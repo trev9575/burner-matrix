@@ -87,6 +87,10 @@ docker run -d --name burner-matrix --restart unless-stopped -p 8088:80 burner-ma
 
 ## Notes
 
+- **Photos** for the hover pop-up: Wayne and Comet photos load from their websites. Beckett's site blocks
+  other sites from showing its images, so Beckett photos are stored in `html/photos/` (`beckett-cf1400.jpg`, etc.).
+  To fetch them all, run `scripts/get-beckett-photos.ps1` (Windows) or `scripts/get-beckett-photos.sh` (Mac/Linux)
+  on your own computer, then upload the files to `html/photos/` on GitHub.
 - **Logos** are in `html/logos/` (`beckett.png`, `wayne.png`). Replace those files to update them.
 - The page has no login. For reps outside the office, put it behind a reverse proxy with auth
   or a VPN (Tailscale/WireGuard) rather than opening the port.

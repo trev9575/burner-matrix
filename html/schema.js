@@ -40,7 +40,7 @@
     if ('applications' in b && !subset(b.applications, APPS)) e.push(`applications: pick one or more of ${APPS.join(', ')}`);
     if ('notes' in b && !str(b.notes)) e.push('notes: add a short selling note');
     if ('link' in b && !(str(b.link) && /^https:\/\/\S+$/.test(b.link))) e.push('link: must be a full https:// address to the product page or spec sheet');
-    if ('image' in b && !(str(b.image) && /^https:\/\/\S+$/.test(b.image))) e.push('image: must be a full https:// address to a photo, or leave it out');
+    if ('image' in b && !(str(b.image) && (/^https:\/\/\S+$/.test(b.image) || /^photos\/[\w.-]+\.(jpg|jpeg|png|webp)$/i.test(b.image)))) e.push('image: a full https:// photo address, or photos/<file> for a photo stored in the repo');
     if ('biofuel' in b && !str(b.biofuel)) e.push('biofuel: remove it or describe the rating (e.g. "B20")');
     if ('propane' in b && !str(b.propane)) e.push('propane: remove it or describe how (e.g. "Conversion kit")');
     if ('propane' in b && b.fuel === 'oil') e.push('propane: only applies to gas burners');

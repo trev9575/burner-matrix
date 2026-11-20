@@ -120,6 +120,8 @@ footer p{margin:0 0 6px;max-width:100ch}
 #pic img{display:block;width:100%;height:190px;object-fit:contain;background:#fff}
 #pic span{display:block;margin-top:6px;font-size:13px;font-weight:700;text-align:center}
 #pic.err img{display:none}
+#pic.ld img{visibility:hidden}
+#pic.ld span::after{content:" (loading…)";font-weight:500;color:var(--mute)}
 #pic.err span::after{content:" (photo unavailable)";font-weight:500;color:var(--mute)}
 a.bn[data-img]{cursor:zoom-in}
 details>summary{cursor:pointer;list-style:none;display:flex;flex-wrap:wrap;align-items:baseline;gap:10px}
@@ -379,8 +381,8 @@ unitLbl();dimMode();
 
 /* ---------- Hover photo ---------- */
 const pic=$('pic'),pimg=pic.querySelector('img'),pcap=pic.querySelector('span');
-pimg.onerror=()=>pic.classList.add('err');pimg.onload=()=>pic.classList.remove('err');
-const showPic=a=>{pic.classList.remove('err');pimg.src=a.dataset.img;pcap.textContent=a.textContent;const r=a.getBoundingClientRect(),w=250,h=240;let x=r.right+14,y=r.top-20;if(x+w>innerWidth-8)x=Math.max(8,r.left);if(x!==r.right+14)y=r.bottom+8;if(y+h>innerHeight-8)y=Math.max(8,r.top-h-8);pic.style.left=x+'px';pic.style.top=y+'px';pic.classList.add('on')};
+pimg.onerror=()=>{pic.classList.remove('ld');pic.classList.add('err')};pimg.onload=()=>pic.classList.remove('ld','err');
+const showPic=a=>{pic.classList.remove('err');if(pimg.getAttribute('src')!==a.dataset.img){pic.classList.add('ld');pimg.removeAttribute('src');pimg.src=a.dataset.img;if(pimg.complete&&pimg.naturalWidth)pic.classList.remove('ld')}pcap.textContent=a.textContent;const r=a.getBoundingClientRect(),w=250,h=240;let x=r.right+14,y=r.top-20;if(x+w>innerWidth-8)x=Math.max(8,r.left);if(x!==r.right+14)y=r.bottom+8;if(y+h>innerHeight-8)y=Math.max(8,r.top-h-8);pic.style.left=x+'px';pic.style.top=y+'px';pic.classList.add('on')};
 const hidePic=()=>pic.classList.remove('on');
 $('tb').addEventListener('mouseover',e=>{const a=e.target.closest('a.bn[data-img]');if(a)showPic(a)});
 $('tb').addEventListener('mouseout',e=>{const a=e.target.closest('a.bn');if(a&&!a.contains(e.relatedTarget))hidePic()});
