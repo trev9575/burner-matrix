@@ -115,6 +115,13 @@ footer p{margin:0 0 6px;max-width:100ch}
 .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:4px;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
 [hidden]{display:none !important}
+#pic{position:fixed;z-index:60;display:none;width:250px;background:#fff;border-radius:6px;box-shadow:0 8px 28px rgba(0,0,0,.22);padding:10px;pointer-events:none}
+#pic.on{display:block}
+#pic img{display:block;width:100%;height:190px;object-fit:contain;background:#fff}
+#pic span{display:block;margin-top:6px;font-size:13px;font-weight:700;text-align:center}
+#pic.err img{display:none}
+#pic.err span::after{content:" (photo unavailable)";font-weight:500;color:var(--mute)}
+a.bn[data-img]{cursor:zoom-in}
 details>summary{cursor:pointer;list-style:none;display:flex;flex-wrap:wrap;align-items:baseline;gap:10px}
 details>summary::-webkit-details-marker{display:none}
 details>summary h2::before{content:"+ ";color:var(--red)}
@@ -212,6 +219,7 @@ b.pv{color:#b35c00;font-size:12px}
         <label><span>Min firing rate <span class="u a-unit">GPH</span></span><input name="min" id="a-min" type="number" step="any" min="0"></label>
         <label><span>Max firing rate <span class="u a-unit">GPH</span></span><input name="max" id="a-max" type="number" step="any" min="0"></label>
         <label>Link to product page or spec sheet<input name="link" id="a-link" type="url" placeholder="https://"></label>
+        <label><span>Photo URL <span class="u">optional, shown on hover</span></span><input name="image" id="a-img" type="url" placeholder="https://"></label>
       </div>
       <div class="fg3">
         <fieldset><legend>Power available</legend><div id="a-power"></div></fieldset>
@@ -249,6 +257,7 @@ b.pv{color:#b35c00;font-size:12px}
   <p>Internal Beckett sales tool. Logos and specifications belong to their owners.</p>
 </footer>
 <div class="toast" id="toast" role="status"></div>
+<div id="pic" aria-hidden="true"><img alt=""><span></span></div>
 
 <script src="schema.js"></script>
 <script>
@@ -259,7 +268,7 @@ const PW={'12 VDC':'12dc','24 VDC':'24dc','120 VAC':'120','208-240 VAC 1P':'240'
 const MW={'on/off':'onoff','low-high-low':'hilo','modulating':'mod'};
 const AW={'residential':'res','light commercial':'lc','commercial/industrial':'ci','pressure washers/road equipment':'mob','oil-to-gas conversion':'conv','ovens/process':'proc'};
 // readable burners.json entry -> internal record
-const toRec=o=>({std:o.powerStd?PW[o.powerStd]:null,n:o.name,b:o.brand,f:o.fuel,lo:o.min,hi:o.max,v:o.power.map(x=>PW[x]),vt:o.powerText,m:o.modes.map(x=>MW[x]),dim:Array.isArray(o.dims)?o.dims:o.dims==='spec sheet'?'spec':null,tube:o.airTube,a:o.applications.map(x=>AW[x]),bio:o.biofuel,lp:o.propane,disc:!!o.discontinued,note:o.notes,u:o.link,raw:o});
+const toRec=o=>({img:o.image||null,std:o.powerStd?PW[o.powerStd]:null,n:o.name,b:o.brand,f:o.fuel,lo:o.min,hi:o.max,v:o.power.map(x=>PW[x]),vt:o.powerText,m:o.modes.map(x=>MW[x]),dim:Array.isArray(o.dims)?o.dims:o.dims==='spec sheet'?'spec':null,tube:o.airTube,a:o.applications.map(x=>AW[x]),bio:o.biofuel,lp:o.propane,disc:!!o.discontinued,note:o.notes,u:o.link,raw:o});
 let D=[],RAW=[],PREV=[];
 const APPS={res:'Residential heating',lc:'Light commercial',ci:'Commercial / industrial',mob:'Pressure washers / road equipment',conv:'Oil-to-gas conversion',proc:'Ovens & process heat'};
 const VOLTS={'12dc':'12 VDC','24dc':'24 VDC','120':'120 VAC','240':'208-240 VAC 1P','3p240':'208-240 VAC 3P','3p480':'480 VAC 3P'};
@@ -307,7 +316,7 @@ function render(){
   const req=r!=null?`<div class="req" style="left:${pos(Math.min(Math.max(r,15),15000))}%"></div>`:'';
   $('lad').innerHTML=list.length?list.map(x=>{const[a,b]=mb(x);const fz=fit(x,r);return`<div class="lr" data-n="${esc(x.n)}" title="${esc(x.b+' '+x.n)}: ${fmt(x)}"><div class="nm">${esc(x.n)}<small>${x.prev?'Preview':esc(x.b)}</small></div><div class="track">${gl}${req}<div class="bar ${x.f}${x.disc?' off':''}${fz==='edge'?' edgebar':''}" style="left:${pos(a)}%;width:${Math.max(pos(b)-pos(a),.8)}%"></div></div></div>`}).join(''):'<div class="empty">No burner meets every filter. Loosen the footprint or power limits, or check the firing rate unit.</div>';
   $('tb').innerHTML=list.map(x=>{const fz=fit(x,r);const d=Array.isArray(x.dim)?x.dim.map(n=>+n.toFixed(2)).join(' × '):x.dim==='spec'?'See spec sheet':'Not published';
-    return`<tr id="r-${x.n.replace(/\W/g,'')}" class="${fz==='edge'?'edge':''}"><td><b class="nm-${x.f}"><a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.n)}</a></b><br><span class="note">${esc(x.b)}${x.disc?' · discontinued':''}${x.prev?' · <b class=pv>preview, not saved</b>':''}</span></td><td><span class="fuel ${x.f}">${x.f==='oil'?'Oil':'Gas'}</span>${x.bio?`<br><span class="tag">${esc(x.bio)}</span>`:''}${x.lp?`<br><span class="tag">LP: ${esc(x.lp)}</span>`:''}</td><td class="n">${fmt(x)}${sub(x)?`<br><span class="note">${sub(x)}</span>`:''}${fz==='ok'?`<br><span class="fit ok">Sweet spot</span>`:fz==='edge'?`<br><span class="fit edge">${where(x,r)==='max'?`Near MAX · ${pctOf(x,r)}% of max`:`Near MIN · ${Math.round((r/mb(x)[0]-1)*100)}% above min`}</span>`:''}</td><td><div class="pws">${['12dc','24dc','120','240','3p240','3p480','none'].filter(k=>x.v.includes(k)).map(k=>`<span class="pw ${PCH[k][1]}">${PCH[k][0]}${x.std===k&&x.v.length>1?' <i>Std</i>':''}</span>`).join('')}</div></td><td>${x.m.map(m=>`<span class="tag">${MODES[m]}</span>`).join('')}</td><td class="n">${d}</td><td>${x.a.map(a=>`<span class="tag">${APPS[a]}</span>`).join('')}</td><td>${esc(x.note)}</td></tr>`}).join('');
+    return`<tr id="r-${x.n.replace(/\W/g,'')}" class="${fz==='edge'?'edge':''}"><td><b class="nm-${x.f}"><a class="bn" href="${esc(x.u)}"${x.img?` data-img="${esc(x.img)}"`:''} target="_blank" rel="noopener">${esc(x.n)}</a></b><br><span class="note">${esc(x.b)}${x.disc?' · discontinued':''}${x.prev?' · <b class=pv>preview, not saved</b>':''}</span></td><td><span class="fuel ${x.f}">${x.f==='oil'?'Oil':'Gas'}</span>${x.bio?`<br><span class="tag">${esc(x.bio)}</span>`:''}${x.lp?`<br><span class="tag">LP: ${esc(x.lp)}</span>`:''}</td><td class="n">${fmt(x)}${sub(x)?`<br><span class="note">${sub(x)}</span>`:''}${fz==='ok'?`<br><span class="fit ok">Sweet spot</span>`:fz==='edge'?`<br><span class="fit edge">${where(x,r)==='max'?`Near MAX · ${pctOf(x,r)}% of max`:`Near MIN · ${Math.round((r/mb(x)[0]-1)*100)}% above min`}</span>`:''}</td><td><div class="pws">${['12dc','24dc','120','240','3p240','3p480','none'].filter(k=>x.v.includes(k)).map(k=>`<span class="pw ${PCH[k][1]}">${PCH[k][0]}${x.std===k&&x.v.length>1?' <i>Std</i>':''}</span>`).join('')}</div></td><td>${x.m.map(m=>`<span class="tag">${MODES[m]}</span>`).join('')}</td><td class="n">${d}</td><td>${x.a.map(a=>`<span class="tag">${APPS[a]}</span>`).join('')}</td><td>${esc(x.note)}</td></tr>`}).join('');
 }
 function sync(){
   seg('f-fuel',[['all','All'],['oil','Oil'],['gas','Gas']],'fuel');
@@ -347,11 +356,11 @@ const readForm=()=>{const f=af.elements,o={};
   o.dims=f.dimmode.value==='published'?[n('dh'),n('dw'),n('dd')]:f.dimmode.value;
   o.airTube=t('airTube');o.applications=[...af.querySelectorAll('[name=applications]:checked')].map(x=>x.value);
   if(t('biofuel'))o.biofuel=t('biofuel');if(o.fuel==='gas'&&t('propane'))o.propane=t('propane');if(f.discontinued.checked)o.discontinued=true;
-  o.notes=t('notes');o.link=t('link');
+  o.notes=t('notes');o.link=t('link');if(t('image'))o.image=t('image');
   if(Array.isArray(o.dims)&&o.dims.some(v=>v===undefined))o.dims=undefined;
   for(const k of Object.keys(o))if(o[k]===undefined||o[k]==='')delete o[k];
   return o};
-const LBL={name:'Model name',brand:'Brand',fuel:'Fuel',min:'Min firing rate',max:'Max firing rate',power:'Power available',powerText:'Power notes',powerStd:'Standard supply',modes:'Firing modes',dims:'Chassis dimensions',airTube:'Air tube / insertion',applications:'Applications',notes:'Selling note',link:'Link',biofuel:'Biofuel rating',propane:'Propane',discontinued:'Discontinued'};
+const LBL={name:'Model name',brand:'Brand',fuel:'Fuel',min:'Min firing rate',max:'Max firing rate',power:'Power available',powerText:'Power notes',powerStd:'Standard supply',modes:'Firing modes',dims:'Chassis dimensions',airTube:'Air tube / insertion',applications:'Applications',notes:'Selling note',link:'Link',biofuel:'Biofuel rating',propane:'Propane',discontinued:'Discontinued',image:'Photo URL'};
 const nice=m=>{let k=m.match(/^Missing "(\w+)"$/);if(k)return `${LBL[k[1]]||k[1]}: required`;k=m.match(/^(\w+):(.*)$/);if(k&&LBL[k[1]])return LBL[k[1]]+':'+k[2];return m};
 let lastOut='';
 af.onsubmit=e=>{e.preventDefault();const o=readForm();
@@ -367,6 +376,17 @@ $('a-clear').onclick=()=>{PREV=[];render();toast('Previews cleared')};
 $('a-reset').onclick=()=>{af.reset();unitLbl();dimMode();$('a-err').hidden=true;$('a-out').hidden=true};
 $('a-edit').href=REPO+'/edit/main/html/burners.json';
 unitLbl();dimMode();
+
+/* ---------- Hover photo ---------- */
+const pic=$('pic'),pimg=pic.querySelector('img'),pcap=pic.querySelector('span');
+pimg.onerror=()=>pic.classList.add('err');pimg.onload=()=>pic.classList.remove('err');
+const showPic=a=>{pic.classList.remove('err');pimg.src=a.dataset.img;pcap.textContent=a.textContent;const r=a.getBoundingClientRect(),w=250,h=240;let x=r.right+14,y=r.top-20;if(x+w>innerWidth-8)x=Math.max(8,r.left);if(x!==r.right+14)y=r.bottom+8;if(y+h>innerHeight-8)y=Math.max(8,r.top-h-8);pic.style.left=x+'px';pic.style.top=y+'px';pic.classList.add('on')};
+const hidePic=()=>pic.classList.remove('on');
+$('tb').addEventListener('mouseover',e=>{const a=e.target.closest('a.bn[data-img]');if(a)showPic(a)});
+$('tb').addEventListener('mouseout',e=>{const a=e.target.closest('a.bn');if(a&&!a.contains(e.relatedTarget))hidePic()});
+$('tb').addEventListener('focusin',e=>{const a=e.target.closest('a.bn[data-img]');if(a)showPic(a)});
+$('tb').addEventListener('focusout',hidePic);
+addEventListener('scroll',hidePic,{passive:true});
 
 /* ---------- Load data ---------- */
 fetch('burners.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(list=>{

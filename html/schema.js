@@ -6,7 +6,7 @@
   const APPS = ['residential', 'light commercial', 'commercial/industrial', 'pressure washers/road equipment', 'oil-to-gas conversion', 'ovens/process'];
   const DIMS_TEXT = ['spec sheet', 'not published'];
   const REQUIRED = ['name', 'brand', 'fuel', 'min', 'max', 'power', 'powerText', 'modes', 'dims', 'airTube', 'applications', 'notes', 'link'];
-  const OPTIONAL = ['powerStd', 'biofuel', 'propane', 'discontinued'];
+  const OPTIONAL = ['powerStd', 'biofuel', 'propane', 'discontinued', 'image'];
 
   const str = v => typeof v === 'string' && v.trim().length > 0;
   const num = v => typeof v === 'number' && isFinite(v) && v > 0;
@@ -40,6 +40,7 @@
     if ('applications' in b && !subset(b.applications, APPS)) e.push(`applications: pick one or more of ${APPS.join(', ')}`);
     if ('notes' in b && !str(b.notes)) e.push('notes: add a short selling note');
     if ('link' in b && !(str(b.link) && /^https:\/\/\S+$/.test(b.link))) e.push('link: must be a full https:// address to the product page or spec sheet');
+    if ('image' in b && !(str(b.image) && /^https:\/\/\S+$/.test(b.image))) e.push('image: must be a full https:// address to a photo, or leave it out');
     if ('biofuel' in b && !str(b.biofuel)) e.push('biofuel: remove it or describe the rating (e.g. "B20")');
     if ('propane' in b && !str(b.propane)) e.push('propane: remove it or describe how (e.g. "Conversion kit")');
     if ('propane' in b && b.fuel === 'oil') e.push('propane: only applies to gas burners');
