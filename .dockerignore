@@ -3,3 +3,4 @@
 unraid
 *.md
 docker-compose.yml
+scripts

@@ -87,6 +87,26 @@ footer{background:var(--ink);color:#d8d8d2;font-size:13px}
 footer p{margin:0 0 6px;max-width:100ch}
 .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:4px;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
+[hidden]{display:none !important}
+details>summary{cursor:pointer;list-style:none;display:flex;flex-wrap:wrap;align-items:baseline;gap:10px}
+details>summary::-webkit-details-marker{display:none}
+details>summary h2::before{content:"+ ";color:var(--red)}
+details[open]>summary h2::before{content:"– "}
+#addf{margin-top:16px}
+#addf label:not(.chk){display:flex;flex-direction:column;gap:4px;font-weight:700;font-size:14px}
+#addf input[type=text],#addf input[type=url],#addf textarea{font:500 16px Montserrat,Helvetica,Arial,sans-serif;min-height:44px;padding:8px 10px;border-radius:3px;border:1px solid #b9b9b2;background:#fff;color:var(--ink);width:100%}
+#addf .u{font-weight:500;color:var(--mute);font-size:13px}
+.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 16px;margin-bottom:12px}
+.fg3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 16px;background:#f7f7f4;padding:12px;border-radius:4px;margin-bottom:12px}
+.fg3 fieldset{margin:0}
+.rad{gap:4px 18px}
+.aerr{margin-top:14px;background:#fde3e5;border-left:4px solid var(--red);padding:10px 14px;font-size:14px}
+.aerr ul{margin:6px 0 0;padding-left:20px}
+.aout{margin-top:14px;background:#e9f5ec;border-left:4px solid #1d7a3a;padding:10px 14px;font-size:14px}
+.aout ol{margin:4px 0 10px;padding-left:20px}
+.aout pre{background:#fff;border:1px solid var(--rule);padding:10px;overflow-x:auto;white-space:pre-wrap;overflow-wrap:anywhere;font-size:12.5px}
+.aout a{color:var(--red);font-weight:700}
+b.pv{color:#b35c00;font-size:12px}
 @media(max-width:900px){.main{grid-template-columns:minmax(0,1fr)}.rail{position:static}}
 @media(max-width:600px){.util{display:none}.brand .div{display:none}.axis,.lr{grid-template-columns:96px minmax(0,1fr)}.lr .nm small{display:none}.axis span:nth-child(even){display:none}table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--rule)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:7.5em;background:none !important}.stack td::before{content:attr(data-l);float:inline-start;width:7em;margin-inline-start:-7.5em;color:var(--mute);font-size:12.5px}.stack td:empty{display:none}}
 @media(prefers-reduced-motion:reduce){.toast{transition:none}}
@@ -150,61 +170,66 @@ footer p{margin:0 0 6px;max-width:100ch}
     <thead><tr><th>Burner</th><th>Fuel</th><th>Firing rate</th><th>Fit</th><th>Power</th><th>Mode</th><th>H × W × D (in)</th><th>Air tube / insertion</th><th>Best for</th><th>Notes</th></tr></thead>
     <tbody id="tb"></tbody>
   </table></div>
-
-</section>
+</div></section>
+<section class="band" style="padding-top:0" id="add"><div class="mx">
+  <details id="a-det">
+    <summary><h2 style="display:inline">Add a burner</h2> <span class="note">Every field is required unless marked optional.</span></summary>
+    <form id="addf" novalidate>
+      <div class="fg">
+        <label>Model name<input name="name" id="a-name" type="text" placeholder="e.g. CF900"></label>
+        <label>Brand<input name="brand" id="a-brand" type="text" list="a-brands" placeholder="Beckett"><datalist id="a-brands"></datalist></label>
+        <label>Fuel<select name="fuel" id="a-fuel"><option value="oil">Oil</option><option value="gas">Gas</option></select></label>
+        <label><span>Min firing rate <span class="u a-unit">GPH</span></span><input name="min" id="a-min" type="number" step="any" min="0"></label>
+        <label><span>Max firing rate <span class="u a-unit">GPH</span></span><input name="max" id="a-max" type="number" step="any" min="0"></label>
+        <label>Link to product page or spec sheet<input name="link" id="a-link" type="url" placeholder="https://"></label>
+      </div>
+      <div class="fg3">
+        <fieldset><legend>Power available</legend><div id="a-power"></div></fieldset>
+        <fieldset><legend>Firing modes</legend><div id="a-modes"></div></fieldset>
+        <fieldset><legend>Applications</legend><div id="a-apps"></div></fieldset>
+      </div>
+      <div class="fg">
+        <label>Power details shown in the table<input name="powerText" id="a-pt" type="text" placeholder="120 VAC std; 240 VAC 1φ option"></label>
+        <label>Air tube / insertion<input name="airTube" id="a-tube" type="text" placeholder='6" to 15", or See spec sheet'></label>
+      </div>
+      <fieldset><legend>Chassis dimensions</legend>
+        <div class="seg rad"><label class="chk"><input type="radio" name="dimmode" value="published" checked> Published (inches)</label><label class="chk"><input type="radio" name="dimmode" value="spec sheet"> On spec sheet only</label><label class="chk"><input type="radio" name="dimmode" value="not published"> Not published</label></div>
+        <div class="row" id="a-dims" style="max-width:420px;margin-top:8px"><input name="dh" type="number" step="any" min="0" placeholder="Height" aria-label="Height in inches"><input name="dw" type="number" step="any" min="0" placeholder="Width" aria-label="Width in inches"><input name="dd" type="number" step="any" min="0" placeholder="Depth" aria-label="Depth in inches"></div>
+      </fieldset>
+      <div class="fg">
+        <label><span>Biofuel rating <span class="u">optional</span></span><input name="biofuel" type="text" placeholder="e.g. B20"></label>
+        <label id="a-lpwrap" hidden><span>Propane / LP <span class="u">optional</span></span><input name="propane" type="text" placeholder="e.g. Conversion kit"></label>
+        <label class="chk" style="align-self:end"><input type="checkbox" name="discontinued"> Discontinued</label>
+      </div>
+      <label style="margin-top:12px">Selling note<textarea name="notes" id="a-notes" rows="2" placeholder="What it's best at, limits, anything a rep should know"></textarea></label>
+      <div class="acts" style="margin-top:14px"><button class="btn pri" type="submit">Check &amp; preview</button><button class="btn" type="button" id="a-reset">Clear form</button><button class="btn" type="button" id="a-clear">Remove previews</button></div>
+      <div class="aerr" id="a-err" hidden role="alert"></div>
+      <div class="aout" id="a-out" hidden>
+        <p><b>Ready.</b> It's on the chart as a preview (only on this device). To add it for everyone:</p>
+        <ol><li>Copy the entry below.</li><li>Open <a id="a-edit" target="_blank" rel="noopener">burners.json on GitHub</a> and click the pencil icon to edit.</li><li>Paste it right after the last <code>}</code>, before the final <code>]</code>.</li><li>Click <b>Commit changes</b>. The build checks it, then Unraid picks it up on the next update.</li></ol>
+        <pre id="a-json"></pre>
+        <button class="btn pri" type="button" id="a-copy">Copy entry</button>
+      </div>
+    </form>
+  </details>
+</div></section>
+<footer class="band">
+  <p>Compiled 20 Nov 2026 from beckettcorp.com (product pages, product sheets, Commercial Selection Guide 61990), waynecombustion.com/products and preferred-mfg.com (Comet brochure). Beckett commercial (CF/CG) and Comet chassis sizes are published only as lettered drawing dimensions, so they show as "see spec sheet" and count as unpublished in the footprint filter. 460 V three-phase motors are grouped under 480 VAC 3P. Always confirm against the current spec sheet and the appliance maker's burner spec before quoting.</p>
+  <p>Internal Beckett sales tool. Logos and specifications belong to their owners.</p>
+</footer>
 <div class="toast" id="toast" role="status"></div>
 
+<script src="schema.js"></script>
 <script>
 {
-const BK='Beckett',WY='Wayne';
-const CM='https://www.preferred-mfg.com/products/burners/commercial-burners/comet.html';
-const BO='https://beckettcorp.com/product-category/burners/oil-burners',BG='https://www.beckettcorp.com/product-category/burners/gas-burners/',BC='https://www.beckettcorp.com/wp-content/uploads/2022/05/61990-R3-Commercial-Selection-Guide.pdf',W='https://waynecombustion.com/products/';
-// v: 12dc, 24dc, 120 VAC, 240 = 208-240 1P, 3p240 = 208-240 3P, 3p480 = 480 3P (460 V motors counted here), none = needs no power (passes any power filter)
-// m: onoff, hilo, mod ; a: res, lc, ci, mob, conv, proc
-const D=[
-{n:'AF/AFG',b:BK,f:'oil',lo:.40,hi:3.00,v:['120','240'],vt:'120 VAC; 240 VAC by factory request',m:['onoff'],dim:[11.5,12.875,6.56],tube:'4-1/2" to 16" usable',a:['res','lc'],bio:'B100, R100',note:'The default residential replacement. AF for refractory chambers; AFG for no or minimal chamber, moderate chamber pressure.',u:'https://www.beckettcorp.com/wp-content/uploads/2023/01/6578-AFG-Product-Sheet-012523.pdf'},
-{n:'RF',b:BK,f:'oil',lo:.38,hi:1.75,v:['120'],vt:'120 VAC',m:['onoff'],dim:[10.9,13.7,9.835],tube:'7" (RF101/RF102 universal)',a:['res'],bio:'B100, R100',note:'Newest Beckett residential. Natural draft, positive pressure and direct vent. Universal "burner-in-a-box".',u:'https://beckettcorp.com/product/rf-oil-biodiesel-renewable-diesel-burner-0-38-to-1-75-gph-ac-power'},
-{n:'NX',b:BK,f:'oil',lo:.40,hi:1.75,v:['120'],vt:'120 VAC',m:['onoff'],dim:null,tube:'5", 7", 9"',a:['res'],note:'Single combined air/head adjustment. High static; air intake kit suits direct vent.',u:'https://www.beckettcorp.com/product/nx-oil-burner/'},
-{n:'SM',b:BK,f:'oil',lo:1.25,hi:3.00,v:['120'],vt:'120 VAC',m:['onoff'],dim:[13.5,14.25,8.5],tube:'6-5/8", 9", 13", 15"',a:['mob','lc'],note:'Does not rely on a combustion chamber for flame stability. Common on hot-water pressure washers.',u:'https://www.beckettcorp.com/product/sm-oil-burner-1-25-to-3-0-gph-ac-power/'},
-{n:'SF',b:BK,f:'oil',lo:1.25,hi:5.50,v:['120'],vt:'120 VAC',m:['onoff'],dim:[13.5,15.375,8.5],tube:'6-5/8" to 16"',a:['lc','res'],note:'AF-style head, broader range. Blocking solenoid valve required above 3 GPH.',u:'https://www.beckettcorp.com/product/sf-oil-burner-1-25-to-5-50-gph-ac-power/'},
-{n:'ADC',b:BK,f:'oil',lo:.75,hi:2.50,v:['12dc','24dc'],vt:'12 VDC or 24 VDC',m:['onoff'],dim:[10.5,14.375,6.56],tube:'F-head air tube combos',a:['mob'],note:'For sites with no AC power: pressure washers, road equipment. Up to 3.00 GPH at full charging voltage (13.5/27 V).',u:'https://www.beckettcorp.com/product/adc-oil-burner/'},
-{n:'SDC',b:BK,f:'oil',lo:1.75,hi:5.00,v:['12dc','24dc'],vt:'12 VDC or 24 VDC',m:['onoff'],dim:[13.625,15.375,8.5],tube:'F22 / F31 heads',a:['mob'],note:'Larger DC burner for road maintenance. Up to 5.50 GPH at full charging voltage. 25 A max draw at 12 V.',u:'https://www.beckettcorp.com/wp-content/uploads/2022/05/61084_SDCBurnerProductSheet.pdf'},
-{n:'CF375',b:BK,f:'oil',lo:1.65,hi:3.75,v:['120'],vt:'120 VAC',m:['onoff'],dim:'spec',tube:'See spec sheet',a:['lc'],note:'Entry commercial chassis, 1/7 HP.',u:BC},
-{n:'CF500',b:BK,f:'oil',lo:1.75,hi:5.50,v:['120'],vt:'120 VAC',m:['onoff'],dim:'spec',tube:'See spec sheet',a:['lc'],bio:'B20',note:'Light commercial and industrial, 1/3 HP.',u:'https://www.beckettcorp.com/product/cf500-oil-burner-1-75-to-5-50-gph-ac-power/'},
-{n:'CF800',b:BK,f:'oil',lo:3.00,hi:8.00,v:['120'],vt:'120 VAC',m:['onoff'],dim:'spec',tube:'See spec sheet',a:['lc','ci'],note:'1/3 HP.',u:BC},
-{n:'CF1000',b:BK,f:'oil',lo:4.00,hi:10.00,v:['120','240','3p240','3p480'],vt:'120 VAC std; 240 VAC 1φ, 208/240/480 3φ options',m:['onoff'],dim:'spec',tube:'See spec sheet',a:['ci'],note:'1/2 HP.',u:BC},
-{n:'CF1400',b:BK,f:'oil',lo:4.00,hi:13.60,v:['120','240','3p240','3p480'],vt:'120 VAC std; 240 VAC 1φ, 208/240/480 3φ options',m:['hilo'],dim:'spec',tube:'See spec sheet',a:['ci','proc'],note:'Linkageless low-high-low.',u:BC},
-{n:'CF2300A',b:BK,f:'oil',lo:7.00,hi:19.90,v:['120','240','3p240','3p480'],vt:'120 VAC std; 240 VAC 1φ, 208/240/480 3φ options',m:['hilo'],dim:'spec',tube:'See spec sheet',a:['ci'],note:'Linkageless low-high-low, 3/4 HP.',u:BC},
-{n:'CF2500A',b:BK,f:'oil',lo:17.00,hi:19.90,v:['240','3p240','3p480'],vt:'240 VAC 1φ std; 208-240-480 3φ available',m:['hilo'],dim:'spec',tube:'See spec sheet',a:['ci'],note:'Dual nozzles at 250-300 PSI, 2 HP. Panels available.',u:BO},
-{n:'CF3500',b:BK,f:'oil',lo:17.00,hi:35.00,v:['240','3p240','3p480'],vt:'208/230 VAC std; 208/230/480 3φ options',m:['hilo'],dim:'spec',tube:'See spec sheet',a:['ci'],note:'Largest Beckett oil burner, 2 HP.',u:BC},
-{n:'CG10',b:BK,f:'gas',lo:300,hi:1200,v:['120','240'],vt:'120 VAC 1φ std; 240 VAC 1φ option',m:['onoff'],dim:'spec',tube:'See spec sheet',a:['lc','conv'],lp:'Restrictor kit',note:'On/off, low-fire start optional. Also sold as conversion burner. CG10-24 variant covers the same range.',u:'https://www.beckettcorp.com/product/cg10-gas-burner-300-to-1200-mbh-ac-power/'},
-{n:'CG15',b:BK,f:'gas',lo:800,hi:1400,v:['120','240','3p240','3p480'],vt:'120 VAC std; 208/230 1φ, 208/230/460 3φ options',m:['hilo','mod'],dim:'spec',tube:'See spec sheet',a:['ci'],lp:'Conversion kit',note:'Range from Beckett gas product sheet 6161202; the selection guide lists a wider range, so confirm.',u:BC},
-{n:'CG25',b:BK,f:'gas',lo:990,hi:2700,v:['120','3p240','3p480'],vt:'120 VAC std; 208/230/460 3φ options',m:['hilo','mod'],dim:'spec',tube:'See spec sheet',a:['ci'],lp:'Conversion kit',note:'3/4 HP.',u:BG},
-{n:'CG50',b:BK,f:'gas',lo:1400,hi:5000,v:['240','3p240','3p480'],vt:'208/230 VAC 1φ std; 208/230/460 3φ options',m:['onoff','hilo','mod'],dim:'spec',tube:'Welded insertion',a:['ci','proc'],lp:'Conversion kit',note:'On/off up to 2,500 MBH; low-high-low or modulation above. 2 HP.',u:'https://www.beckettcorp.com/product/cg50-gas-burner-1400-to-5000-mbh-ac-power/'},
-{n:'MSR',b:WY,f:'oil',lo:.50,hi:2.75,v:['120','240'],vt:'120 VAC or 220/240 VAC, 50/60 Hz',m:['onoff'],dim:[11.875,13.875,6.875],tube:'4" to 18"',a:['res','lc'],note:'Ideal for high static applications. 1- or 2-stage pump.',u:W+'msr'},
-{n:'EHASR',b:WY,f:'oil',lo:.50,hi:3.00,v:['120','240','12dc'],vt:'120 or 220/240 VAC; 12 VDC version per Wayne literature',m:['onoff'],dim:null,tube:'6" to 18"',a:['lc','proc'],note:'High-temperature flame. Flange or pedestal mount. 42 lb.',u:W+'ehasr'},
-{n:'MSR-DC',b:WY,f:'oil',lo:.50,hi:2.25,v:['12dc'],vt:'12 VDC',m:['onoff'],dim:null,tube:'3.75"',a:['mob'],note:'Runs off an engine alternator and battery, no generator needed. 25 lb.',u:W+'msr-dc'},
-{n:'EH',b:WY,f:'oil',lo:3.00,hi:6.00,v:['120','240'],vt:'120 or 220/240 VAC; DC variant per Wayne literature',m:['onoff'],dim:null,tube:'6" to 18"',a:['lc','ci'],note:'Cast-iron air cone changeable for range. 44 lb.',u:W+'eh'},
-{n:'FH',b:WY,f:'oil',lo:4.00,hi:13.00,v:['120','240'],vt:'120 or 220/240 VAC, 50/60 Hz',m:['onoff'],dim:null,tube:'10" or 15" std, shorter available',a:['ci'],note:'Largest Wayne oil burner, 1/2 HP. 75 lb min.',u:W+'fh'},
-{n:'HS Blue Angel Plus',b:WY,f:'oil',lo:.50,hi:3.00,v:['120','240'],vt:'120 or 220/240 VAC',m:['onoff'],dim:[12.5,12.875,7.75],tube:'6" to 18"',a:['res'],disc:1,note:'Discontinued per Wayne. Listed for service replacements only.',u:W+'hs-blue-angel-plus'},
-{n:'A55 / A60',b:WY,f:'gas',lo:40,hi:60,v:['none'],vt:'No external power (AAA battery ignition)',m:['onoff'],dim:null,tube:'9" × 4" dia',a:['proc'],lp:'A60 model',note:'Atmospheric pizza oven burner, new or retrofit ovens. A55 natural gas, A60 LP.',u:W+'a55-a60-pizza-oven-burner'},
-{n:'SC80',b:WY,f:'gas',lo:20,hi:80,v:['120'],vt:'120 VAC (24 V gas valve)',m:['onoff'],dim:[11.42,12.18,6.39],tube:'3" dia, 4-4.75" max insertion',a:['res','proc'],lp:'Yes',note:'For small combustion chambers.',u:W+'sc80'},
-{n:'FLEX-Heat',b:WY,f:'gas',lo:20,hi:100,v:['120','240'],vt:'120 or 220/240 VAC',m:['onoff'],dim:null,tube:'Custom ported',a:['proc'],lp:'Yes',note:'Custom shapes and port patterns for the heat pattern needed. Wayne lists modulation inconsistently; confirm.',u:W+'flex-heat-burner'},
-{n:'HSG200',b:WY,f:'gas',lo:60,hi:200,v:['120','240'],vt:'120 or 220/240 VAC',m:['onoff'],dim:[12.5,13.5,7.75],tube:'6", 8", 9", 12"',a:['res','lc'],lp:'Field orifice change',note:'Higher-static alternative to the P250AF.',u:W+'hsg200'},
-{n:'P250AF-E',b:WY,f:'gas',lo:50,hi:250,v:['120'],vt:'120 VAC',m:['onoff','mod'],dim:[13.76,17.04,14.28],tube:'8" × 4" dia',a:['conv','res'],lp:'Yes',note:'Built for oil-to-gas conversions. Universal flange; modulation optional.',u:W+'p250af-e'},
-{n:'P265F BB-E',b:WY,f:'gas',lo:65,hi:200,v:['120'],vt:'120 VAC',m:['onoff','mod'],dim:[13.76,17.04,14.63],tube:'7.375" × 4" dia',a:['conv','res'],note:'Boiler oil-to-gas conversion only. Natural gas only.',u:W+'p265f-bb-e'},
-{n:'HSG400',b:WY,f:'gas',lo:200,hi:400,v:['120','240'],vt:'120 or 220/240 VAC',m:['onoff'],dim:[12.5,13.5,7.75],tube:'6.25", 9", 12"',a:['lc'],lp:'Field orifice change',note:'Good combustion in poor-draft situations.',u:W+'hsg400'},
-{n:'EHG',b:WY,f:'gas',lo:425,hi:700,v:['120'],vt:'120 VAC',m:['onoff'],dim:[15.1,18.4,8.3],tube:'6" to 15"',a:['lc'],lp:'Yes',note:'Flame retention head shapes the flame to the chamber.',u:W+'ehg'},
-{n:'LC1500 Nighthawk',b:WY,f:'gas',lo:700,hi:1500,v:['120','240'],vt:'120 VAC control; motor 115/208-230 V',m:['onoff'],dim:[13.6,24.33,28.73],tube:'6" × 5.75" dia, 5" max insertion',a:['ci'],lp:'Yes',note:'Heavy commercial / light industrial, high static. CSD-1 gas train.',u:W+'lc1500-nighthawk'},
-{n:'LC2300',b:WY,f:'gas',lo:1100,hi:2300,v:['120','240'],vt:'120 VAC control; motor 115/208-230 V',m:['onoff'],dim:[14.6,28.1,33.08],tube:'9" × 6.25" dia, 8" max insertion',a:['ci'],lp:'Yes',note:'Full range without orifice change.',u:W+'lc2300'},
-{n:'LC2300M',b:WY,f:'gas',lo:700,hi:2300,v:['120','240'],vt:'120 VAC; motor 115/208-230 V',m:['mod'],dim:[21.1,35.6,34.0],tube:'9" × 6.25" dia',a:['ci','proc'],lp:'Yes',note:'Parallel-positioning modulation; Wayne states 30:1 turndown. Boilers, roasters, ovens, MUA, water heaters.',u:W+'lc2300m'},
-{n:'Comet PCG-050',b:WY,f:'gas',lo:288,hi:2300,v:['120','240'],vt:'120/208 VAC 1φ (3/4 HP fan); 120 VAC control panel',m:['mod'],dim:'spec',tube:'See brochure',a:['ci'],lp:'Yes (UL listed)',note:'Made by Preferred Utilities, sold through Wayne. 50 BHP firetube / firebox boilers and fired heaters. 8:1 turndown, parallel positioning; low end shown is max ÷ 8. No. 2 oil and dual fuel listed as coming soon.',u:CM},
-{n:'Comet PCG-100',b:WY,f:'gas',lo:575,hi:4600,v:['3p240','3p480'],vt:'208/230/460 VAC 3φ (4 HP fan); 120 VAC control panel',m:['mod'],dim:'spec',tube:'See brochure',a:['ci'],lp:'Yes (UL listed)',note:'Made by Preferred Utilities, sold through Wayne. 100 BHP firetube / firebox boilers and fired heaters. 8:1 turndown, parallel positioning; low end shown is max ÷ 8. No. 2 oil and dual fuel listed as coming soon.',u:CM},
-{n:'Comet PCG-150',b:WY,f:'gas',lo:862,hi:6900,v:['3p240','3p480'],vt:'208/230/460 VAC 3φ (5.5 HP fan); 120 VAC control panel',m:['mod'],dim:'spec',tube:'See brochure',a:['ci'],lp:'Yes (UL listed)',note:'Made by Preferred Utilities, sold through Wayne. 150 BHP firetube / firebox boilers and fired heaters. 8:1 turndown, parallel positioning; low end shown is max ÷ 8. No. 2 oil and dual fuel listed as coming soon.',u:CM},
-{n:'Comet PCG-200',b:WY,f:'gas',lo:1200,hi:9600,v:['3p240','3p480'],vt:'208/230/460 VAC 3φ (7.5 HP fan); 120 VAC control panel',m:['mod'],dim:'spec',tube:'See brochure',a:['ci'],lp:'Yes (UL listed)',note:'Made by Preferred Utilities, sold through Wayne. 200 BHP firetube / firebox boilers and fired heaters. 8:1 turndown, parallel positioning; low end shown is max ÷ 8. No. 2 oil and dual fuel listed as coming soon.',u:CM},
-{n:'Comet PCG-250',b:WY,f:'gas',lo:1288,hi:10300,v:['3p240','3p480'],vt:'208/230/460 VAC 3φ (10 HP fan); 120 VAC control panel',m:['mod'],dim:'spec',tube:'See brochure',a:['ci'],lp:'Yes (UL listed)',note:'Made by Preferred Utilities, sold through Wayne. 250 BHP firetube / firebox boilers and fired heaters. 8:1 turndown, parallel positioning; low end shown is max ÷ 8. No. 2 oil and dual fuel listed as coming soon.',u:CM},
-{n:'Comet PCG-300',b:WY,f:'gas',lo:1588,hi:12700,v:['3p240','3p480'],vt:'208/230/460 VAC 3φ (12.5 HP fan); 120 VAC control panel',m:['mod'],dim:'spec',tube:'See brochure',a:['ci'],lp:'Yes (UL listed)',note:'Made by Preferred Utilities, sold through Wayne. 300 BHP firetube / firebox boilers and fired heaters. 8:1 turndown, parallel positioning; low end shown is max ÷ 8. No. 2 oil and dual fuel listed as coming soon.',u:CM}
-];
+const REPO='https://github.com/trev9575/burner-matrix';
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const PW={'12 VDC':'12dc','24 VDC':'24dc','120 VAC':'120','208-240 VAC 1P':'240','208-240 VAC 3P':'3p240','480 VAC 3P':'3p480','no power':'none'};
+const MW={'on/off':'onoff','low-high-low':'hilo','modulating':'mod'};
+const AW={'residential':'res','light commercial':'lc','commercial/industrial':'ci','mobile/DC equipment':'mob','oil-to-gas conversion':'conv','ovens/process':'proc'};
+// readable burners.json entry -> internal record
+const toRec=o=>({n:o.name,b:o.brand,f:o.fuel,lo:o.min,hi:o.max,v:o.power.map(x=>PW[x]),vt:o.powerText,m:o.modes.map(x=>MW[x]),dim:Array.isArray(o.dims)?o.dims:o.dims==='spec sheet'?'spec':null,tube:o.airTube,a:o.applications.map(x=>AW[x]),bio:o.biofuel,lp:o.propane,disc:!!o.discontinued,note:o.notes,u:o.link,raw:o});
+let D=[],RAW=[],PREV=[];
 const APPS={res:'Residential heating',lc:'Light commercial',ci:'Commercial / industrial',mob:'Mobile / DC equipment',conv:'Oil-to-gas conversion',proc:'Ovens & process heat'};
 const VOLTS={'12dc':'12 VDC','24dc':'24 VDC','120':'120 VAC','240':'208-240 VAC 1P','3p240':'208-240 VAC 3P','3p480':'480 VAC 3P'};
 const MODES={onoff:'On/off',hilo:'Low-high-low',mod:'Modulating'};
@@ -238,20 +263,21 @@ const pass=x=>{
 let list=[];
 function render(){
   const r=reqMBH();
-  list=D.filter(pass).sort((p,q)=>{const o={ok:0,edge:1};if(r!=null&&fit(p,r)!==fit(q,r))return o[fit(p,r)]-o[fit(q,r)];return mb(p)[0]-mb(q)[0]});
-  $('count').innerHTML=`${list.length}<small>of ${D.filter(x=>S.disc||!x.disc).length} burners match</small>`;
+  const ALL=D.concat(PREV);
+  list=ALL.filter(pass).sort((p,q)=>{const o={ok:0,edge:1};if(r!=null&&fit(p,r)!==fit(q,r))return o[fit(p,r)]-o[fit(q,r)];return mb(p)[0]-mb(q)[0]});
+  $('count').innerHTML=`${list.length}<small>of ${ALL.filter(x=>S.disc||!x.disc).length} burners match</small>`;
   $('conv').textContent=r==null?'Leave blank to see every rating.':S.unit==='gph'?`≈ ${Math.round(r).toLocaleString()} MBH input`:`≈ ${(r/G).toFixed(2)} GPH oil equivalent`;
   const ticks=[20,50,100,200,500,1000,2000,5000,10000];
   const gl=ticks.map(t=>`<div class="grid" style="left:${pos(t)}%"></div>`).join('');
   $('ax').innerHTML=ticks.map(t=>`<span style="left:${pos(t)}%">${t>=1000?t/1000+'k':t}</span>`).join('');
   const req=r!=null?`<div class="req" style="left:${pos(Math.min(Math.max(r,15),15000))}%"></div>`:'';
-  $('lad').innerHTML=list.length?list.map(x=>{const[a,b]=mb(x);const fz=fit(x,r);return`<div class="lr" data-n="${x.n}" title="${x.b} ${x.n}: ${fmt(x)}"><div class="nm">${x.n}<small>${x.b}</small></div><div class="track">${gl}${req}<div class="bar ${x.f}${x.disc?' off':''}" style="left:${pos(a)}%;width:${Math.max(pos(b)-pos(a),.8)}%"></div></div></div>`}).join(''):'<div class="empty">No burner meets every filter. Loosen the footprint or power limits, or check the firing rate unit.</div>';
+  $('lad').innerHTML=list.length?list.map(x=>{const[a,b]=mb(x);const fz=fit(x,r);return`<div class="lr" data-n="${esc(x.n)}" title="${esc(x.b+' '+x.n)}: ${fmt(x)}"><div class="nm">${esc(x.n)}<small>${x.prev?'Preview':esc(x.b)}</small></div><div class="track">${gl}${req}<div class="bar ${x.f}${x.disc?' off':''}" style="left:${pos(a)}%;width:${Math.max(pos(b)-pos(a),.8)}%"></div></div></div>`}).join(''):'<div class="empty">No burner meets every filter. Loosen the footprint or power limits, or check the firing rate unit.</div>';
   $('tb').innerHTML=list.map(x=>{const fz=fit(x,r);const d=Array.isArray(x.dim)?x.dim.map(n=>+n.toFixed(2)).join(' × '):x.dim==='spec'?'See spec sheet':'Not published';
-    return`<tr id="r-${x.n.replace(/\W/g,'')}"><td><b><a href="${x.u}" target="_blank" rel="noopener">${x.n}</a></b><br><span class="note">${x.b}${x.disc?' · discontinued':''}</span></td><td><span class="fuel ${x.f}">${x.f==='oil'?'Oil':'Gas'}</span>${x.bio?`<br><span class="tag">${x.bio}</span>`:''}${x.lp?`<br><span class="tag">LP: ${x.lp}</span>`:''}</td><td class="n">${fmt(x)}${sub(x)?`<br><span class="note">${sub(x)}</span>`:''}</td><td>${fz?`<span class="fit ${fz}">${fz==='ok'?'Sweet spot':'Edge of range'}</span>`:'<span class="note">Enter rate</span>'}</td><td>${x.vt}</td><td>${x.m.map(m=>`<span class="tag">${MODES[m]}</span>`).join('')}</td><td class="n">${d}</td><td>${x.tube}</td><td>${x.a.map(a=>`<span class="tag">${APPS[a]}</span>`).join('')}</td><td>${x.note}</td></tr>`}).join('');
+    return`<tr id="r-${x.n.replace(/\W/g,'')}"><td><b><a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.n)}</a></b><br><span class="note">${esc(x.b)}${x.disc?' · discontinued':''}${x.prev?' · <b class=pv>preview, not saved</b>':''}</span></td><td><span class="fuel ${x.f}">${x.f==='oil'?'Oil':'Gas'}</span>${x.bio?`<br><span class="tag">${esc(x.bio)}</span>`:''}${x.lp?`<br><span class="tag">LP: ${esc(x.lp)}</span>`:''}</td><td class="n">${fmt(x)}${sub(x)?`<br><span class="note">${sub(x)}</span>`:''}</td><td>${fz?`<span class="fit ${fz}">${fz==='ok'?'Sweet spot':'Edge of range'}</span>`:'<span class="note">Enter rate</span>'}</td><td>${esc(x.vt)}</td><td>${x.m.map(m=>`<span class="tag">${MODES[m]}</span>`).join('')}</td><td class="n">${d}</td><td>${esc(x.tube)}</td><td>${x.a.map(a=>`<span class="tag">${APPS[a]}</span>`).join('')}</td><td>${esc(x.note)}</td></tr>`}).join('');
 }
 function sync(){
   seg('f-fuel',[['all','All'],['oil','Oil'],['gas','Gas']],'fuel');
-  seg('f-brand',[['all','Both'],[BK,BK],[WY,WY]],'brand');
+  seg('f-brand',[['all','All'],...[...new Set(D.map(x=>x.b))].map(b=>[b,b])],'brand');
   seg('f-mode',[['any','Any'],...Object.entries(MODES)],'mode');
   $('f-volt').innerHTML=['12dc','24dc','120','240','3p240','3p480'].map(k=>[k,VOLTS[k]]).map(([k,t])=>`<label class="chk"><input type="checkbox" data-v="${k}" ${S.volt.includes(k)?'checked':''}> ${t}</label>`).join('');
   $('rate').value=S.rate;$('unit').value=S.unit;$('app').value=S.app;$('maxh').value=S.maxh;$('maxw').value=S.maxw;
@@ -269,7 +295,51 @@ const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');setTime
 $('copy').onclick=async()=>{const r=reqMBH();const head=r!=null?`Required input: ${S.rate} ${S.unit.toUpperCase()} (~${Math.round(r).toLocaleString()} MBH)\n`:'';
   const txt=head+list.map(x=>{const fz=fit(x,r);return`${x.b} ${x.n} | ${x.f==='oil'?'Oil':'Gas'} | ${fmt(x)} | ${x.vt} | ${x.m.map(m=>MODES[m]).join('/')}${fz?' | '+(fz==='ok'?'sweet spot':'edge of range'):''}\n  ${x.u}`}).join('\n');
   try{await navigator.clipboard.writeText(txt||'No matches');toast(`Copied ${list.length} burners`)}catch(e){toast('Copy blocked by browser')}};
-sync();
+/* ---------- Add a burner ---------- */
+const af=$('addf');
+$('a-power').innerHTML=BurnerSchema.POWER.map(t=>`<label class="chk"><input type="checkbox" name="power" value="${t}"> ${t}</label>`).join('');
+$('a-modes').innerHTML=BurnerSchema.MODES.map(t=>`<label class="chk"><input type="checkbox" name="modes" value="${t}"> ${t}</label>`).join('');
+$('a-apps').innerHTML=BurnerSchema.APPS.map(t=>`<label class="chk"><input type="checkbox" name="applications" value="${t}"> ${t}</label>`).join('');
+const unitLbl=()=>{const g=af.fuel.value==='gas';document.querySelectorAll('.a-unit').forEach(u=>u.textContent=g?'MBH':'GPH');$('a-lpwrap').hidden=!g};
+af.fuel.onchange=unitLbl;
+const dimMode=()=>{const pub=af.dimmode.value==='published';$('a-dims').hidden=!pub};
+for(const r of af.dimmode)r.onchange=dimMode;
+const readForm=()=>{const f=af.elements,o={};
+  const t=k=>f[k].value.trim();const n=k=>f[k].value===''?undefined:Number(f[k].value);
+  o.name=t('name');o.brand=t('brand');o.fuel=f.fuel.value;o.min=n('min');o.max=n('max');
+  o.power=[...af.querySelectorAll('[name=power]:checked')].map(x=>x.value);o.powerText=t('powerText');
+  o.modes=[...af.querySelectorAll('[name=modes]:checked')].map(x=>x.value);
+  o.dims=f.dimmode.value==='published'?[n('dh'),n('dw'),n('dd')]:f.dimmode.value;
+  o.airTube=t('airTube');o.applications=[...af.querySelectorAll('[name=applications]:checked')].map(x=>x.value);
+  if(t('biofuel'))o.biofuel=t('biofuel');if(o.fuel==='gas'&&t('propane'))o.propane=t('propane');if(f.discontinued.checked)o.discontinued=true;
+  o.notes=t('notes');o.link=t('link');
+  if(Array.isArray(o.dims)&&o.dims.some(v=>v===undefined))o.dims=undefined;
+  for(const k of Object.keys(o))if(o[k]===undefined||o[k]==='')delete o[k];
+  return o};
+const LBL={name:'Model name',brand:'Brand',fuel:'Fuel',min:'Min firing rate',max:'Max firing rate',power:'Power available',powerText:'Power details',modes:'Firing modes',dims:'Chassis dimensions',airTube:'Air tube / insertion',applications:'Applications',notes:'Selling note',link:'Link',biofuel:'Biofuel rating',propane:'Propane',discontinued:'Discontinued'};
+const nice=m=>{let k=m.match(/^Missing "(\w+)"$/);if(k)return `${LBL[k[1]]||k[1]}: required`;k=m.match(/^(\w+):(.*)$/);if(k&&LBL[k[1]])return LBL[k[1]]+':'+k[2];return m};
+let lastOut='';
+af.onsubmit=e=>{e.preventDefault();const o=readForm();
+  const errs=BurnerSchema.check(o);
+  if(errs.length===0&&RAW.concat(PREV.map(x=>x.raw)).some(r=>r.brand.toLowerCase()===o.brand.toLowerCase()&&r.name.toLowerCase()===o.name.toLowerCase()))errs.push(`${o.brand} ${o.name} is already in the list`);
+  if(errs.length){$('a-out').hidden=true;$('a-err').hidden=false;$('a-err').innerHTML='<b>Fill in or fix these before it can be added:</b><ul>'+errs.map(m=>`<li>${esc(nice(m))}</li>`).join('')+'</ul>';$('a-err').scrollIntoView({block:'nearest'});return}
+  $('a-err').hidden=true;
+  lastOut=',\n  '+JSON.stringify(o);
+  $('a-json').textContent=lastOut;$('a-out').hidden=false;
+  const rec=toRec(o);rec.prev=true;PREV.push(rec);render();toast(`${o.name} added to the chart as a preview`);};
+$('a-copy').onclick=async()=>{try{await navigator.clipboard.writeText(lastOut);toast('Entry copied')}catch(e){toast('Copy blocked: select the text and copy it')}};
+$('a-clear').onclick=()=>{PREV=[];render();toast('Previews cleared')};
+$('a-reset').onclick=()=>{af.reset();unitLbl();dimMode();$('a-err').hidden=true;$('a-out').hidden=true};
+$('a-edit').href=REPO+'/edit/main/html/burners.json';
+unitLbl();dimMode();
+
+/* ---------- Load data ---------- */
+fetch('burners.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(list=>{
+  const bad=BurnerSchema.checkAll(list);if(bad.length)console.warn('burners.json problems:',bad);
+  RAW=list;D=list.filter(o=>BurnerSchema.check(o).length===0).map(toRec);
+  $('a-brands').innerHTML=[...new Set(RAW.map(o=>o.brand))].map(b=>`<option value="${esc(b)}">`).join('');
+  sync();
+}).catch(err=>{$('lad').innerHTML=`<div class="empty">Could not load burners.json (${esc(err.message)}). Open this page through the web server, not as a file.</div>`;sync()});
 }
 </script>
 </body>

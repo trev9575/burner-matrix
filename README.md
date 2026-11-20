@@ -4,7 +4,7 @@ Internal field-sales tool for choosing Beckett and Wayne (incl. Comet) oil and g
 Filter by fuel, required firing rate (GPH or MBH), power available, firing mode, application
 and footprint; the chart shows every matching burner's firing range against the job.
 
-It is a single static page (`html/index.html`) served by nginx. The official Beckett and Wayne
+It is a static page (`html/index.html`) that reads its data from `html/burners.json`, served by nginx. The official Beckett and Wayne
 logos are downloaded from each maker's website when the image is built.
 
 ## 1. Build (automatic)
@@ -40,15 +40,42 @@ Then open `http://YOUR-UNRAID-IP:8088`.
 
 ## 3. Updating
 
-Edit `html/index.html` (on GitHub, or locally and push) → wait for the Action to finish
+Edit `html/burners.json` or `html/index.html` (on GitHub, or locally and push) → wait for the Action to finish
 (a minute or two) → in Unraid click **Check for Updates** on the Docker tab, then
 **Apply update**.
 
-Burner data lives in the `const D=[ ... ]` array near the bottom of `index.html`, one line per
-burner. Fields: `n` name, `b` brand, `f` fuel (`oil`/`gas`), `lo`/`hi` firing range (GPH for
-oil, MBH for gas), `v` power codes (`12dc`, `24dc`, `120`, `240` = 208-240 1P, `3p240`,
-`3p480`, `none`), `m` modes (`onoff`, `hilo`, `mod`), `dim` [H, W, D] inches or `'spec'`/`null`,
-`a` applications (`res`, `lc`, `ci`, `mob`, `conv`, `proc`), plus `bio`, `lp`, `disc`, `note`, `u` link.
+## Adding or changing burners
+
+All burner data is in **`html/burners.json`**, one burner per line. You don't touch the page code.
+
+**Easiest way:** open the tool, scroll to **Add a burner**, and fill in the form. It won't produce an
+entry until every required field is complete and sensible (e.g. GPH for oil, MBH for gas, min below max,
+a real https link). Click **Check & preview** to see it on the chart, then **Copy entry**, open
+`burners.json` on GitHub (the form links straight to the editor), paste it after the last `}` and
+before the final `]`, and **Commit changes**.
+
+**Editing an existing burner:** change its line in `burners.json` on GitHub and commit.
+
+Every commit runs `scripts/validate.js` first. If an entry is incomplete or a comma is missing, the
+build stops with a message saying which burner and which field, and the running site is left as it was.
+Check it locally with `node scripts/validate.js`.
+
+| Field | What to put |
+|---|---|
+| `name`, `brand` | Model and brand. New brands appear in the brand filter automatically. |
+| `fuel` | `"oil"` or `"gas"` |
+| `min`, `max` | Firing range: **GPH** for oil, **MBH** (1,000 Btu/h input) for gas |
+| `power` | Any of `"12 VDC"`, `"24 VDC"`, `"120 VAC"`, `"208-240 VAC 1P"`, `"208-240 VAC 3P"`, `"480 VAC 3P"`, `"no power"` |
+| `powerText` | The wording shown in the table, e.g. `"120 VAC std; 240 VAC 1φ option"` |
+| `modes` | Any of `"on/off"`, `"low-high-low"`, `"modulating"` |
+| `dims` | `[height, width, depth]` in inches, or `"spec sheet"`, or `"not published"` |
+| `airTube` | Air tube lengths or insertion |
+| `applications` | Any of `"residential"`, `"light commercial"`, `"commercial/industrial"`, `"mobile/DC equipment"`, `"oil-to-gas conversion"`, `"ovens/process"` |
+| `notes` | Short selling note |
+| `link` | `https://` product page or spec sheet |
+| `biofuel`, `propane`, `discontinued` | Optional. e.g. `"B20"`, `"Conversion kit"`, `true` |
+
+The allowed values live in `html/schema.js`, which the form and the build check share.
 
 ## Run without GitHub
 
