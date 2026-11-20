@@ -3,7 +3,7 @@
 (function (root) {
   const POWER = ['12 VDC', '24 VDC', '120 VAC', '208-240 VAC 1P', '208-240 VAC 3P', '480 VAC 3P', 'no power'];
   const MODES = ['on/off', 'low-high-low', 'modulating'];
-  const APPS = ['residential', 'light commercial', 'commercial/industrial', 'mobile/DC equipment', 'oil-to-gas conversion', 'ovens/process'];
+  const APPS = ['residential', 'light commercial', 'commercial/industrial', 'pressure washers/road equipment', 'oil-to-gas conversion', 'ovens/process'];
   const DIMS_TEXT = ['spec sheet', 'not published'];
   const REQUIRED = ['name', 'brand', 'fuel', 'min', 'max', 'power', 'powerText', 'modes', 'dims', 'airTube', 'applications', 'notes', 'link'];
   const OPTIONAL = ['powerStd', 'biofuel', 'propane', 'discontinued'];

@@ -70,7 +70,7 @@ Check it locally with `node scripts/validate.js`.
 | `modes` | Any of `"on/off"`, `"low-high-low"`, `"modulating"` |
 | `dims` | `[height, width, depth]` in inches, or `"spec sheet"`, or `"not published"` |
 | `airTube` | Air tube lengths or insertion |
-| `applications` | Any of `"residential"`, `"light commercial"`, `"commercial/industrial"`, `"mobile/DC equipment"`, `"oil-to-gas conversion"`, `"ovens/process"` |
+| `applications` | Any of `"residential"`, `"light commercial"`, `"commercial/industrial"`, `"pressure washers/road equipment"`, `"oil-to-gas conversion"`, `"ovens/process"` |
 | `notes` | Short selling note |
 | `link` | `https://` product page or spec sheet |
 | `biofuel`, `propane`, `discontinued` | Optional. e.g. `"B20"`, `"Conversion kit"`, `true` |

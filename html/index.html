@@ -257,11 +257,11 @@ const REPO='https://github.com/trev9575/burner-matrix';
 const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const PW={'12 VDC':'12dc','24 VDC':'24dc','120 VAC':'120','208-240 VAC 1P':'240','208-240 VAC 3P':'3p240','480 VAC 3P':'3p480','no power':'none'};
 const MW={'on/off':'onoff','low-high-low':'hilo','modulating':'mod'};
-const AW={'residential':'res','light commercial':'lc','commercial/industrial':'ci','mobile/DC equipment':'mob','oil-to-gas conversion':'conv','ovens/process':'proc'};
+const AW={'residential':'res','light commercial':'lc','commercial/industrial':'ci','pressure washers/road equipment':'mob','oil-to-gas conversion':'conv','ovens/process':'proc'};
 // readable burners.json entry -> internal record
 const toRec=o=>({std:o.powerStd?PW[o.powerStd]:null,n:o.name,b:o.brand,f:o.fuel,lo:o.min,hi:o.max,v:o.power.map(x=>PW[x]),vt:o.powerText,m:o.modes.map(x=>MW[x]),dim:Array.isArray(o.dims)?o.dims:o.dims==='spec sheet'?'spec':null,tube:o.airTube,a:o.applications.map(x=>AW[x]),bio:o.biofuel,lp:o.propane,disc:!!o.discontinued,note:o.notes,u:o.link,raw:o});
 let D=[],RAW=[],PREV=[];
-const APPS={res:'Residential heating',lc:'Light commercial',ci:'Commercial / industrial',mob:'Mobile / DC equipment',conv:'Oil-to-gas conversion',proc:'Ovens & process heat'};
+const APPS={res:'Residential heating',lc:'Light commercial',ci:'Commercial / industrial',mob:'Pressure washers / road equipment',conv:'Oil-to-gas conversion',proc:'Ovens & process heat'};
 const VOLTS={'12dc':'12 VDC','24dc':'24 VDC','120':'120 VAC','240':'208-240 VAC 1P','3p240':'208-240 VAC 3P','3p480':'480 VAC 3P'};
 const MODES={onoff:'On/Off',hilo:'Lo-Hi-Lo',mod:'Modulating'};
 const G=140;
