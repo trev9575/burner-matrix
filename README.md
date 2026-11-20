@@ -86,8 +86,10 @@ docker run -d --name burner-matrix --restart unless-stopped -p 8088:80 burner-ma
 
 ## Notes
 
-- If a logo URL changes and the build fails, commit your own files as `html/logos/beckett.png`
-  and `html/logos/wayne.svg` and delete the two `ADD` lines in the `Dockerfile`.
+- Logos are downloaded during the build. If a site refuses (the build log shows
+  `WARNING: could not download ...`), the page shows the brand names as text instead. To make it
+  permanent, commit the files as `html/logos/beckett.png` and `html/logos/wayne.svg`; the build
+  uses committed files and skips the download.
 - The page has no login. For reps outside the office, put it behind a reverse proxy with auth
   or a VPN (Tailscale/WireGuard) rather than opening the port.
 - Specifications were compiled from beckettcorp.com, waynecombustion.com and preferred-mfg.com
