@@ -74,7 +74,7 @@ Check it locally with `node scripts/validate.js`.
 | `notes` | Short selling note |
 | `link` | `https://` product page or spec sheet |
 | `image` | Optional. https link to a product photo, shown when you hover over the burner name |
-| `biofuel`, `propane`, `discontinued` | Optional. e.g. `"B20"`, `"Conversion kit"`, `true` |
+| `biofuel`, `propane` | Optional. e.g. `"B20"`, `"Conversion kit"` |
 
 The allowed values live in `html/schema.js`, which the form and the build check share.
 

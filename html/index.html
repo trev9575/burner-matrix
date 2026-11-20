@@ -186,7 +186,6 @@ b.pv{color:#b35c00;font-size:12px}
       <div class="opts">
         <label class="chk"><input type="checkbox" id="bio"> Biofuel rated (B20 or higher)</label>
         <label class="chk"><input type="checkbox" id="lp"> Propane / LP capable</label>
-        <label class="chk"><input type="checkbox" id="disc"> Show discontinued</label>
       </div>
       <div class="acts"><button class="btn pri" id="copy">Copy shortlist</button><button class="btn" id="reset">Reset</button></div>
     </div>
@@ -240,7 +239,6 @@ b.pv{color:#b35c00;font-size:12px}
       <div class="fg">
         <label><span>Biofuel rating <span class="u">optional</span></span><input name="biofuel" type="text" placeholder="e.g. B20"></label>
         <label id="a-lpwrap" hidden><span>Propane / LP <span class="u">optional</span></span><input name="propane" type="text" placeholder="e.g. Conversion kit"></label>
-        <label class="chk" style="align-self:end"><input type="checkbox" name="discontinued"> Discontinued</label>
       </div>
       <label style="margin-top:12px">Selling note<textarea name="notes" id="a-notes" rows="2" placeholder="What it's best at, limits, anything a rep should know"></textarea></label>
       <div class="acts" style="margin-top:14px"><button class="btn pri" type="submit">Check &amp; preview</button><button class="btn" type="button" id="a-reset">Clear form</button><button class="btn" type="button" id="a-clear">Remove previews</button></div>
@@ -281,7 +279,7 @@ const L0=Math.log10(15),L1=Math.log10(15000);
 const pos=v=>(Math.log10(v)-L0)/(L1-L0)*100;
 const $=id=>document.getElementById(id);
 const VOLTS0={'12dc':1,'24dc':1,'120':1,'240':1,'3p240':1,'3p480':1};
-const DEF={fuel:'all',brand:'all',rate:'',unit:'gph',volt:[],mode:'any',app:'',maxh:'',maxw:'',unk:true,bio:false,lp:false,disc:false};
+const DEF={fuel:'all',brand:'all',rate:'',unit:'gph',volt:[],mode:'any',app:'',maxh:'',maxw:'',unk:true,bio:false,lp:false};
 let S;try{const sv=localStorage.getItem('burnerSel2');S=Object.assign({},DEF,sv?JSON.parse(sv):{});S.volt=(S.volt||[]).filter(v=>v in VOLTS0)}catch(e){S=Object.assign({},DEF)}
 const save=()=>{try{localStorage.setItem('burnerSel2',JSON.stringify(S))}catch(e){}};
 const seg=(el,opts,key)=>{$(el).innerHTML=opts.map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="${S[key]===v}">${t}</button>`).join('');$(el).onclick=e=>{const b=e.target.closest('button');if(!b)return;S[key]=b.dataset.v;sync();}};
@@ -293,7 +291,6 @@ const pctOf=(x,r)=>{const[a,b]=mb(x);return Math.round(r/b*100)};
 const fmt=x=>x.f==='oil'?`${x.lo.toFixed(2)}–${x.hi.toFixed(2)} GPH`:`${x.lo.toLocaleString()}–${x.hi.toLocaleString()} MBH`;
 const sub=x=>{const[a,b]=mb(x);return x.f==='oil'?`${Math.round(a)}–${Math.round(b).toLocaleString()} MBH`:''};
 const pass=x=>{
-  if(!S.disc&&x.disc)return false;
   if(S.fuel!=='all'&&x.f!==S.fuel)return false;
   if(S.brand!=='all'&&x.b!==S.brand)return false;
   if(S.volt.length&&!x.v.includes('none')&&!S.volt.some(v=>x.v.includes(v)))return false;
@@ -310,7 +307,7 @@ function render(){
   const r=reqMBH();
   const ALL=D.concat(PREV);
   list=ALL.filter(pass).sort((p,q)=>{const o={ok:0,edge:1};if(r!=null&&fit(p,r)!==fit(q,r))return o[fit(p,r)]-o[fit(q,r)];return mb(p)[0]-mb(q)[0]});
-  $('count').innerHTML=`${list.length}<small>of ${ALL.filter(x=>S.disc||!x.disc).length} burners match</small>`;
+  $('count').innerHTML=`${list.length}<small>of ${ALL.length} burners match</small>`;
   $('conv').textContent=r==null?'Leave blank to see every rating.':S.unit==='gph'?`≈ ${Math.round(r).toLocaleString()} MBH input`:`≈ ${(r/G).toFixed(2)} GPH oil equivalent`;
   const ticks=[20,50,100,200,500,1000,2000,5000,10000];
   const gl=ticks.map(t=>`<div class="grid" style="left:${pos(t)}%"></div>`).join('');
@@ -326,14 +323,14 @@ function sync(){
   seg('f-mode',[['any','Any'],...Object.entries(MODES)],'mode');
   $('f-volt').innerHTML=['12dc','24dc','120','240','3p240','3p480'].map(k=>[k,VOLTS[k]]).map(([k,t])=>`<label class="chk"><input type="checkbox" data-v="${k}" ${S.volt.includes(k)?'checked':''}> ${t}</label>`).join('');
   $('rate').value=S.rate;$('unit').value=S.unit;$('app').value=S.app;$('maxh').value=S.maxh;$('maxw').value=S.maxw;
-  for(const k of['unk','bio','lp','disc'])$(k).checked=S[k];
+  for(const k of['unk','bio','lp'])$(k).checked=S[k];
   save();render();
 }
 $('app').innerHTML+=Object.entries(APPS).map(([k,t])=>`<option value="${k}">${t}</option>`).join('');
 $('f-volt').onchange=e=>{const v=e.target.dataset.v;S.volt=e.target.checked?[...S.volt,v]:S.volt.filter(x=>x!==v);save();render()};
 for(const k of['rate','maxh','maxw'])$(k).oninput=e=>{S[k]=e.target.value;save();render()};
 for(const k of['unit','app'])$(k).onchange=e=>{S[k]=e.target.value;save();render()};
-for(const k of['unk','bio','lp','disc'])$(k).onchange=e=>{S[k]=e.target.checked;save();render()};
+for(const k of['unk','bio','lp'])$(k).onchange=e=>{S[k]=e.target.checked;save();render()};
 $('reset').onclick=()=>{S=JSON.parse(JSON.stringify(DEF));sync()};
 $('lad').onclick=e=>{const row=e.target.closest('.lr');if(!row)return;const t=$('r-'+row.dataset.n.replace(/\W/g,''));if(!t)return;document.querySelectorAll('tr.hl').forEach(x=>x.classList.remove('hl'));t.classList.add('hl');t.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'center'})};
 const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1800)};
@@ -357,7 +354,7 @@ const readForm=()=>{const f=af.elements,o={};
   o.modes=[...af.querySelectorAll('[name=modes]:checked')].map(x=>x.value);
   o.dims=f.dimmode.value==='published'?[n('dh'),n('dw'),n('dd')]:f.dimmode.value;
   o.airTube=t('airTube');o.applications=[...af.querySelectorAll('[name=applications]:checked')].map(x=>x.value);
-  if(t('biofuel'))o.biofuel=t('biofuel');if(o.fuel==='gas'&&t('propane'))o.propane=t('propane');if(f.discontinued.checked)o.discontinued=true;
+  if(t('biofuel'))o.biofuel=t('biofuel');if(o.fuel==='gas'&&t('propane'))o.propane=t('propane');
   o.notes=t('notes');o.link=t('link');if(t('image'))o.image=t('image');
   if(Array.isArray(o.dims)&&o.dims.some(v=>v===undefined))o.dims=undefined;
   for(const k of Object.keys(o))if(o[k]===undefined||o[k]==='')delete o[k];
