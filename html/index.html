@@ -33,8 +33,16 @@ h2{font-size:22px}
 .hero p{margin:10px 0 0;max-width:62ch;color:#fff}
 .count{font-size:46px;font-weight:700;line-height:1;white-space:nowrap;color:#fff}
 .count small{font-weight:500;font-size:14px;margin-left:6px}
-.main{display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px}
-.rail{background:var(--panel);border-radius:4px;padding:18px;align-self:start;position:sticky;top:12px;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.main{display:grid;grid-template-columns:minmax(0,1fr);gap:20px}
+.rail{background:var(--panel);border-radius:4px;padding:18px 20px 14px;box-shadow:0 1px 2px rgba(0,0,0,.08);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px 28px;align-items:start}
+.rail fieldset{margin:0}
+.rail .f-power{grid-column:span 2}
+.rail .f-last{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 24px;border-top:1px solid var(--rule);padding-top:12px}
+.rail .opts{display:flex;flex-wrap:wrap;gap:4px 24px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips .chk{min-height:40px;padding:0 12px 0 10px;border-radius:3px;background:var(--btn);color:var(--ink);font-weight:600;gap:6px}
+.chips .chk:has(input:checked){background:var(--red);color:#fff}
+.chips .chk input{accent-color:#fff}
 fieldset{border:0;padding:0;margin:0 0 16px}
 legend,.lbl{font-weight:700;font-size:14px;margin-bottom:6px;padding:0;display:block}
 .seg{display:flex;flex-wrap:wrap;gap:6px}
@@ -124,7 +132,8 @@ details[open]>summary h2::before{content:"– "}
 .aout pre{background:#fff;border:1px solid var(--rule);padding:10px;overflow-x:auto;white-space:pre-wrap;overflow-wrap:anywhere;font-size:12.5px}
 .aout a{color:var(--red);font-weight:700}
 b.pv{color:#b35c00;font-size:12px}
-@media(max-width:900px){.main{grid-template-columns:minmax(0,1fr)}.rail{position:static}}
+@media(max-width:1000px){.rail{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.rail{grid-template-columns:minmax(0,1fr)}.rail .f-power{grid-column:auto}}
 @media(max-width:600px){.util{display:none}.brand .div{display:none}.axis,.lr{grid-template-columns:96px minmax(0,1fr)}.lr .nm small{display:none}.axis span:nth-child(even){display:none}table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--rule)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:7.5em;background:none !important}.stack td::before{content:attr(data-l);float:inline-start;width:7em;margin-inline-start:-7.5em;color:var(--mute);font-size:12.5px}.stack td:empty{display:none}}
 @media(prefers-reduced-motion:reduce){.toast{transition:none}}
 </style>
@@ -147,27 +156,29 @@ b.pv{color:#b35c00;font-size:12px}
 
 <div class="band main">
   <aside class="rail" aria-label="Filters">
-    <fieldset><legend>Fuel</legend><div class="seg" id="f-fuel"></div></fieldset>
-    <fieldset><legend>Brand</legend><div class="seg" id="f-brand"></div></fieldset>
-    <fieldset>
+    <fieldset class="f-rate">
       <label class="lbl" for="rate">Required firing rate</label>
-      <div class="row"><input type="number" id="rate" min="0" step="any" inputmode="decimal" placeholder="e.g. 1.25"><select id="unit" aria-label="Rate unit" style="width:104px;flex:none"><option value="gph">GPH</option><option value="mbh">MBH</option></select></div>
+      <div class="row"><input type="number" id="rate" min="0" step="any" inputmode="decimal" placeholder="e.g. 1.25"><select id="unit" aria-label="Rate unit" style="width:96px;flex:none"><option value="gph">GPH</option><option value="mbh">MBH</option></select></div>
       <p class="hint" id="conv">Leave blank to see every rating.</p>
     </fieldset>
-    <fieldset><legend>Power available</legend><div id="f-volt"></div><p class="hint">Tick every supply on site. Unpowered burners (A55/A60) always show.</p></fieldset>
+    <fieldset><legend>Fuel</legend><div class="seg" id="f-fuel"></div></fieldset>
+    <fieldset><legend>Brand</legend><div class="seg" id="f-brand"></div></fieldset>
     <fieldset><legend>Firing mode</legend><div class="seg" id="f-mode"></div></fieldset>
+    <fieldset class="f-power"><legend>Power available</legend><div id="f-volt" class="chips"></div><p class="hint">Tick every supply on site. Unpowered burners (A55/A60) always show.</p></fieldset>
     <fieldset><legend>Application</legend>
       <select id="app"><option value="">Any application</option></select></fieldset>
     <fieldset><legend>Footprint limit (chassis face)</legend>
       <div class="row"><input type="number" id="maxh" min="0" step="0.5" placeholder="Max H in" aria-label="Maximum height in inches"><input type="number" id="maxw" min="0" step="0.5" placeholder="Max W in" aria-label="Maximum width in inches"></div>
-      <label class="chk"><input type="checkbox" id="unk" checked> Keep burners with unpublished size</label>
+      <label class="chk"><input type="checkbox" id="unk" checked> Keep unpublished sizes</label>
     </fieldset>
-    <fieldset>
-      <label class="chk"><input type="checkbox" id="bio"> Biofuel rated (B20 or higher)</label>
-      <label class="chk"><input type="checkbox" id="lp"> Propane / LP capable</label>
-      <label class="chk"><input type="checkbox" id="disc"> Show discontinued</label>
-    </fieldset>
-    <div class="acts"><button class="btn pri" id="copy">Copy shortlist</button><button class="btn" id="reset">Reset</button></div>
+    <div class="f-last">
+      <div class="opts">
+        <label class="chk"><input type="checkbox" id="bio"> Biofuel rated (B20 or higher)</label>
+        <label class="chk"><input type="checkbox" id="lp"> Propane / LP capable</label>
+        <label class="chk"><input type="checkbox" id="disc"> Show discontinued</label>
+      </div>
+      <div class="acts"><button class="btn pri" id="copy">Copy shortlist</button><button class="btn" id="reset">Reset</button></div>
+    </div>
   </aside>
 
   <section aria-label="Firing range chart">
