@@ -86,10 +86,11 @@ docker run -d --name burner-matrix --restart unless-stopped -p 8088:80 burner-ma
 
 ## Notes
 
-- Logos are downloaded during the build. If a site refuses (the build log shows
-  `WARNING: could not download ...`), the page shows the brand names as text instead. To make it
-  permanent, commit the files as `html/logos/beckett.png` and `html/logos/wayne.svg`; the build
-  uses committed files and skips the download.
+- **Logos:** the Beckett and Wayne sites block cloud build servers, so the container downloads the logos
+  when it starts on your server (see the container log: `logos: downloaded ...`). If that's blocked too,
+  the page shows the brand names as text. For a permanent fix, upload the files to the repo as
+  `html/logos/beckett.png` and `html/logos/wayne.svg` (GitHub → `html` folder → **Add file → Upload files**,
+  type `logos/` in the name box); committed files are always used.
 - The page has no login. For reps outside the office, put it behind a reverse proxy with auth
   or a VPN (Tailscale/WireGuard) rather than opening the port.
 - Specifications were compiled from beckettcorp.com, waynecombustion.com and preferred-mfg.com
