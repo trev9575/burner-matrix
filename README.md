@@ -4,8 +4,7 @@ Internal field-sales tool for choosing Beckett and Wayne (incl. Comet) oil and g
 Filter by fuel, required firing rate (GPH or MBH), power available, firing mode, application
 and footprint; the chart shows every matching burner's firing range against the job.
 
-It is a static page (`html/index.html`) that reads its data from `html/burners.json`, served by nginx. The official Beckett and Wayne
-logos are downloaded from each maker's website when the image is built.
+It is a static page (`html/index.html`) that reads its data from `html/burners.json`, served by nginx. 
 
 ## 1. Build (automatic)
 
@@ -86,11 +85,7 @@ docker run -d --name burner-matrix --restart unless-stopped -p 8088:80 burner-ma
 
 ## Notes
 
-- **Logos:** the Beckett and Wayne sites block cloud build servers, so the container downloads the logos
-  when it starts on your server (see the container log: `logos: downloaded ...`). If that's blocked too,
-  the page shows the brand names as text. For a permanent fix, upload the files to the repo as
-  `html/logos/beckett.png` and `html/logos/wayne.svg` (GitHub → `html` folder → **Add file → Upload files**,
-  type `logos/` in the name box); committed files are always used.
+- **Logos** are in `html/logos/` (`beckett.png`, `wayne.png`). Replace those files to update them.
 - The page has no login. For reps outside the office, put it behind a reverse proxy with auth
   or a VPN (Tailscale/WireGuard) rather than opening the port.
 - Specifications were compiled from beckettcorp.com, waynecombustion.com and preferred-mfg.com
