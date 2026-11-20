@@ -260,7 +260,7 @@ const toRec=o=>({n:o.name,b:o.brand,f:o.fuel,lo:o.min,hi:o.max,v:o.power.map(x=>
 let D=[],RAW=[],PREV=[];
 const APPS={res:'Residential heating',lc:'Light commercial',ci:'Commercial / industrial',mob:'Mobile / DC equipment',conv:'Oil-to-gas conversion',proc:'Ovens & process heat'};
 const VOLTS={'12dc':'12 VDC','24dc':'24 VDC','120':'120 VAC','240':'208-240 VAC 1P','3p240':'208-240 VAC 3P','3p480':'480 VAC 3P'};
-const MODES={onoff:'On/off',hilo:'Low-high-low',mod:'Modulating'};
+const MODES={onoff:'On/Off',hilo:'Lo-Hi-Lo',mod:'Modulating'};
 const G=140;
 const mb=x=>x.f==='oil'?[x.lo*G,x.hi*G]:[x.lo,x.hi];
 const L0=Math.log10(15),L1=Math.log10(15000);
