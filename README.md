@@ -65,7 +65,8 @@ Check it locally with `node scripts/validate.js`.
 | `fuel` | `"oil"` or `"gas"` |
 | `min`, `max` | Firing range: **GPH** for oil, **MBH** (1,000 Btu/h input) for gas |
 | `power` | Any of `"12 VDC"`, `"24 VDC"`, `"120 VAC"`, `"208-240 VAC 1P"`, `"208-240 VAC 3P"`, `"480 VAC 3P"`, `"no power"` |
-| `powerText` | The wording shown in the table, e.g. `"120 VAC std; 240 VAC 1φ option"` |
+| `powerStd` | Optional. Which of the `power` values is standard; shown as a **Std** tag in the table |
+| `powerText` | Reference notes on the electrical options (not shown in the table) |
 | `modes` | Any of `"on/off"`, `"low-high-low"`, `"modulating"` |
 | `dims` | `[height, width, depth]` in inches, or `"spec sheet"`, or `"not published"` |
 | `airTube` | Air tube lengths or insertion |

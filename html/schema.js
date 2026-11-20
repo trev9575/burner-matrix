@@ -6,7 +6,7 @@
   const APPS = ['residential', 'light commercial', 'commercial/industrial', 'mobile/DC equipment', 'oil-to-gas conversion', 'ovens/process'];
   const DIMS_TEXT = ['spec sheet', 'not published'];
   const REQUIRED = ['name', 'brand', 'fuel', 'min', 'max', 'power', 'powerText', 'modes', 'dims', 'airTube', 'applications', 'notes', 'link'];
-  const OPTIONAL = ['biofuel', 'propane', 'discontinued'];
+  const OPTIONAL = ['powerStd', 'biofuel', 'propane', 'discontinued'];
 
   const str = v => typeof v === 'string' && v.trim().length > 0;
   const num = v => typeof v === 'number' && isFinite(v) && v > 0;
@@ -29,6 +29,7 @@
       if (b.fuel === 'gas' && b.max < 10) e.push('gas firing rate is in MBH; max looks too low (did you enter GPH or MMBH?)');
     }
     if ('power' in b && !subset(b.power, POWER)) e.push(`power: pick one or more of ${POWER.join(', ')}`);
+    if ('powerStd' in b && !(Array.isArray(b.power) && b.power.includes(b.powerStd))) e.push('powerStd: must be one of the ticked power options (or leave it out)');
     if ('powerText' in b && !str(b.powerText)) e.push('powerText: describe the electrical options (e.g. "120 VAC std; 240 VAC option")');
     if ('modes' in b && !subset(b.modes, MODES)) e.push(`modes: pick one or more of ${MODES.join(', ')}`);
     if ('dims' in b) {

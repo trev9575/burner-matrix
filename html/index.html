@@ -90,7 +90,9 @@ tbody tr:nth-child(even) td{background:#f7f7f4}
 .pw.ac3{background:#f1ecf8;border-color:#6b3fa0;color:#55307f}
 .pw.dc{background:#eef6ee;border-color:#2f7d32;color:#246327}
 .pw.np{background:#f2f2ef;border-color:#8a8a84;color:#55554f}
-.pwn{margin-top:6px;font-size:12px;line-height:1.4;color:var(--mute)}
+.pw i{font-style:normal;font-size:11px;font-weight:700;background:currentColor;border-radius:2px;padding:0 4px;margin-left:4px;vertical-align:1px}
+.pw i{color:inherit}
+.pw.ac1 i{background:#1d4f86;color:#fff}.pw.ac3 i{background:#55307f;color:#fff}.pw.dc i{background:#246327;color:#fff}
 #tbl td:nth-child(8){min-width:240px}
 #tbl td:nth-child(2){width:1%}
 td.n{white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -217,7 +219,8 @@ b.pv{color:#b35c00;font-size:12px}
         <fieldset><legend>Applications</legend><div id="a-apps"></div></fieldset>
       </div>
       <div class="fg">
-        <label>Power details shown in the table<input name="powerText" id="a-pt" type="text" placeholder="120 VAC std; 240 VAC 1φ option"></label>
+        <label><span>Standard supply <span class="u">optional</span></span><select name="powerStd" id="a-std"><option value="">None / any of the ticked</option></select></label>
+        <label>Power notes (for reference)<input name="powerText" id="a-pt" type="text" placeholder="120 VAC std; 240 VAC 1φ option"></label>
         <label>Air tube / insertion<input name="airTube" id="a-tube" type="text" placeholder='6" to 15", or See spec sheet'></label>
       </div>
       <fieldset><legend>Chassis dimensions</legend>
@@ -256,7 +259,7 @@ const PW={'12 VDC':'12dc','24 VDC':'24dc','120 VAC':'120','208-240 VAC 1P':'240'
 const MW={'on/off':'onoff','low-high-low':'hilo','modulating':'mod'};
 const AW={'residential':'res','light commercial':'lc','commercial/industrial':'ci','mobile/DC equipment':'mob','oil-to-gas conversion':'conv','ovens/process':'proc'};
 // readable burners.json entry -> internal record
-const toRec=o=>({n:o.name,b:o.brand,f:o.fuel,lo:o.min,hi:o.max,v:o.power.map(x=>PW[x]),vt:o.powerText,m:o.modes.map(x=>MW[x]),dim:Array.isArray(o.dims)?o.dims:o.dims==='spec sheet'?'spec':null,tube:o.airTube,a:o.applications.map(x=>AW[x]),bio:o.biofuel,lp:o.propane,disc:!!o.discontinued,note:o.notes,u:o.link,raw:o});
+const toRec=o=>({std:o.powerStd?PW[o.powerStd]:null,n:o.name,b:o.brand,f:o.fuel,lo:o.min,hi:o.max,v:o.power.map(x=>PW[x]),vt:o.powerText,m:o.modes.map(x=>MW[x]),dim:Array.isArray(o.dims)?o.dims:o.dims==='spec sheet'?'spec':null,tube:o.airTube,a:o.applications.map(x=>AW[x]),bio:o.biofuel,lp:o.propane,disc:!!o.discontinued,note:o.notes,u:o.link,raw:o});
 let D=[],RAW=[],PREV=[];
 const APPS={res:'Residential heating',lc:'Light commercial',ci:'Commercial / industrial',mob:'Mobile / DC equipment',conv:'Oil-to-gas conversion',proc:'Ovens & process heat'};
 const VOLTS={'12dc':'12 VDC','24dc':'24 VDC','120':'120 VAC','240':'208-240 VAC 1P','3p240':'208-240 VAC 3P','3p480':'480 VAC 3P'};
@@ -304,7 +307,7 @@ function render(){
   const req=r!=null?`<div class="req" style="left:${pos(Math.min(Math.max(r,15),15000))}%"></div>`:'';
   $('lad').innerHTML=list.length?list.map(x=>{const[a,b]=mb(x);const fz=fit(x,r);return`<div class="lr" data-n="${esc(x.n)}" title="${esc(x.b+' '+x.n)}: ${fmt(x)}"><div class="nm">${esc(x.n)}<small>${x.prev?'Preview':esc(x.b)}</small></div><div class="track">${gl}${req}<div class="bar ${x.f}${x.disc?' off':''}${fz==='edge'?' edgebar':''}" style="left:${pos(a)}%;width:${Math.max(pos(b)-pos(a),.8)}%"></div></div></div>`}).join(''):'<div class="empty">No burner meets every filter. Loosen the footprint or power limits, or check the firing rate unit.</div>';
   $('tb').innerHTML=list.map(x=>{const fz=fit(x,r);const d=Array.isArray(x.dim)?x.dim.map(n=>+n.toFixed(2)).join(' × '):x.dim==='spec'?'See spec sheet':'Not published';
-    return`<tr id="r-${x.n.replace(/\W/g,'')}" class="${fz==='edge'?'edge':''}"><td><b class="nm-${x.f}"><a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.n)}</a></b><br><span class="note">${esc(x.b)}${x.disc?' · discontinued':''}${x.prev?' · <b class=pv>preview, not saved</b>':''}</span></td><td><span class="fuel ${x.f}">${x.f==='oil'?'Oil':'Gas'}</span>${x.bio?`<br><span class="tag">${esc(x.bio)}</span>`:''}${x.lp?`<br><span class="tag">LP: ${esc(x.lp)}</span>`:''}</td><td class="n">${fmt(x)}${sub(x)?`<br><span class="note">${sub(x)}</span>`:''}${fz==='ok'?`<br><span class="fit ok">Sweet spot</span>`:fz==='edge'?`<br><span class="fit edge">${where(x,r)==='max'?`Near MAX · ${pctOf(x,r)}% of max`:`Near MIN · ${Math.round((r/mb(x)[0]-1)*100)}% above min`}</span>`:''}</td><td><div class="pws">${['12dc','24dc','120','240','3p240','3p480','none'].filter(k=>x.v.includes(k)).map(k=>`<span class="pw ${PCH[k][1]}">${PCH[k][0]}</span>`).join('')}</div>${x.vt.trim()==='120 VAC'?'':`<div class="pwn">${esc(x.vt)}</div>`}</td><td>${x.m.map(m=>`<span class="tag">${MODES[m]}</span>`).join('')}</td><td class="n">${d}</td><td>${x.a.map(a=>`<span class="tag">${APPS[a]}</span>`).join('')}</td><td>${esc(x.note)}</td></tr>`}).join('');
+    return`<tr id="r-${x.n.replace(/\W/g,'')}" class="${fz==='edge'?'edge':''}"><td><b class="nm-${x.f}"><a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.n)}</a></b><br><span class="note">${esc(x.b)}${x.disc?' · discontinued':''}${x.prev?' · <b class=pv>preview, not saved</b>':''}</span></td><td><span class="fuel ${x.f}">${x.f==='oil'?'Oil':'Gas'}</span>${x.bio?`<br><span class="tag">${esc(x.bio)}</span>`:''}${x.lp?`<br><span class="tag">LP: ${esc(x.lp)}</span>`:''}</td><td class="n">${fmt(x)}${sub(x)?`<br><span class="note">${sub(x)}</span>`:''}${fz==='ok'?`<br><span class="fit ok">Sweet spot</span>`:fz==='edge'?`<br><span class="fit edge">${where(x,r)==='max'?`Near MAX · ${pctOf(x,r)}% of max`:`Near MIN · ${Math.round((r/mb(x)[0]-1)*100)}% above min`}</span>`:''}</td><td><div class="pws">${['12dc','24dc','120','240','3p240','3p480','none'].filter(k=>x.v.includes(k)).map(k=>`<span class="pw ${PCH[k][1]}">${PCH[k][0]}${x.std===k&&x.v.length>1?' <i>Std</i>':''}</span>`).join('')}</div></td><td>${x.m.map(m=>`<span class="tag">${MODES[m]}</span>`).join('')}</td><td class="n">${d}</td><td>${x.a.map(a=>`<span class="tag">${APPS[a]}</span>`).join('')}</td><td>${esc(x.note)}</td></tr>`}).join('');
 }
 function sync(){
   seg('f-fuel',[['all','All'],['oil','Oil'],['gas','Gas']],'fuel');
@@ -329,6 +332,7 @@ $('copy').onclick=async()=>{const r=reqMBH();const head=r!=null?`Required input:
 /* ---------- Add a burner ---------- */
 const af=$('addf');
 $('a-power').innerHTML=BurnerSchema.POWER.map(t=>`<label class="chk"><input type="checkbox" name="power" value="${t}"> ${t}</label>`).join('');
+$('a-std').innerHTML+=BurnerSchema.POWER.map(t=>`<option value="${t}">${t}</option>`).join('');
 $('a-modes').innerHTML=BurnerSchema.MODES.map(t=>`<label class="chk"><input type="checkbox" name="modes" value="${t}"> ${t}</label>`).join('');
 $('a-apps').innerHTML=BurnerSchema.APPS.map(t=>`<label class="chk"><input type="checkbox" name="applications" value="${t}"> ${t}</label>`).join('');
 const unitLbl=()=>{const g=af.fuel.value==='gas';document.querySelectorAll('.a-unit').forEach(u=>u.textContent=g?'MBH':'GPH');$('a-lpwrap').hidden=!g};
@@ -338,7 +342,7 @@ for(const r of af.dimmode)r.onchange=dimMode;
 const readForm=()=>{const f=af.elements,o={};
   const t=k=>f[k].value.trim();const n=k=>f[k].value===''?undefined:Number(f[k].value);
   o.name=t('name');o.brand=t('brand');o.fuel=f.fuel.value;o.min=n('min');o.max=n('max');
-  o.power=[...af.querySelectorAll('[name=power]:checked')].map(x=>x.value);o.powerText=t('powerText');
+  o.power=[...af.querySelectorAll('[name=power]:checked')].map(x=>x.value);o.powerText=t('powerText');if(f.powerStd.value)o.powerStd=f.powerStd.value;
   o.modes=[...af.querySelectorAll('[name=modes]:checked')].map(x=>x.value);
   o.dims=f.dimmode.value==='published'?[n('dh'),n('dw'),n('dd')]:f.dimmode.value;
   o.airTube=t('airTube');o.applications=[...af.querySelectorAll('[name=applications]:checked')].map(x=>x.value);
@@ -347,7 +351,7 @@ const readForm=()=>{const f=af.elements,o={};
   if(Array.isArray(o.dims)&&o.dims.some(v=>v===undefined))o.dims=undefined;
   for(const k of Object.keys(o))if(o[k]===undefined||o[k]==='')delete o[k];
   return o};
-const LBL={name:'Model name',brand:'Brand',fuel:'Fuel',min:'Min firing rate',max:'Max firing rate',power:'Power available',powerText:'Power details',modes:'Firing modes',dims:'Chassis dimensions',airTube:'Air tube / insertion',applications:'Applications',notes:'Selling note',link:'Link',biofuel:'Biofuel rating',propane:'Propane',discontinued:'Discontinued'};
+const LBL={name:'Model name',brand:'Brand',fuel:'Fuel',min:'Min firing rate',max:'Max firing rate',power:'Power available',powerText:'Power notes',powerStd:'Standard supply',modes:'Firing modes',dims:'Chassis dimensions',airTube:'Air tube / insertion',applications:'Applications',notes:'Selling note',link:'Link',biofuel:'Biofuel rating',propane:'Propane',discontinued:'Discontinued'};
 const nice=m=>{let k=m.match(/^Missing "(\w+)"$/);if(k)return `${LBL[k[1]]||k[1]}: required`;k=m.match(/^(\w+):(.*)$/);if(k&&LBL[k[1]])return LBL[k[1]]+':'+k[2];return m};
 let lastOut='';
 af.onsubmit=e=>{e.preventDefault();const o=readForm();
