@@ -1,0 +1,7 @@
+services:
+  burner-matrix:
+    image: ghcr.io/trev9575/burner-matrix:latest
+    container_name: burner-matrix
+    ports:
+      - "8088:80"
+    restart: unless-stopped

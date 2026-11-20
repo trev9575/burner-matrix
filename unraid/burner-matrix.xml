@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>burner-matrix</Name>
+  <Repository>ghcr.io/trev9575/burner-matrix:latest</Repository>
+  <Registry>https://github.com/trev9575/burner-matrix/pkgs/container/burner-matrix</Registry>
+  <Network>bridge</Network>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/trev9575/burner-matrix/issues</Support>
+  <Project>https://github.com/trev9575/burner-matrix</Project>
+  <Overview>Internal field-sales burner selection matrix for Beckett and Wayne (incl. Comet) oil and gas burners. Filter by fuel, firing rate, power supply, firing mode, application and footprint. Static page, no data stored.</Overview>
+  <Category>Productivity: Tools:</Category>
+  <WebUI>http://[IP]:[PORT:80]/</WebUI>
+  <Icon>https://raw.githubusercontent.com/trev9575/burner-matrix/main/html/favicon.svg</Icon>
+  <Config Name="Web UI port" Target="80" Default="8088" Mode="tcp" Description="Port for the web page" Type="Port" Display="always" Required="true" Mask="false">8088</Config>
+</Container>
