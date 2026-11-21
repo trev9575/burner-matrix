@@ -287,6 +287,10 @@ async function api(req, res, url) {
     if (!canSee(me, r)) return send(res, 404, { error: 'RFQ not found' });
     if (!rm[2] && m === 'GET') return send(res, 200, r);
     if (!rm[2] && m === 'PUT') {
+      // Only the person drafting it can change an RFQ, and only before it's emailed and within 2 hours of creating it.
+      // After that it's a record: reopen shows it read-only, and "Copy to new RFQ" starts a revision.
+      if (r.by !== me.name || (r.sends || []).length || Date.now() - Date.parse(r.date) > 2 * 3600e3)
+        return send(res, 409, { error: 'This RFQ is locked. Use “Copy to new RFQ” to make a revised one.' });
       const b = await readBody(req, 512 * 1024);
       r.fields = cleanFields(b.fields); r.updated = new Date().toISOString(); r.editedBy = me.name;
       writeJSON(rfqFile(r.id), r);

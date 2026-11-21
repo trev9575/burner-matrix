@@ -45,7 +45,7 @@ starts and after each edit, and the burner is switched to the local copy. Admin 
 **Store web photos on server** button to retry; anything that can't be downloaded is listed so you can upload it by hand.
 
 **Saved RFQs.** RFQs are saved on the server (`/data/rfqs`). Reps see their own under **My RFQs**;
-editors and admins see everyone's (**RFQs**, with an *Only mine* filter) and can reopen, edit, download or resend any of them.
+editors and admins see everyone's (**RFQs**, with an *Only mine* filter). Saved RFQs open **read-only** (download, print or resend only); **Copy to new RFQ** starts a revision with a new number. The server also refuses changes once an RFQ is emailed or 2 hours old.
 
 **Email PDF.** The server turns the RFQ into a PDF (headless Chromium, built into the image) and emails it.
 Fill in the SMTP variables on the container: `SMTP_HOST`, `SMTP_PORT` (465 SSL or 587 STARTTLS), `SMTP_USER`,
