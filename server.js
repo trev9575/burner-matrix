@@ -262,7 +262,7 @@ const server = http.createServer(async (req, res) => {
     if (p.startsWith('/photos/')) { // uploaded photos first, then the ones shipped in the image
       const name = path.basename(p);
       const up = path.join(F.photos, name);
-      return sendFile(res, fs.existsSync(up) ? up : path.join(HTML, 'photos', name), 'public, max-age=86400');
+      return sendFile(res, fs.existsSync(up) ? up : path.join(HTML, 'photos', name), 'public, max-age=300');
     }
     const file = path.normalize(path.join(HTML, p === '/' ? 'index.html' : p));
     if (!file.startsWith(HTML + path.sep) || /\/\./.test(p) || p.endsWith('burners.json')) return send(res, 404, 'Not found', 'text/plain');
