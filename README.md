@@ -39,6 +39,11 @@ the password variable.
 a **Rep** account (matrix + RFQs only); **Editors** can also change burners; **Admins** also manage people.
 Each person's full name, phone and email fill in *Prepared by* on their RFQs. Admins set these under
 **Users**; anyone can change their own from **My profile** at the top of the main page.
+**Photos are stored on the server.** Any burner photo that points at a website (the Wayne/Comet
+ones in the seed list, or a URL pasted in admin) is downloaded into `/data/photos` when the container
+starts and after each edit, and the burner is switched to the local copy. Admin → History has a
+**Store web photos on server** button to retry; anything that can't be downloaded is listed so you can upload it by hand.
+
 **Saved RFQs.** RFQs are saved on the server (`/data/rfqs`). Reps see their own under **My RFQs**;
 editors and admins see everyone's (**RFQs**, with an *Only mine* filter) and can reopen, edit, download or resend any of them.
 

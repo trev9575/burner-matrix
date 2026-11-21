@@ -150,6 +150,57 @@ const saveBurners = (list, who, action) => {
   return null;
 };
 
+// ---------- photos: keep a local copy of any web-hosted burner photo ----------
+const IMG_TYPES = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
+const sniff = buf => buf[0] === 0xff && buf[1] === 0xd8 ? '.jpg' : buf.slice(1, 4).toString() === 'PNG' ? '.png'
+  : buf.slice(0, 4).toString() === 'RIFF' && buf.slice(8, 12).toString() === 'WEBP' ? '.webp' : null;
+async function fetchImage(url) {
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 20000);
+  try {
+    const r = await fetch(url, { signal: ctl.signal, redirect: 'follow', headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Safari/537.36',
+      Accept: 'image/avif,image/webp,image/png,image/jpeg,*/*;q=0.8', Referer: new URL(url).origin + '/' } });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const buf = Buffer.from(await r.arrayBuffer());
+    if (buf.length > 6 * 1024 * 1024) throw new Error('too large');
+    const ext = sniff(buf) || IMG_TYPES[(r.headers.get('content-type') || '').split(';')[0]];
+    if (!ext || !sniff(buf)) throw new Error('not an image');
+    return { buf, ext };
+  } finally { clearTimeout(t); }
+}
+let localizing = null;
+function localizePhotos(who = 'server') {
+  if (localizing) return localizing;
+  localizing = (async () => {
+    const list = getBurners(), done = new Map(), failed = [];
+    let stored = 0;
+    for (const b of list) {
+      if (!/^https?:\/\//i.test(b.image || '')) continue;
+      const url = b.image;
+      if (!done.has(url)) {
+        try {
+          const { buf, ext } = await fetchImage(url);
+          const base = decodeURIComponent(new URL(url).pathname.split('/').pop() || 'photo').replace(/\.[a-z0-9]+$/i, '')
+            .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 50) || 'photo';
+          const brand = String(b.brand).toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          const file = `${brand}-${base}-${crypto.createHash('sha1').update(url).digest('hex').slice(0, 6)}${ext}`;
+          fs.writeFileSync(path.join(F.photos, file), buf);
+          done.set(url, 'photos/' + file);
+        } catch (e) { done.set(url, null); console.warn(`Photo for ${b.brand} ${b.name} not stored (${e.message}): ${url}`); }
+      }
+      if (done.get(url)) { b.image = done.get(url); stored++; } else failed.push(`${b.brand} ${b.name}`);
+    }
+    if (stored) {
+      const cur = getBurners(); // apply to the current list in case it changed while downloading
+      for (const c of cur) { const n = list.find(x => keyOf(x) === keyOf(c)); if (n && c.image && done.get(c.image)) c.image = done.get(c.image); }
+      saveBurners(cur, who, `Stored ${stored} web photo${stored === 1 ? '' : 's'} on the server`);
+      console.log(`Stored ${stored} web photos locally.`);
+    }
+    return { stored, failed };
+  })().finally(() => { localizing = null; });
+  return localizing;
+}
+
 // ---------- RFQs ----------
 const rfqFile = id => path.join(F.rfqs, id + '.json');
 const getRfq = id => /^[a-f0-9]{12}$/.test(id) ? readJSON(rfqFile(id), null) : null;
@@ -280,6 +331,7 @@ async function api(req, res, url) {
     if (dup >= 0 && dup !== i) return send(res, 422, { errors: [`${burner.brand} ${burner.name} already exists`] });
     if (i >= 0) list[i] = burner; else list.push(burner);
     const e = saveBurners(list, me.name, (i >= 0 ? 'Edited ' : 'Added ') + burner.brand + ' ' + burner.name);
+    if (!e && /^https?:/i.test(burner.image || '')) setTimeout(() => localizePhotos(me.name).catch(() => {}), 100);
     return e ? send(res, 422, { errors: e }) : send(res, 200, { ok: true });
   }
   if (p === '/api/burners' && m === 'DELETE') {
@@ -304,6 +356,7 @@ async function api(req, res, url) {
     const e = saveBurners(h.burners, me.name, `Undid "${h.action}" (${h.at.slice(0, 16).replace('T', ' ')})`);
     return e ? send(res, 422, { errors: e }) : send(res, 200, { ok: true });
   }
+  if (p === '/api/photos/localize' && m === 'POST') return send(res, 200, await localizePhotos(me.name));
   if (p === '/api/photo' && m === 'POST') { // {name, data: dataURL}
     const { name = '', data = '' } = await readBody(req);
     const mm = /^data:image\/(jpeg|png|webp);base64,(.+)$/.exec(data);
@@ -389,4 +442,7 @@ const server = http.createServer(async (req, res) => {
     if (!e.code) console.error(e);
   }
 });
-server.listen(PORT, () => console.log(`Burner matrix on port ${PORT}, data in ${DATA}`));
+server.listen(PORT, () => {
+  console.log(`Burner matrix on port ${PORT}, data in ${DATA}`);
+  setTimeout(() => localizePhotos().catch(e => console.warn('Photo download failed:', e.message)), 3000);
+});

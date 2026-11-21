@@ -184,7 +184,8 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
     <!-- HISTORY -->
     <section id="t-history" hidden>
       <div class="panel">
-        <div class="row" style="justify-content:space-between;margin-bottom:12px"><h2>Change history</h2><a class="btn" id="exp" download="burners.json" href="#">Download burners.json</a></div>
+        <div class="row" style="justify-content:space-between;margin-bottom:12px"><h2>Change history</h2><span class="row" style="gap:8px"><button class="btn" id="loc" type="button" title="Download any photo that still points at a website and store it on this server">Store web photos on server</button><a class="btn" id="exp" download="burners.json" href="#">Download burners.json</a></span></div>
+        <div id="locmsg" class="msg" hidden style="margin-bottom:12px"></div>
         <p class="u" style="margin:0 0 12px">Every save is recorded. <b>Undo</b> puts the whole list back the way it was just before that change (and that is recorded too, so it can be undone).</p>
         <div id="hc" hidden class="confirm" style="margin-bottom:12px"><span id="hct"></span><button class="btn dan" id="hy">Yes, undo</button><button class="btn" id="hn">Cancel</button></div>
         <div class="scroll"><table><thead><tr><th>When</th><th>Who</th><th>Change</th><th></th></tr></thead><tbody id="hist"></tbody></table></div>
@@ -334,6 +335,10 @@ async function loadHistory(){const h=await call('GET','/api/history');
 $('hist').onclick=e=>{const b=e.target.closest('button[data-id]');if(!b)return;pendingRestore=b.dataset.id;$('hct').textContent=`Put the list back to just before “${b.dataset.a}”? Later changes will be undone too.`;$('hc').hidden=false};
 $('hn').onclick=()=>{$('hc').hidden=true;pendingRestore=null};
 $('hy').onclick=async()=>{try{await call('POST','/api/restore',{id:pendingRestore});$('hc').hidden=true;toast('Restored.');loadHistory();loadBurners()}catch(err){toast(err.message)}};
+$('loc').onclick=async e=>{const b=e.currentTarget;b.disabled=true;b.textContent='Downloading photos…';
+  try{const r=await call('POST','/api/photos/localize',{});toast(r.stored?`Stored ${r.stored} photo(s) on the server`+(r.failed.length?`; ${r.failed.length} failed`:''):r.failed.length?`${r.failed.length} photo(s) could not be downloaded`:'All photos are already on the server');
+    $('locmsg').hidden=true;if(r.failed.length)showMsg($('locmsg'),'err','Could not download photos for: '+esc(r.failed.join(', '))+'. Upload them by hand in the burner editor.');loadHistory();loadBurners()}
+  catch(err){toast(err.message)}finally{b.disabled=false;b.textContent='Store web photos on server'}};
 $('exp').onclick=async e=>{e.preventDefault();const data=await call('GET','/api/burners');const url=URL.createObjectURL(new Blob(['[\n'+data.map(o=>'  '+JSON.stringify(o)).join(',\n')+'\n]\n'],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='burners.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)};
 
 /* ---------- users ---------- */
