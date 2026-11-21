@@ -195,12 +195,15 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
     <section id="t-users" hidden>
       <div class="panel" style="display:grid;gap:16px">
         <h2>Who can sign in</h2>
-        <p class="u" style="margin:0"><b>Editors</b> can change burners. <b>Admins</b> can also add and remove people.</p>
-        <div class="scroll"><table><thead><tr><th>Username</th><th>Role</th><th>New password</th><th></th></tr></thead><tbody id="ulist"></tbody></table></div>
+        <p class="u" style="margin:0">Everyone needs an account to open the site. <b>Reps</b> can use the matrix and make RFQs. <b>Editors</b> can also change burners. <b>Admins</b> can also add and remove people. Name, phone and email fill in “Prepared by” on RFQs; people can change their own from <i>My profile</i> on the main page.</p>
+        <div class="scroll"><table><thead><tr><th>Username</th><th>Role</th><th>Full name</th><th>Phone</th><th>Email</th><th></th><th>New password</th><th></th></tr></thead><tbody id="ulist"></tbody></table></div>
         <form id="uf" class="grid" style="align-items:end">
           <label class="f">New username<input type="text" name="name" autocapitalize="none" placeholder="e.g. jsmith"></label>
           <label class="f">Password<input type="text" name="password" placeholder="8+ characters"></label>
-          <label class="f">Role<select name="role"><option value="editor">Editor</option><option value="admin">Admin</option></select></label>
+          <label class="f">Full name<input type="text" name="full" placeholder="e.g. Jane Smith"></label>
+          <label class="f">Phone<input type="text" inputmode="tel" name="phone"></label>
+          <label class="f">Email<input type="text" inputmode="email" autocapitalize="none" name="email"></label>
+          <label class="f">Role<select name="role"><option value="rep">Rep</option><option value="editor">Editor</option><option value="admin">Admin</option></select></label>
           <button class="btn pri" type="submit">Add person</button>
         </form>
         <div id="umsg" class="msg" hidden></div>
@@ -242,7 +245,7 @@ $('lf').onsubmit=async e=>{e.preventDefault();$('lerr').hidden=true;
   catch(err){$('lerr').textContent=err.message;$('lerr').hidden=false}};
 $('out').onclick=async()=>{await call('POST','/api/logout',{});me=null;showLogin('Signed out.')};
 async function boot(){try{me=await call('GET','/api/me');start()}catch(e){showLogin()}}
-function start(){$('login').hidden=true;$('app').hidden=false;$('who').textContent=`${me.name} (${me.role})`;$('usertab').hidden=me.role!=='admin';tab('burners');loadBurners()}
+function start(){if(me.role==='rep'){location.replace('/');return}$('login').hidden=true;$('app').hidden=false;$('who').textContent=`${me.name} (${me.role})`;$('usertab').hidden=me.role!=='admin';tab('burners');loadBurners()}
 
 /* ---------- tabs ---------- */
 function tab(t){if(t!=='burners'&&!leaveOk())return;document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));
@@ -336,17 +339,20 @@ $('exp').onclick=async e=>{e.preventDefault();const data=await call('GET','/api/
 /* ---------- users ---------- */
 async function loadUsers(){const u=await call('GET','/api/users');
   $('ulist').innerHTML=u.map(x=>`<tr data-n="${esc(x.name)}"><td><b>${esc(x.name)}</b>${x.name===me.name?' <span class="u">(you)</span>':''}</td>
-   <td><select class="ur" aria-label="Role for ${esc(x.name)}"><option value="editor"${x.role==='editor'?' selected':''}>Editor</option><option value="admin"${x.role==='admin'?' selected':''}>Admin</option></select></td>
+   <td><select class="ur" style="min-width:92px" aria-label="Role for ${esc(x.name)}">${[['rep','Rep'],['editor','Editor'],['admin','Admin']].map(([v,l])=>`<option value="${v}"${x.role===v?' selected':''}>${l}</option>`).join('')}</select></td>
+   ${['full','phone','email'].map(k=>`<td><input type="text" class="uc" data-k="${k}" value="${esc(x[k])}" aria-label="${k} for ${esc(x.name)}" style="min-width:110px"></td>`).join('')}
+   <td><button class="btn usv">Save</button></td>
    <td><div class="row" style="flex-wrap:nowrap"><input type="text" class="up" placeholder="8+ characters" aria-label="New password for ${esc(x.name)}"><button class="btn us">Set</button></div></td>
    <td>${x.name===me.name?'':'<button class="btn dan ux">Remove</button>'}</td></tr>`).join('')}
 $('ulist').addEventListener('change',async e=>{const s=e.target.closest('.ur');if(!s)return;const n=s.closest('tr').dataset.n;
-  try{await call('PATCH','/api/users',{name:n,role:s.value});toast(`${n} is now ${s.value==='admin'?'an admin':'an editor'}`)}catch(err){showMsg($('umsg'),'err',esc(err.message));loadUsers()}});
+  try{await call('PATCH','/api/users',{name:n,role:s.value});toast(`${n} is now ${{admin:'an admin',editor:'an editor',rep:'a rep'}[s.value]}`)}catch(err){showMsg($('umsg'),'err',esc(err.message));loadUsers()}});
 $('ulist').addEventListener('click',async e=>{const tr=e.target.closest('tr');if(!tr)return;const n=tr.dataset.n;
+  if(e.target.closest('.usv')){const b={name:n};tr.querySelectorAll('.uc').forEach(i=>b[i.dataset.k]=i.value);try{await call('PATCH','/api/users',b);toast(`Saved ${n}`)}catch(err){showMsg($('umsg'),'err',esc(err.message))}}
   if(e.target.closest('.us')){const p=tr.querySelector('.up').value;try{await call('PATCH','/api/users',{name:n,password:p});toast(`Password set for ${n}. They'll need to sign in again.`);tr.querySelector('.up').value=''}catch(err){showMsg($('umsg'),'err',esc(err.message))}}
   if(e.target.closest('.ux')){const b=e.target.closest('.ux');if(!b.dataset.armed){b.dataset.armed=1;b.textContent='Click to confirm';setTimeout(()=>{delete b.dataset.armed;b.textContent='Remove'},4000);return}
     try{await call('DELETE','/api/users',{name:n});toast(`${n} removed`);loadUsers()}catch(err){showMsg($('umsg'),'err',esc(err.message))}}});
 $('uf').onsubmit=async e=>{e.preventDefault();const U=e.target.elements;
-  try{await call('POST','/api/users',{name:U.name.value,password:U.password.value,role:U.role.value});toast(`${U.name.value} added`);e.target.reset();$('umsg').hidden=true;loadUsers()}
+  try{await call('POST','/api/users',{name:U.name.value,password:U.password.value,role:U.role.value,full:U.full.value,phone:U.phone.value,email:U.email.value});toast(`${U.name.value} added`);e.target.reset();$('umsg').hidden=true;loadUsers()}
   catch(err){showMsg($('umsg'),'err',esc(err.message))}};
 
 /* ---------- password ---------- */

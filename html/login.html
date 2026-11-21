@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign in · Burner Selection Matrix</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Bitter:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light;--bg:#e3e3df;--ink:#2a2a2a;--mute:#5f5f5a;--red:#e71d2f}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);font:500 15px/1.6 Montserrat,Helvetica,Arial,sans-serif}
+.brand{background:#2a2a2a;display:flex;align-items:center;justify-content:center;gap:28px;padding:18px 16px}
+.brand img{height:48px;width:auto}
+.brand .div{width:1px;height:44px;background:#666}
+.band{background:var(--red);height:10px}
+main{flex:1;display:grid;place-items:center;padding:40px 16px}
+form{background:#fff;width:100%;max-width:380px;padding:28px;border-radius:4px;box-shadow:0 2px 10px rgba(0,0,0,.08);display:grid;gap:14px}
+.eb{font:700 12px/1.2 Bitter,Georgia,serif;letter-spacing:.12em;text-transform:uppercase;color:var(--red)}
+h1{margin:0;font-size:24px;line-height:1.15}
+p{margin:0;color:var(--mute);font-size:14px}
+label{display:grid;gap:4px;font-size:13px;font-weight:600}
+input{font:inherit;padding:9px 10px;border:1px solid #b9b9b2;border-radius:3px}
+input:focus{outline:2px solid var(--ink);outline-offset:1px}
+button{font:700 15px Montserrat,Helvetica,Arial,sans-serif;background:var(--red);color:#fff;border:0;border-radius:3px;padding:11px;cursor:pointer}
+button:disabled{opacity:.6}
+.err{background:#fde8ea;color:#8a1020;padding:8px 10px;border-radius:3px;font-size:14px}
+[hidden]{display:none !important}
+</style>
+</head>
+<body>
+<div class="brand" role="banner">
+  <img src="logos/beckett.png" alt="Beckett">
+  <span class="div" aria-hidden="true"></span>
+  <img src="logos/wayne.png" alt="Wayne Combustion Systems">
+</div>
+<div class="band"></div>
+<main>
+  <form id="f">
+    <div class="eb">Internal sales tool</div>
+    <h1>Burner Selection Matrix</h1>
+    <p>Sign in with the account your admin gave you.</p>
+    <label>Username<input id="u" autocomplete="username" autocapitalize="none" required autofocus></label>
+    <label>Password<input id="p" type="password" autocomplete="current-password" required></label>
+    <button type="submit" id="b">Sign in</button>
+    <div id="e" class="err" role="alert" hidden></div>
+  </form>
+</main>
+<script>
+{
+const $=id=>document.getElementById(id);
+const next=new URLSearchParams(location.search).get('next')==='admin'?'/admin':'/';
+fetch('/api/me',{credentials:'same-origin'}).then(r=>{if(r.ok)location.replace(next)}).catch(()=>{});
+$('f').onsubmit=async e=>{e.preventDefault();$('e').hidden=true;$('b').disabled=true;
+  try{const r=await fetch('/api/login',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-BM':'1'},body:JSON.stringify({name:$('u').value,password:$('p').value})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(j.error||'Sign-in failed');
+    location.replace(j.role==='rep'?'/':next)}
+  catch(err){$('e').textContent=err.message;$('e').hidden=false;$('p').value='';$('p').focus()}
+  finally{$('b').disabled=false}};
+}
+</script>
+</body>
+</html>

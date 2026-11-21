@@ -80,7 +80,7 @@ const readSession = req => {
   return u;
 };
 const cookie = (val, maxAge) =>
-  `bm_s=${val}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${COOKIE_SECURE ? '; Secure' : ''}`;
+  `bm_s=${val}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${COOKIE_SECURE ? '; Secure' : ''}`;
 
 // ---------- login rate limit ----------
 const attempts = new Map();
@@ -123,6 +123,11 @@ const readBody = (req, limit = 8 * 1024 * 1024) => new Promise((ok, bad) => {
   req.on('end', () => { try { ok(n ? JSON.parse(Buffer.concat(chunks).toString()) : {}); } catch { bad(Object.assign(new Error('Bad JSON'), { code: 400 })); } });
   req.on('error', bad);
 });
+const ROLES = ['rep', 'editor', 'admin'];
+const normRole = r => ROLES.includes(r) ? r : 'rep';
+const clip = v => String(v ?? '').trim().slice(0, 100);
+const contact = (u, b) => { for (const k of ['full', 'phone', 'email']) if (b[k] !== undefined) u[k] = clip(b[k]); };
+const pub = u => ({ name: u.name, role: u.role, full: u.full || '', phone: u.phone || '', email: u.email || '', created: u.created });
 const keyOf = b => (b.brand + '|' + b.name).toLowerCase();
 
 // ---------- burners + history ----------
@@ -143,7 +148,7 @@ const saveBurners = (list, who, action) => {
 // ---------- API ----------
 async function api(req, res, url) {
   const p = url.pathname, m = req.method;
-  // all writes must be same-origin JSON with our header (CSRF guard on top of SameSite=Strict)
+  // all writes must be same-origin JSON with our header (CSRF guard on top of SameSite=Lax)
   if (m !== 'GET' && (req.headers['x-bm'] !== '1' || !/application\/json/.test(req.headers['content-type'] || '')))
     return send(res, 403, { error: 'Bad request' });
 
@@ -156,7 +161,13 @@ async function api(req, res, url) {
     attempts.delete(ip);
     return send(res, 200, { name: u.name, role: u.role }, undefined, { 'Set-Cookie': cookie(makeToken(u.name, u.ver || 0), SESSION_HOURS * 3600) });
   }
-  // public: next RFQ sequence number for the day (shared by every rep using this server)
+  if (p === '/api/logout' && m === 'POST') return send(res, 200, { ok: true }, undefined, { 'Set-Cookie': cookie('', 0) });
+
+  const me = readSession(req);
+  if (p === '/api/me') return me ? send(res, 200, { ...pub(me), setup: true }) : send(res, 401, { error: 'Not signed in', setup: users.length > 0 });
+  if (!me) return send(res, 401, { error: 'Not signed in' });
+
+  // next RFQ sequence number for the day (shared by every rep using this server)
   if (p === '/api/rfq-seq' && m === 'POST') {
     const { date = '' } = await readBody(req, 256);
     if (!/^\d{6}$/.test(String(date))) return send(res, 400, { error: 'Bad date' });
@@ -166,14 +177,12 @@ async function api(req, res, url) {
     writeJSON(f, { date, n });
     return send(res, 200, { date, n });
   }
-  if (p === '/api/logout' && m === 'POST') return send(res, 200, { ok: true }, undefined, { 'Set-Cookie': cookie('', 0) });
-
-  const me = readSession(req);
-  if (p === '/api/me') return me ? send(res, 200, { name: me.name, role: me.role, setup: true }) : send(res, 401, { error: 'Not signed in', setup: users.length > 0 });
-  if (!me) return send(res, 401, { error: 'Not signed in' });
-
+  if (p === '/api/profile' && m === 'POST') { // anyone can update their own name / phone / email
+    contact(me, await readBody(req, 4096)); saveUsers(); return send(res, 200, pub(me));
+  }
   if (p === '/api/burners' && m === 'GET') return send(res, 200, getBurners());
 
+  if (me.role === 'rep' && p !== '/api/password') return send(res, 403, { error: 'Your account can view the matrix only' });
   if (p === '/api/burners' && m === 'PUT') { // save one burner (add or replace); body {original?:key, burner}
     const { original, burner } = await readBody(req);
     const list = getBurners();
@@ -231,14 +240,14 @@ async function api(req, res, url) {
   // ----- admin-only: users -----
   if (p.startsWith('/api/users')) {
     if (me.role !== 'admin') return send(res, 403, { error: 'Admins only' });
-    if (m === 'GET') return send(res, 200, users.map(u => ({ name: u.name, role: u.role, created: u.created })));
+    if (m === 'GET') return send(res, 200, users.map(pub));
     const b = await readBody(req, 4096);
     const name = String(b.name || '').trim().toLowerCase();
     if (m === 'POST') {
       if (!validName(name)) return send(res, 422, { error: 'Username: 2–32 letters, numbers, dot, dash or underscore' });
       if (users.some(u => u.name === name)) return send(res, 422, { error: 'That username exists' });
       if (String(b.password || '').length < 8) return send(res, 422, { error: 'Password must be at least 8 characters' });
-      users.push({ name, role: b.role === 'admin' ? 'admin' : 'editor', hash: hashPw(String(b.password)), created: new Date().toISOString() });
+      const nu = { name, role: normRole(b.role), hash: hashPw(String(b.password)), created: new Date().toISOString() }; contact(nu, b); users.push(nu);
       saveUsers(); return send(res, 200, { ok: true });
     }
     const u = users.find(x => x.name === name);
@@ -247,7 +256,8 @@ async function api(req, res, url) {
       if (b.password !== undefined) { if (String(b.password).length < 8) return send(res, 422, { error: 'Password must be at least 8 characters' });
         u.hash = hashPw(String(b.password)); u.ver = (u.ver || 0) + 1; }
       if (b.role) { if (u.role === 'admin' && b.role !== 'admin' && users.filter(x => x.role === 'admin').length < 2) return send(res, 422, { error: 'Keep at least one admin' });
-        u.role = b.role === 'admin' ? 'admin' : 'editor'; }
+        u.role = normRole(b.role); }
+      contact(u, b);
       saveUsers(); return send(res, 200, { ok: true });
     }
     if (m === 'DELETE') {
@@ -266,13 +276,24 @@ const server = http.createServer(async (req, res) => {
     const p = decodeURIComponent(url.pathname);
     if (p.startsWith('/api/')) return await api(req, res, url);
     if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, 'Method not allowed', 'text/plain');
+    // public bits: the sign-in page and what it needs
+    if (p === '/login' || p === '/login/') return sendPage(res, path.join(HTML, 'login.html'));
+    if (!(p === '/favicon.svg' || p.startsWith('/logos/'))) {
+      const me = readSession(req);
+      if (!me) {
+        if (p === '/' || p === '/index.html' || p === '/admin' || p === '/admin/')
+          return send(res, 302, '', 'text/plain', { Location: '/login' + (p.startsWith('/admin') ? '?next=admin' : '') });
+        return send(res, 401, 'Sign in required', 'text/plain');
+      }
+      if (me.role === 'rep' && p.startsWith('/admin')) return send(res, 302, '', 'text/plain', { Location: '/' });
+    }
     if (p === '/burners.json') return sendFile(res, F.burners);
     if (p === '/admin' || p === '/admin/') return sendPage(res, path.join(HTML, 'admin.html'));
     if (p === '/' || p === '/index.html') return sendPage(res, path.join(HTML, 'index.html'));
     if (p.startsWith('/photos/')) { // uploaded photos first, then the ones shipped in the image
       const name = path.basename(p);
       const up = path.join(F.photos, name);
-      return sendFile(res, fs.existsSync(up) ? up : path.join(HTML, 'photos', name), 'public, max-age=300');
+      return sendFile(res, fs.existsSync(up) ? up : path.join(HTML, 'photos', name), 'private, max-age=300');
     }
     const file = path.normalize(path.join(HTML, p === '/' ? 'index.html' : p));
     if (!file.startsWith(HTML + path.sep) || /\/\./.test(p) || p.endsWith('burners.json')) return send(res, 404, 'Not found', 'text/plain');

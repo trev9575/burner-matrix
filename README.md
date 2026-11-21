@@ -35,6 +35,12 @@ Every push to `main` checks `html/burners.json`, builds the image and publishes
 sign in at `/admin`, change your password, and add other people under **Users**. You can then blank
 the password variable.
 
+**Everyone needs an account.** The whole site (matrix, photos, data) is behind sign-in. Give each rep
+a **Rep** account (matrix + RFQs only); **Editors** can also change burners; **Admins** also manage people.
+Each person's full name, phone and email fill in *Prepared by* on their RFQs. Admins set these under
+**Users**; anyone can change their own from **My profile** at the top of the main page.
+RFQ numbers are `YYMMDD-NNMODEL`, where NN counts RFQs made that day across everyone (kept in `/data/rfq-seq.json`).
+
 Optional: `COOKIE_SECURE=true` if you only open it over https, `TRUST_PROXY=true` behind Nginx Proxy
 Manager / SWAG / a Cloudflare tunnel, `SESSION_HOURS` (default 12).
 
@@ -109,5 +115,5 @@ Or without Docker (Node 20+): `DATA_DIR=./data ADMIN_USER=trevor ADMIN_PASSWORD=
 
 - The public page has no sign-in. To reach it from outside the office, put it behind a VPN
   (Tailscale/WireGuard) or a reverse proxy rather than opening the port.
-- Sign-in cookies are HttpOnly and SameSite=Strict; every change also needs a custom request header.
+- Sign-in cookies are HttpOnly and SameSite=Lax (so links from email open signed in); every change also needs a custom request header.
 - Passwords are stored as scrypt hashes. Changing or resetting a password signs that person out everywhere.
