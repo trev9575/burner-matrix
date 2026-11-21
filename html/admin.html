@@ -114,7 +114,7 @@ td{border-bottom:1px solid var(--rule);padding:8px;vertical-align:middle}
           <div class="head"><h2 id="ft"></h2><span class="dirty" id="dirty" hidden>Unsaved changes</span></div>
           <div class="grid">
             <label class="f">Model name<input type="text" name="name"></label>
-            <label class="f">Brand<input type="text" name="brand" list="brands"><datalist id="brands"></datalist></label>
+            <div class="f" style="display:flex;flex-direction:column;gap:4px"><label class="f" for="bsel">Brand</label><select name="brandSel" id="bsel"></select><input type="text" name="brandNew" id="bnew" placeholder="New brand name" aria-label="New brand name" hidden></div>
             <label class="f">Fuel<select name="fuel"><option value="oil">Oil</option><option value="gas">Gas</option></select></label>
             <label class="f"><span>Min firing rate <span class="u un">GPH</span></span><input type="number" name="min" step="any" min="0"></label>
             <label class="f"><span>Max firing rate <span class="u un">GPH</span></span><input type="number" name="max" step="any" min="0"></label>
@@ -243,7 +243,11 @@ function tab(t){if(t!=='burners'&&!leaveOk())return;document.querySelectorAll('.
 document.querySelector('.tabs').onclick=e=>{const b=e.target.closest('button');if(b)tab(b.dataset.t)};
 
 /* ---------- burner list ---------- */
-async function loadBurners(){list=await call('GET','/api/burners');$('brands').innerHTML=[...new Set(list.map(b=>b.brand))].map(b=>`<option value="${esc(b)}">`).join('');renderList()}
+async function loadBurners(){list=await call('GET','/api/burners');brandOpts();renderList()}
+const NEWB='__new__';
+function brandOpts(extra){const bs=[...new Set(list.map(b=>b.brand).concat(extra?[extra]:[]))].sort((a,b)=>a.localeCompare(b));
+  E.brandSel.innerHTML=bs.map(b=>`<option value="${esc(b)}">${esc(b)}</option>`).join('')+`<option value="${NEWB}">+ Add a new brand…</option>`}
+const brandUI=()=>{const n=E.brandSel.value===NEWB;$('bnew').hidden=!n;if(n)$('bnew').focus()};
 function fmt(b){return b.fuel==='oil'?`${b.min}–${b.max} GPH`:`${(+b.min).toLocaleString()}–${(+b.max).toLocaleString()} MBH`}
 function renderList(){const q=$('q').value.trim().toLowerCase();
   const rows=list.filter(b=>!q||(b.brand+' '+b.name+' '+b.fuel).toLowerCase().includes(q)).sort((a,b)=>a.brand.localeCompare(b.brand)||a.name.localeCompare(b.name,undefined,{numeric:true}));
@@ -268,8 +272,9 @@ const dimUI=()=>{$('dims').style.display=E.dimmode.value==='published'?'flex':'n
 const pic=()=>{const v=E.image.value.trim();$('pimg').src=v||'';$('pimg').style.visibility=v?'visible':'hidden'};
 function edit(b,isCopy){cur={key:b&&!isCopy?keyOf(b):null};$('none').hidden=true;f.hidden=false;$('delc').hidden=true;$('fmsg').hidden=true;
   f.reset();const o=b||{fuel:'oil',power:[],modes:[],applications:[],dims:'not published'};
-  for(const k of['name','brand','fuel','min','max','link','powerText','airTube','biofuel','propane','notes','image','flameLength','flameWidth','turndown','overfire','parts','service'])E[k].value=o[k]??'';
+  for(const k of['name','fuel','min','max','link','powerText','airTube','biofuel','propane','notes','image','flameLength','flameWidth','turndown','overfire','parts','service'])E[k].value=o[k]??'';
   if(isCopy)E.name.value=o.name+' (copy)';
+  brandOpts(o.brand);E.brandSel.value=o.brand||(list[0]?list[0].brand:NEWB);E.brandNew.value='';brandUI();
   E.powerStd.value=o.powerStd||'';
   for(const [n,arr] of[['power',o.power],['modes',o.modes],['applications',o.applications]])f.querySelectorAll(`[name=${n}]`).forEach(c=>c.checked=(arr||[]).includes(c.value));
   const pub=Array.isArray(o.dims);E.dimmode.value=pub?'published':(o.dims||'not published');
@@ -277,9 +282,9 @@ function edit(b,isCopy){cur={key:b&&!isCopy?keyOf(b):null};$('none').hidden=true
   $('ft').textContent=b&&!isCopy?`${o.brand} ${o.name}`:'New burner';$('del').hidden=!cur.key;$('dup').hidden=!cur.key;$('cancel').textContent=cur.key?'Discard changes':'Cancel';
   units();dimUI();pic();dirty=!!isCopy;$('dirty').hidden=!dirty;renderList();E.name.focus()}
 f.addEventListener('input',e=>{dirty=true;$('dirty').hidden=false;if(e.target===E.fuel)units();if(e.target.name==='dimmode')dimUI();if(e.target===E.image)pic()});
-f.addEventListener('change',e=>{if(e.target===E.fuel)units();if(e.target.name==='dimmode')dimUI()});
+f.addEventListener('change',e=>{if(e.target===E.brandSel)brandUI();if(e.target===E.fuel)units();if(e.target.name==='dimmode')dimUI()});
 function read(){const t=k=>E[k].value.trim(),n=k=>E[k].value===''?undefined:Number(E[k].value),o={};
-  o.name=t('name');o.brand=t('brand');o.fuel=E.fuel.value;o.min=n('min');o.max=n('max');
+  o.name=t('name');o.brand=E.brandSel.value===NEWB?t('brandNew'):E.brandSel.value;o.fuel=E.fuel.value;o.min=n('min');o.max=n('max');
   o.power=[...f.querySelectorAll('[name=power]:checked')].map(x=>x.value);if(E.powerStd.value)o.powerStd=E.powerStd.value;o.powerText=t('powerText');
   o.modes=[...f.querySelectorAll('[name=modes]:checked')].map(x=>x.value);
   o.dims=E.dimmode.value==='published'?[n('dh'),n('dw'),n('dd')]:E.dimmode.value;if(Array.isArray(o.dims)&&o.dims.some(v=>v===undefined))o.dims=undefined;
@@ -305,7 +310,7 @@ $('dely').onclick=async()=>{try{await call('DELETE','/api/burners',{key:cur.key}
 $('pfile').onchange=async()=>{const file=$('pfile').files[0];if(!file)return;
   if(file.size>4*1024*1024){showMsg($('fmsg'),'err','That photo is over 4 MB. Use a smaller one.');return}
   const data=await new Promise(ok=>{const r=new FileReader();r.onload=()=>ok(r.result);r.readAsDataURL(file)});
-  try{const j=await call('POST','/api/photo',{name:(E.brand.value+'-'+E.name.value)||file.name,data});E.image.value=j.path;pic();dirty=true;$('dirty').hidden=false;toast('Photo uploaded. Click Save to keep it.')}
+  try{const j=await call('POST','/api/photo',{name:((E.brandSel.value===NEWB?E.brandNew.value:E.brandSel.value)+'-'+E.name.value)||file.name,data});E.image.value=j.path;pic();dirty=true;$('dirty').hidden=false;toast('Photo uploaded. Click Save to keep it.')}
   catch(err){showMsg($('fmsg'),'err',esc(err.message))}$('pfile').value=''};
 
 /* ---------- history ---------- */
