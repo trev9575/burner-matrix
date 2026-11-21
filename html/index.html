@@ -518,6 +518,18 @@ const rfqNo=(x,n)=>`${ymd()}-${String(n).padStart(2,'0')}${modelCode(x.n)}`;
 const inp=(id,label,val='',ph='',wide)=>`<div${wide?' class="w"':''}><label for="${id}">${label}</label><input id="${id}" type="text" value="${esc(val)}" placeholder="${esc(ph)}"></div>`;
 const LOCKABLE=['q-rate','q-pwr','q-ch','q-of'];
 const sel=(id,label,opts,val)=>`<div><label for="${id}">${label}</label><select id="${id}">${opts.map(o=>`<option${o===val?' selected':''}>${esc(o)}</option>`).join('')}</select></div>`;
+// dropdown that starts blank; "Select…" never prints or goes out in a PDF
+const dd=(id,label,opts,val='')=>`<div><label for="${id}">${label}</label><select id="${id}" class="dd"><option value="">Select…</option>${opts.map(o=>`<option${o===val?' selected':''}>${esc(o)}</option>`).join('')}</select></div>`;
+const OTHER='Other (see notes)';
+const DD={
+  type:['Hot water boiler','Steam boiler','Warm air furnace','Water heater','Oven / process heat','Pressure washer / mobile equipment',OTHER],
+  oil:['#2 heating oil','#1 oil / kerosene','Bioheat blend (B5–B20)','Biodiesel (B100)','Renewable diesel (R100)',OTHER],
+  gas:['Natural gas','LP / propane',OTHER],
+  pwr:['120 VAC','208–240 VAC 1Φ','208–240 VAC 3Φ','480 VAC 3Φ','12 VDC','24 VDC',OTHER],
+  oilsup:['One-pipe (gravity feed)','Two-pipe','One-pipe with deaerator','Lift (tank below burner)',OTHER],
+  vent:['Natural draft (chimney)','Power vent / induced draft','Direct vent / sealed combustion','Positive pressure (forced draft)',OTHER],
+  mount:['Adjustable flange','Universal flange','Welded flange','Pedestal','Per appliance maker',OTHER],
+};
 const ro=(label,val)=>`<div><span class="k">${label}</span><span class="v">${val}</span></div>`;
 const fmtD=iso=>new Date(iso).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
 const rawOf=x=>RAW.find(o=>(o.brand+'|'+o.name).toLowerCase()===(x.b+'|'+x.n).toLowerCase());
@@ -541,11 +553,11 @@ function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);
   <h3>Customer &amp; job</h3>
   <div class="kv">${inp('q-co','Company')}${inp('q-ct','Contact')}${inp('q-ph','Phone')}${inp('q-em','Email')}${inp('q-job','Project / job name')}${inp('q-qty','Quantity','1')}${inp('q-addr','Site address','','',true)}${inp('q-need','Required by date')}${inp('q-po','Customer ref / PO')}</div>
   <h3>Application</h3>
-  <div class="kv">${inp('q-app','Appliance make / model','','e.g. boiler make & model')}${inp('q-type','Appliance type','','Boiler, furnace, water heater, oven…')}
-    ${inp('q-rate','Required input',rateTxt,x.f==='oil'?'GPH or MBH':'MBH')}${inp('q-fuel','Fuel',x.f==='oil'?'#2 heating oil':'Natural gas',x.f==='oil'?'#1/#2 oil, biodiesel blend…':'Natural gas or LP')}
-    ${inp('q-pwr','Power available on site',site,'Voltage / phase')}${inp('q-ch','Combustion chamber L × W × H',(S.fl||S.fw)?`Flame must fit ${S.fl||'?'} × ${S.fw||'?'} in`:'','inches')}
+  <div class="kv">${inp('q-app','Appliance make / model','','e.g. boiler make & model')}${dd('q-type','Appliance type',DD.type)}
+    ${inp('q-rate','Required input',rateTxt,x.f==='oil'?'GPH or MBH':'MBH')}${dd('q-fuel','Fuel',x.f==='oil'?DD.oil:DD.gas)}
+    ${site?inp('q-pwr','Power available on site',site):dd('q-pwr','Power available on site',DD.pwr)}${inp('q-ch','Combustion chamber L × W × H',(S.fl||S.fw)?`Flame must fit ${S.fl||'?'} × ${S.fw||'?'} in`:'','inches')}
     ${inp('q-of','Overfire pressure',S.op?`${S.op} in. WC`:'','in. WC')}${inp('q-alt','Altitude','','ft above sea level')}
-    ${x.f==='gas'?inp('q-gp','Gas supply pressure','','in. WC min / max'):inp('q-ol','Oil supply','','One-pipe / two-pipe, lift')}${inp('q-vent','Venting / draft','','Natural draft, power vent…')}</div>
+    ${x.f==='gas'?inp('q-gp','Gas supply pressure','','in. WC min / max'):dd('q-ol','Oil supply',DD.oilsup)}${dd('q-vent','Venting / draft',DD.vent)}</div>
   <h3>Selected burner</h3>
   <div class="sh-burner"><div class="kv" style="grid-template-columns:minmax(0,1fr)">
     ${ro('Brand / model',`${esc(x.b)} ${esc(x.n)}`)}
@@ -564,8 +576,8 @@ function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);
     ${ro('Product page',`<a href="${esc(x.u)}">${esc(x.u.replace(/^https?:\/\//,'').replace(/\/$/,''))}</a>`)}
   </div>${x.img?`<img src="${esc(x.img)}" alt="${esc(x.n)}" onerror="this.remove()">`:''}</div>
   <h3>Configuration requested</h3>
-  <div class="kv">${sel('q-v','Voltage / phase',pOpts,pDefault)}${sel('q-m','Firing mode',mOpts,mOpts[mOpts.length-1])}
-    ${inp('q-tube','Air tube length / insertion','','inches')}${inp('q-mount','Mounting','','Adjustable flange, welded flange, pedestal')}
+  <div class="kv">${dd('q-v','Voltage / phase',pOpts,siteKeys.length||pOpts.length===1?pDefault:'')}${dd('q-m','Firing mode',mOpts,mOpts.length===1?mOpts[0]:'')}
+    ${inp('q-tube','Air tube length / insertion','','inches')}${dd('q-mount','Mounting',DD.mount)}
     ${inp('q-ctl','Controls / panel','','Primary control, panel, CSD-1…')}${inp('q-opt','Other options','','Nozzle, head, solenoid…')}</div>
   <h3>Notes</h3>
   <textarea id="q-notes" aria-label="Notes" placeholder="Anything else the quote needs to cover"></textarea>
@@ -577,14 +589,16 @@ function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);
   const locks=meta.locks||LOCKABLE.filter(id=>$(id).value.trim());RFQ.locks=locks;
   locks.forEach(id=>{const el=$(id);if(el&&el.value.trim()){el.readOnly=true;el.dataset.lock='1';el.title='Set by your selections on the matrix page. Change the filter there to change this.'}});
   if(!meta.fields&&CONV&&x.f==='gas'&&String(CONV.mbh)===String(S.rate)&&S.unit==='mbh'){
-    $('q-notes').value=`Oil-to-gas conversion. Replaces ${nzTxt(CONV)} at ${CONV.p} psi (≈ ${CONV.gph.toFixed(2)} GPH, ${CONV.mbh.toLocaleString()} MBH).`;
-    if(!$('q-type').value)$('q-type').value='Oil-fired appliance, converting to gas'}
+    $('q-notes').value=`Oil-to-gas conversion. Replaces ${nzTxt(CONV)} at ${CONV.p} psi (≈ ${CONV.gph.toFixed(2)} GPH, ${CONV.mbh.toLocaleString()} MBH).`;}
   if(RFQ.ro)lockSheet();
   $('matrixv').hidden=true;$('listv').hidden=true;$('rfqv').hidden=false;rfqStatus();scrollTo(0,0);if(!PDFMODE)$('q-co').focus({preventScroll:true})}
 const canDel=r=>!!(r&&ME&&!r.sent&&(r.by===ME.name||ME.role==='admin'));
 async function delRFQ(id,btn){if(!btn.dataset.armed){btn.dataset.armed=1;const t=btn.textContent;btn.textContent='Click again to delete';setTimeout(()=>{delete btn.dataset.armed;btn.textContent=t},4000);return false}
   await J('DELETE','api/rfqs/'+id,{});toast('RFQ deleted');return true}
-function lockSheet(){RFQ.ro=true;RFQ.dirty=false;const sh=$('sheet');sh.classList.add('ro');
+function outputMode(on){$('sheet').querySelectorAll('[placeholder],[data-ph]').forEach(el=>{if(on){if(el.placeholder){el.dataset.ph=el.placeholder;el.removeAttribute('placeholder')}}else if(el.dataset.ph&&!(RFQ&&RFQ.ro)){el.placeholder=el.dataset.ph;delete el.dataset.ph}});
+  $('sheet').querySelectorAll('select.dd option[value=""]').forEach(o=>o.textContent=on?'':'Select…')}
+addEventListener('beforeprint',()=>outputMode(true));addEventListener('afterprint',()=>{if(!(RFQ&&RFQ.ro))outputMode(false)});
+function lockSheet(){outputMode(true);RFQ.ro=true;RFQ.dirty=false;const sh=$('sheet');sh.classList.add('ro');
   sh.querySelectorAll('input,textarea').forEach(el=>el.readOnly=true);sh.querySelectorAll('select').forEach(el=>el.disabled=true);rfqStatus()}
 $('sheet').addEventListener('input',()=>{if(RFQ&&!RFQ.ro){RFQ.dirty=true;rfqStatus()}});
 $('sheet').addEventListener('change',()=>{if(RFQ&&!RFQ.ro){RFQ.dirty=true;rfqStatus()}});
