@@ -208,7 +208,7 @@ const canSee = (me, r) => r && (me.role !== 'rep' || r.by === me.name);
 const rfqSummary = r => ({ id: r.id, no: r.no, date: r.date, by: r.by, byFull: r.byFull, updated: r.updated,
   burner: `${r.burner.brand} ${r.burner.name}`, fuel: r.burner.fuel,
   company: r.fields['q-co'] || '', contact: r.fields['q-ct'] || '', job: r.fields['q-job'] || '',
-  sent: (r.sends || []).slice(-1)[0] || null });
+  sent: (r.sends || []).slice(-1)[0] || null, status: r.status || '', statusAt: r.statusAt || '' });
 const cleanFields = f => {
   const out = {};
   for (const [k, v] of Object.entries(f && typeof f === 'object' ? f : {}))
@@ -281,7 +281,7 @@ async function api(req, res, url) {
     writeJSON(rfqFile(r.id), r);
     return send(res, 200, r);
   }
-  const rm = /^\/api\/rfqs\/([a-f0-9]{12})(\/pdf|\/send)?$/.exec(p);
+  const rm = /^\/api\/rfqs\/([a-f0-9]{12})(\/pdf|\/send|\/status)?$/.exec(p);
   if (rm) {
     const r = getRfq(rm[1]);
     if (!canSee(me, r)) return send(res, 404, { error: 'RFQ not found' });
@@ -295,6 +295,15 @@ async function api(req, res, url) {
       r.fields = cleanFields(b.fields); r.updated = new Date().toISOString(); r.editedBy = me.name;
       writeJSON(rfqFile(r.id), r);
       return send(res, 200, r);
+    }
+    if (rm[2] === '/status' && m === 'POST') { // quoted / won / lost tracking; '' = automatic (draft or emailed)
+      if (r.by !== me.name && me.role === 'rep') return send(res, 403, { error: 'Only the rep who made it can change its status' });
+      const { status = '' } = await readBody(req, 1024);
+      if (!['', 'quoted', 'won', 'lost'].includes(status)) return send(res, 422, { error: 'Unknown status' });
+      r.status = status; r.statusAt = new Date().toISOString(); r.statusBy = me.name;
+      (r.statusLog = r.statusLog || []).push({ at: r.statusAt, by: me.name, status });
+      writeJSON(rfqFile(r.id), r);
+      return send(res, 200, rfqSummary(r));
     }
     if (rm[2] === '/pdf' && m === 'GET') {
       let pdf; try { pdf = await rfqPdf(r, me); } catch (e) { console.error('PDF:', e.message); return send(res, 502, { error: 'Could not build the PDF: ' + e.message }); }

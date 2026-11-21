@@ -20,9 +20,28 @@ body{margin:0;background:var(--bg);color:var(--ink);font:500 15px/1.6 Montserrat
 h1,h2{font-family:Montserrat,Helvetica,Arial,sans-serif;font-weight:700;line-height:1.1;margin:0;text-wrap:balance}
 h1{font-size:clamp(28px,4.2vw,40px);color:#fff}
 h2{font-size:22px}
-.util{background:var(--btn);display:flex;justify-content:flex-end;gap:22px;padding:8px max(4vw,16px);font-size:14px}
-.util a{text-decoration:none}
-.util .acct{margin-right:auto;display:flex;gap:14px;align-items:center}.util .acct button{font:inherit;background:none;border:0;padding:0;color:var(--red);cursor:pointer}
+/* top bar: app navigation on the left, maker links + account menu on the right */
+.util{background:#1c1c1c;color:#d9d9d3;display:flex;align-items:stretch;gap:6px;padding:0 max(4vw,16px);font-size:13.5px;min-height:46px;border-bottom:1px solid #333}
+.util .nav{display:flex;align-items:stretch;gap:4px}
+.util .nav button{font:600 13.5px Montserrat,sans-serif;background:none;border:0;color:#bdbdb6;padding:0 12px;cursor:pointer;position:relative;letter-spacing:.01em}
+.util .nav button:hover{color:#fff}
+.util .nav button[aria-current="page"]{color:#fff}
+.util .nav button[aria-current="page"]::after{content:"";position:absolute;left:12px;right:12px;bottom:0;height:3px;background:var(--red);border-radius:2px 2px 0 0}
+.util .sp{flex:1}
+.util .ext{display:flex;align-items:center;gap:18px;padding-right:14px;margin-right:6px;border-right:1px solid #3a3a3a}
+.util .ext a{color:#9d9d96;text-decoration:none;font-size:12.5px}.util .ext a:hover{color:#fff}
+.util .ext a::after{content:" ↗";font-size:11px}
+.um{position:relative;display:flex;align-items:center}
+.um summary{list-style:none;display:flex;align-items:center;gap:9px;cursor:pointer;padding:6px 4px;border-radius:4px;color:#ededea}
+.um summary::-webkit-details-marker{display:none}
+.um summary:hover .av{box-shadow:0 0 0 2px #555}
+.um .av{width:30px;height:30px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font:700 12.5px Montserrat,sans-serif;letter-spacing:.02em}
+.um .nm{font-weight:600;font-size:13.5px}.um .car{width:7px;height:7px;border-right:2px solid #9d9d96;border-bottom:2px solid #9d9d96;transform:rotate(45deg) translateY(-2px);margin-left:2px}
+.um .menu{position:absolute;right:0;top:calc(100% + 4px);background:#fff;color:var(--ink);min-width:220px;border-radius:6px;box-shadow:0 8px 28px rgba(0,0,0,.22);padding:6px;z-index:50}
+.um .menu .who{padding:8px 10px 10px;border-bottom:1px solid var(--rule);margin-bottom:4px;font-size:13px;line-height:1.35}
+.um .menu .who small{display:block;color:var(--mute);font-size:12px}
+.um .menu button{display:block;width:100%;text-align:left;font:500 14px Montserrat,sans-serif;background:none;border:0;padding:8px 10px;border-radius:4px;cursor:pointer;color:var(--ink)}
+.um .menu button:hover{background:#f2f2ee}.um .menu .out{color:var(--red)}
 #prof{border:0;border-radius:6px;padding:22px;max-width:380px;width:92vw}#prof::backdrop{background:rgba(0,0,0,.4)}
 #prof form{display:grid;gap:12px}#prof label{display:grid;gap:4px;font-size:13px;font-weight:600}#prof input{font:inherit;padding:8px 10px;border:1px solid #b9b9b2;border-radius:3px}
 #prof .row{display:flex;gap:8px;justify-content:flex-end}
@@ -159,6 +178,21 @@ a.bn[data-img]{cursor:zoom-in}
 #listv table{width:100%;border-collapse:collapse;font-size:14px}#listv th{text-align:left;background:var(--ink);color:#fff;font-size:13px;padding:8px}
 #listv td{padding:8px;border-bottom:1px solid var(--rule);vertical-align:top}#listv tbody tr{cursor:pointer}#listv tbody tr:hover td{background:#f6f6f3}
 #listv .no{font-weight:700;white-space:nowrap}#listv .sm{font-size:12.5px;color:var(--mute)}
+.stats{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.stat{font:600 13px Montserrat,sans-serif;border:1px solid var(--rule);background:#fff;border-radius:20px;padding:5px 12px;cursor:pointer;color:var(--ink)}
+.stat b{font-size:15px;margin-right:4px}.stat[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.stat.wr{cursor:default;background:#f6f6f3}
+.st{font:700 12px Montserrat,sans-serif;border-radius:12px;padding:3px 8px;min-height:0;width:auto;height:auto;border:1px solid transparent;cursor:pointer;max-width:120px}
+.st-draft{background:#f0f0ec;color:#55554f}.st-sent{background:#e6eef8;color:#1d4f86}.st-quoted{background:#fdf0d5;color:#8a5a00}
+.st-won{background:#e2f3e7;color:#1d6b35}.st-lost{background:#fde3e5;color:#b3141f}
+#o2g{border:0;border-radius:6px;padding:22px;max-width:560px;width:94vw}#o2g::backdrop{background:rgba(0,0,0,.4)}
+#o2g form{display:grid;gap:12px}#o2g .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#o2g label{display:grid;gap:4px;font-size:13px;font-weight:600}#o2g input[type=number]{font:inherit;padding:8px 10px;border:1px solid #b9b9b2;border-radius:3px;width:100%}
+#o2g .calc{background:#f6f6f3;border-left:4px solid var(--gas);padding:10px 12px;font-size:14px;border-radius:3px}#o2g .calc b{font-size:17px}
+#o2g ul{list-style:none;margin:0;padding:0;max-height:260px;overflow:auto;border:1px solid var(--rule);border-radius:3px}
+#o2g li{display:flex;gap:10px;align-items:center;padding:7px 10px;border-bottom:1px solid var(--rule);font-size:14px}#o2g li:last-child{border:0}
+#o2g li .r{margin-left:auto;color:var(--mute);font-size:12.5px;white-space:nowrap}#o2g .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+@media(max-width:500px){#o2g .g3{grid-template-columns:1fr 1fr}}
 #sendd{border:0;border-radius:6px;padding:22px;max-width:420px;width:92vw}#sendd::backdrop{background:rgba(0,0,0,.4)}
 #sendd form{display:grid;gap:12px}#sendd label{display:grid;gap:4px;font-size:13px;font-weight:600}#sendd input[type=text]{font:inherit;padding:8px 10px;border:1px solid #b9b9b2;border-radius:3px}
 #sendd .ck{display:flex;gap:8px;align-items:center;font-weight:500}#sendd .row{display:flex;gap:8px;justify-content:flex-end}
@@ -192,12 +226,18 @@ a.bn[data-img]{cursor:zoom-in}
 @media print{@page{size:letter;margin:.4in}body{background:#fff}#matrixv,#listv,.noprint,.toast,#pic,.util,.brand{display:none !important}.sheet ::placeholder{color:transparent}.sheet{font-size:10.5px !important;line-height:1.3}.sheet h3{margin:9px 0 3px;padding:3px 7px;font-size:11px}.kv>div{min-height:0;padding:2px 0;grid-template-columns:135px minmax(0,1fr)}.kv label,.kv .k{font-size:10px}.kv input,.kv select{font-size:11px;padding:1px 2px}.sh-burner{grid-template-columns:minmax(0,1fr) 115px}.sh-burner img{width:115px;height:115px}.sheet textarea{min-height:38px;font-size:11px;resize:none}.sh-top{padding-bottom:6px}.sh-top img{height:28px}.sh-top h1{font-size:17px}.sh-foot{margin-top:8px}#rfqv{display:block !important;padding:0}.sheet{box-shadow:none;max-width:none;padding:0;font-size:11.5px}.kv input,.kv select,.sheet textarea{background:transparent;border-bottom:1px solid #ccc;-webkit-appearance:none;appearance:none}.sheet textarea{border:1px solid #ccc}.sheet h3,.sh-top .lg,.sh-fit{-webkit-print-color-adjust:exact;print-color-adjust:exact}.kv>div{break-inside:avoid}}
 @media(max-width:1000px){.rail{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.rail{grid-template-columns:minmax(0,1fr)}.rail .f-power{grid-column:auto}}
-@media(max-width:600px){.util>a{display:none}.brand .div{display:none}.axis,.lr{grid-template-columns:140px minmax(0,1fr)}.lr .nm small{display:none}.axis span:nth-child(even){display:none}table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--rule)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:7.5em;background:none !important}.stack td::before{content:attr(data-l);float:inline-start;width:7em;margin-inline-start:-7.5em;color:var(--mute);font-size:12.5px}.stack td:empty{display:none}}
+@media(max-width:600px){.util .ext,.um .nm,.um .car{display:none}.util .nav button{padding:0 9px;font-size:13px}.brand .div{display:none}.axis,.lr{grid-template-columns:140px minmax(0,1fr)}.lr .nm small{display:none}.axis span:nth-child(even){display:none}table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--rule)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:7.5em;background:none !important}.stack td::before{content:attr(data-l);float:inline-start;width:7em;margin-inline-start:-7.5em;color:var(--mute);font-size:12.5px}.stack td:empty{display:none}}
 @media(prefers-reduced-motion:reduce){.toast{transition:none}}
 </style>
 </head>
 <body>
-<div class="util"><span class="acct" id="acct" hidden><span id="whoami"></span><button type="button" id="rfqsb">My RFQs</button><button type="button" id="profb">My profile</button><button type="button" id="outb">Sign out</button></span><a href="https://www.beckettcorp.com" target="_blank" rel="noopener">beckettcorp.com</a><a href="https://waynecombustion.com/products" target="_blank" rel="noopener">waynecombustion.com</a></div>
+<nav class="util" aria-label="Main">
+  <div class="nav" id="acct" hidden><button type="button" id="navm" aria-current="page">Burner matrix</button><button type="button" id="rfqsb">My RFQs</button></div>
+  <span class="sp"></span>
+  <div class="ext"><a href="https://www.beckettcorp.com" target="_blank" rel="noopener">beckettcorp.com</a><a href="https://waynecombustion.com/products" target="_blank" rel="noopener">waynecombustion.com</a></div>
+  <details class="um" id="um" hidden><summary aria-label="Account menu"><span class="av" id="av"></span><span class="nm" id="whoami"></span><span class="car" aria-hidden="true"></span></summary>
+    <div class="menu"><div class="who" id="whomenu"></div><button type="button" id="profb">My profile</button><button type="button" id="admb" hidden>Admin &amp; burner editor</button><button type="button" class="out" id="outb">Sign out</button></div></details>
+</nav>
 <div class="brand" role="banner" id="home" title="Back to the burner matrix" tabindex="0">
   <img src="logos/beckett.png" alt="Beckett" onerror="this.outerHTML='<span class=bk>Beckett</span>'">
   <span class="div" aria-hidden="true"></span>
@@ -247,7 +287,7 @@ a.bn[data-img]{cursor:zoom-in}
         <label class="chk"><input type="checkbox" id="bio"> Biofuel rated (B20 or higher)</label>
         <label class="chk"><input type="checkbox" id="lp"> Propane / LP capable</label>
       </div>
-      <div class="acts"><button class="btn pri" id="copy">Copy shortlist</button><button class="btn" id="reset">Reset</button></div>
+      <div class="acts"><button class="btn" id="o2gb" title="Size a gas burner from the oil nozzle it replaces">Oil-to-gas helper</button><button class="btn pri" id="copy">Copy shortlist</button><button class="btn" id="reset">Reset</button></div>
     </div>
   </aside>
 
@@ -295,9 +335,23 @@ a.bn[data-img]{cursor:zoom-in}
     <div class="lbar"><button class="btn" id="lback">← Back to matrix</button><h2 id="ltitle" style="margin:0 8px">My RFQs</h2><span style="flex:1"></span>
       <select id="lwho" aria-label="Whose RFQs" hidden><option value="all">Everyone's RFQs</option><option value="mine">Only mine</option></select>
       <input id="lq" type="search" placeholder="Search number, customer, job, burner…" aria-label="Search RFQs" style="min-width:260px"></div>
-    <div style="overflow-x:auto"><table><thead><tr><th>RFQ #</th><th>Date</th><th>Customer</th><th>Job</th><th>Burner</th><th id="lrepth" hidden>Rep</th><th>Emailed</th><th></th></tr></thead><tbody id="lbody"></tbody></table></div>
+    <div class="stats" id="lstats"></div>
+    <div style="overflow-x:auto"><table><thead><tr><th>RFQ #</th><th>Date</th><th>Customer</th><th>Job</th><th>Burner</th><th id="lrepth" hidden>Rep</th><th>Emailed</th><th>Status</th><th></th></tr></thead><tbody id="lbody"></tbody></table></div>
   </div>
 </section>
+<dialog id="o2g"><form id="o2gf" method="dialog">
+  <h2 style="font-size:20px">Oil-to-gas helper</h2>
+  <p style="margin:0;font-size:13px;color:var(--mute)">Enter the oil nozzle in the appliance now. The gas burner should match the same firing rate.</p>
+  <div class="g3">
+    <label>Nozzle size (GPH)<input type="number" id="o-gph" min="0.2" max="60" step="0.05" placeholder="e.g. 0.85" inputmode="decimal"></label>
+    <label>Pump pressure (psi)<input type="number" id="o-psi" min="60" max="300" step="5" value="100" inputmode="decimal"></label>
+    <label>Number of nozzles<input type="number" id="o-n" min="1" max="6" step="1" value="1" inputmode="numeric"></label>
+  </div>
+  <div class="calc" id="o-calc">Nozzles are rated at 100 psi. Higher pump pressure fires more oil than the stamped size.</div>
+  <label class="chk" style="display:flex;font-weight:500"><input type="checkbox" id="o-conv" checked> Only burners made for oil-to-gas conversion</label>
+  <ul id="o-list" hidden></ul>
+  <div class="row"><button type="button" class="btn" id="o-x">Close</button><button type="button" class="btn pri" id="o-go" disabled>Show in the matrix</button></div>
+</form></dialog>
 <dialog id="sendd"><form id="sendf">
   <h2 style="font-size:20px">Email the RFQ PDF</h2>
   <p id="sendnote" style="margin:0;font-size:13px;color:var(--mute)">The RFQ is saved, turned into a PDF and emailed from the server.</p>
@@ -398,7 +452,25 @@ $('f-volt').onchange=e=>{const v=e.target.dataset.v;S.volt=e.target.checked?[...
 for(const k of['rate','maxh','maxw','fl','fw','op'])$(k).oninput=e=>{S[k]=e.target.value;save();render()};
 for(const k of['unit','app','td'])$(k).onchange=e=>{S[k]=e.target.value;save();render()};
 for(const k of['unk','bio','lp','unks'])$(k).onchange=e=>{S[k]=e.target.checked;save();render()};
-$('reset').onclick=()=>{S=JSON.parse(JSON.stringify(DEF));sync()};
+$('reset').onclick=()=>{S=JSON.parse(JSON.stringify(DEF));CONV=null;sync()};
+/* ---------- Oil-to-gas helper ---------- */
+// Actual oil flow = stamped nozzle size × √(pump psi ÷ 100) × nozzles; input ≈ GPH × 140 MBH (same factor as the chart).
+let CONV=null;
+const o2gCalc=()=>{const g=parseFloat($('o-gph').value),p=parseFloat($('o-psi').value)||100,n=Math.max(1,parseInt($('o-n').value)||1);
+  if(!(g>0))return null;const gph=g*Math.sqrt(p/100)*n;return{g,p,n,gph,mbh:Math.round(gph*G)}};
+function o2gRender(){const c=o2gCalc();$('o-go').disabled=!c;const ul=$('o-list');
+  if(!c){$('o-calc').innerHTML='Nozzles are rated at 100 psi. Higher pump pressure fires more oil than the stamped size.';ul.hidden=true;return}
+  $('o-calc').innerHTML=`${c.n>1?c.n+' × ':''}${c.g} GPH at ${c.p} psi fires <b>${c.gph.toFixed(2)} GPH</b> ≈ <b>${c.mbh.toLocaleString()} MBH</b> input.<br><span style="font-size:12.5px;color:var(--mute)">Check the appliance's rated input too; many oil appliances are over-fired.</span>`;
+  const only=$('o-conv').checked;
+  const m=D.filter(x=>x.f==='gas'&&(!only||x.a.includes('conv'))&&fit(x,c.mbh)!=='out').sort((a,b)=>({ok:0,edge:1}[fit(a,c.mbh)]-{ok:0,edge:1}[fit(b,c.mbh)])||mb(a)[0]-mb(b)[0]);
+  ul.hidden=false;ul.innerHTML=m.map(x=>{const fz=fit(x,c.mbh);return`<li><b class="nm-gas" style="color:var(--gas)">${esc(x.n)}</b><span class="note">${esc(x.b)}</span><span class="fit ${fz}">${fz==='ok'?'Sweet spot':where(x,c.mbh)==='max'?'Near MAX':'Near MIN'}</span><span class="r">${fmt(x)}</span></li>`}).join('')||
+    `<li>No ${only?'conversion ':''}gas burner covers ${c.mbh.toLocaleString()} MBH.${only?' Untick the box to see every gas burner.':''}</li>`}
+['o-gph','o-psi','o-n','o-conv'].forEach(i=>$(i).addEventListener('input',o2gRender));
+$('o2gb').onclick=()=>{o2gRender();$('o2g').showModal();$('o-gph').focus()};
+$('o-x').onclick=()=>$('o2g').close();
+$('o-go').onclick=()=>{const c=o2gCalc();if(!c)return;CONV=c;
+  Object.assign(S,{fuel:'gas',rate:String(c.mbh),unit:'mbh',app:$('o-conv').checked?'conv':''});sync();$('o2g').close();
+  (document.querySelector('.ladder')||$('lad')).scrollIntoView({behavior:'smooth',block:'start'});toast(`Showing gas burners for ${c.mbh.toLocaleString()} MBH`)};
 $('lad').onclick=e=>{const row=e.target.closest('.lr');if(!row)return;const t=$('r-'+row.dataset.n.replace(/\W/g,''));if(!t)return;document.querySelectorAll('tr.hl').forEach(x=>x.classList.remove('hl'));t.classList.add('hl');t.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'center'})};
 const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1800)};
 $('copy').onclick=async()=>{const r=reqMBH();const head=r!=null?`Required input: ${S.rate} ${S.unit.toUpperCase()} (~${Math.round(r).toLocaleString()} MBH)\n`:'';
@@ -493,6 +565,9 @@ function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);
   // fields filled from the matrix filters are fixed; change the filter in the matrix to change them
   const locks=meta.locks||LOCKABLE.filter(id=>$(id).value.trim());RFQ.locks=locks;
   locks.forEach(id=>{const el=$(id);if(el&&el.value.trim()){el.readOnly=true;el.dataset.lock='1';el.title='Set by your selections on the matrix page. Change the filter there to change this.'}});
+  if(!meta.fields&&CONV&&x.f==='gas'&&String(CONV.mbh)===String(S.rate)&&S.unit==='mbh'){
+    $('q-notes').value=`Oil-to-gas conversion. Replaces ${CONV.n>1?CONV.n+' × ':''}${CONV.g} GPH oil nozzle at ${CONV.p} psi (≈ ${CONV.gph.toFixed(2)} GPH, ${CONV.mbh.toLocaleString()} MBH).`;
+    if(!$('q-type').value)$('q-type').value='Oil-fired appliance, converting to gas'}
   if(RFQ.ro)lockSheet();
   $('matrixv').hidden=true;$('listv').hidden=true;$('rfqv').hidden=false;rfqStatus();scrollTo(0,0);if(!PDFMODE)$('q-co').focus({preventScroll:true})}
 const canDel=r=>!!(r&&ME&&!r.sent&&(r.by===ME.name||ME.role==='admin'));
@@ -552,36 +627,54 @@ $('sendf').onsubmit=async e=>{e.preventDefault();const g=$('sendgo');g.disabled=
 let LIST=[];
 async function openList(){$('matrixv').hidden=true;$('rfqv').hidden=true;$('listv').hidden=false;scrollTo(0,0);
   const staff=ME&&ME.role!=='rep';$('lwho').hidden=!staff;$('lrepth').hidden=!staff;
-  $('lbody').innerHTML='<tr><td colspan="8" class="sm">Loading…</td></tr>';
-  try{LIST=await J('GET','api/rfqs');renderList()}catch(e){$('lbody').innerHTML=`<tr><td colspan="8">${esc(e.message)}</td></tr>`}}
+  $('lbody').innerHTML='<tr><td colspan="9" class="sm">Loading…</td></tr>';
+  try{LIST=await J('GET','api/rfqs');renderList()}catch(e){$('lbody').innerHTML=`<tr><td colspan="9">${esc(e.message)}</td></tr>`}}
+const STL={draft:'Draft',sent:'Emailed',quoted:'Quoted',won:'Won',lost:'Lost'};
+const stOf=r=>r.status||(r.sent?'sent':'draft');
+let LST='';
 function renderList(){const staff=ME&&ME.role!=='rep',mine=!staff||$('lwho').value==='mine';
   $('ltitle').textContent=mine?'My RFQs':'All RFQs';
   const q=$('lq').value.trim().toLowerCase();
-  const rows=LIST.filter(r=>(!mine||r.by===ME.name)&&(!q||[r.no,r.company,r.contact,r.job,r.burner,r.by,r.byFull].join(' ').toLowerCase().includes(q)));
+  const base=LIST.filter(r=>!mine||r.by===ME.name);
+  const cnt={};base.forEach(r=>cnt[stOf(r)]=(cnt[stOf(r)]||0)+1);const dec=(cnt.won||0)+(cnt.lost||0);
+  $('lstats').innerHTML=`<button class="stat" data-s="" aria-pressed="${!LST}"><b>${base.length}</b>All</button>`+Object.entries(STL).map(([k,l])=>`<button class="stat" data-s="${k}" aria-pressed="${LST===k}"><b>${cnt[k]||0}</b>${l}</button>`).join('')+
+    `<span class="stat wr" title="Won ÷ (won + lost)"><b>${dec?Math.round((cnt.won||0)/dec*100)+'%':'—'}</b>win rate</span>`;
+  const rows=base.filter(r=>(!LST||stOf(r)===LST)&&(!q||[r.no,r.company,r.contact,r.job,r.burner,r.by,r.byFull].join(' ').toLowerCase().includes(q)));
   $('lbody').innerHTML=rows.map(r=>`<tr data-id="${esc(r.id)}"><td class="no">${esc(r.no)}</td><td style="white-space:nowrap">${fmtD(r.date)}</td><td>${esc(r.company)}${r.contact?`<div class="sm">${esc(r.contact)}</div>`:''}</td><td>${esc(r.job)}</td>
     <td><span style="color:${r.fuel==='gas'?'var(--gas)':'var(--oil)'};font-weight:600">${esc(r.burner)}</span></td>${staff?`<td${$('lrepth').hidden?' hidden':''}>${esc(r.byFull||r.by)}</td>`:''}
-    <td class="sm">${r.sent?`${fmtD(r.sent.at)}<br>${esc(r.sent.to.join(', '))}`:'—'}</td><td>${canDel({by:r.by,sent:r.sent})?'<button class="btn ldel" style="min-height:30px;padding:3px 10px;color:#b3141f">Delete</button>':''}</td></tr>`).join('')||`<tr><td colspan="8" class="sm" style="padding:24px 8px">${LIST.length?'No RFQs match.':'No saved RFQs yet. Use “Create RFQ” in the matrix, then Save or Email PDF.'}</td></tr>`}
+    <td class="sm">${r.sent?`${fmtD(r.sent.at)}<br>${esc(r.sent.to.join(', '))}`:'—'}</td><td>${(()=>{const st=stOf(r),can=ME&&(r.by===ME.name||ME.role!=='rep');
+      return can?`<select class="st st-${st}" aria-label="Status of ${esc(r.no)}">${['','quoted','won','lost'].map(v=>`<option value="${v}"${(r.status||'')===v?' selected':''}>${v?STL[v]:(r.sent?'Emailed':'Draft')}</option>`).join('')}</select>`:`<span class="st st-${st}">${STL[st]}</span>`})()}</td><td>${canDel({by:r.by,sent:r.sent})?'<button class="btn ldel" style="min-height:30px;padding:3px 10px;color:#b3141f">Delete</button>':''}</td></tr>`).join('')||`<tr><td colspan="9" class="sm" style="padding:24px 8px">${LIST.length?'No RFQs match.':'No saved RFQs yet. Use “Create RFQ” in the matrix, then Save or Email PDF.'}</td></tr>`}
 async function goHome(){if(!$('rfqv').hidden&&RFQ&&RFQ.dirty&&ME){try{await saveRFQ(true);toast('RFQ saved')}catch(e){toast('Could not save: '+e.message);return}}
   RFQ=null;$('rfqv').hidden=true;$('listv').hidden=true;$('matrixv').hidden=false;scrollTo(0,0)}
 $('home').onclick=goHome;$('home').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();goHome()}};
-$('lwho').onchange=renderList;$('lq').oninput=renderList;
+$('lwho').onchange=renderList;
+$('lstats').onclick=e=>{const b=e.target.closest('button.stat');if(!b)return;LST=b.dataset.s;renderList()};
+$('lbody').addEventListener('change',async e=>{const sel=e.target.closest('select.st');if(!sel)return;const id=sel.closest('tr').dataset.id;
+  try{const r=await J('POST','api/rfqs/'+id+'/status',{status:sel.value});LIST=LIST.map(x=>x.id===id?r:x);renderList();toast(`${r.no}: ${STL[stOf(r)]}`)}catch(err){toast(err.message);renderList()}});$('lq').oninput=renderList;
 $('lback').onclick=()=>{$('listv').hidden=true;$('matrixv').hidden=false};
 async function openSaved(id,from){const rec=await J('GET','api/rfqs/'+id);
   openRFQ(toRec(rec.burner),{id:rec.id,no:rec.no,date:rec.date,raw:rec.burner,fit:rec.fit||'',fields:rec.fields,sends:rec.sends||[],by:rec.by,byFull:rec.byFull,from,ro:true})}
-$('lbody').onclick=async e=>{const tr=e.target.closest('tr[data-id]');const d=e.target.closest('.ldel');
+$('lbody').onclick=async e=>{if(e.target.closest('select.st'))return;const tr=e.target.closest('tr[data-id]');const d=e.target.closest('.ldel');
   if(d&&tr){try{if(await delRFQ(tr.dataset.id,d)){LIST=LIST.filter(r=>r.id!==tr.dataset.id);renderList()}}catch(err){toast(err.message)}return}
   if(tr)openSaved(tr.dataset.id,'list').catch(err=>toast(err.message))};
 $('rfqsb').onclick=()=>{if(!$('rfqv').hidden&&RFQ&&RFQ.dirty){saveRFQ(true).then(openList,err=>toast('Could not save: '+err.message))}else openList()};
 
 /* ---------- Load data ---------- */
-function showMe(){if(!ME)return;$('rfqsb').textContent=ME.role==='rep'?'My RFQs':'RFQs';$('acct').hidden=false;$('whoami').textContent='Signed in as '+(ME.full||ME.name);const a=$('adminl');if(a)a.hidden=ME.role==='rep'}
+function showMe(){if(!ME)return;$('rfqsb').textContent=ME.role==='rep'?'My RFQs':'RFQs';$('acct').hidden=false;$('um').hidden=false;
+  const nm=ME.full||ME.name,ini=(ME.full?ME.full.split(/\s+/).map(w=>w[0]).join(''):ME.name.replace(/@.*/,'').slice(0,2)).slice(0,2).toUpperCase();
+  $('admb').hidden=ME.role==='rep';$('av').textContent=ini;$('whoami').textContent=nm;$('whomenu').innerHTML=`<b>${esc(nm)}</b><small>${esc(ME.email||ME.name)} · ${{rep:'Rep',editor:'Editor',admin:'Admin'}[ME.role]||ME.role}</small>`;const a=$('adminl');if(a)a.hidden=ME.role==='rep'}
 const ME_P=fetch('api/me',{credentials:'same-origin'}).then(r=>r.ok?r.json():null).then(j=>{if(j){ME=j;showMe();if(RFQ)rfqStatus()}}).catch(()=>{});
 // ?rfq=<id> opens a saved RFQ; &pdf=1 is the server's PDF renderer
 const RFQ_Q=new URLSearchParams(location.search).get('rfq');
 if(RFQ_Q)ME_P.then(()=>openSaved(RFQ_Q,'list')).then(async()=>{if(!PDFMODE)return;
     await document.fonts.ready;await Promise.all([...document.querySelectorAll('#sheet img')].map(i=>i.complete?(i.naturalWidth||i.remove()):new Promise(r=>{i.addEventListener('load',r);i.addEventListener('error',()=>{i.remove();r()});setTimeout(()=>{if(!i.naturalWidth)i.remove();r()},8000)})));
     window.RFQ_READY=true}).catch(e=>{window.RFQ_ERROR=e.message||'Could not open RFQ';toast(window.RFQ_ERROR)});
-$('profb').onclick=()=>{$('pf-full').value=ME.full||'';$('pf-phone').value=ME.phone||'';$('pf-email').value=ME.email||'';$('prof').showModal()};
+document.addEventListener('click',e=>{const u=$('um');if(u.open&&!u.contains(e.target))u.open=false});
+const setNav=()=>{const list=!$('listv').hidden||(!$('rfqv').hidden&&RFQ&&RFQ.from==='list');$('navm').setAttribute('aria-current',list?'false':'page');$('rfqsb').setAttribute('aria-current',list?'page':'false')};
+new MutationObserver(setNav).observe($('listv'),{attributes:true,attributeFilter:['hidden']});new MutationObserver(setNav).observe($('rfqv'),{attributes:true,attributeFilter:['hidden']});
+$('navm').onclick=()=>goHome();
+$('admb').onclick=()=>{location.href='admin'};
+$('profb').onclick=()=>{$('um').open=false;$('pf-full').value=ME.full||'';$('pf-phone').value=ME.phone||'';$('pf-email').value=ME.email||'';$('prof').showModal()};
 $('pf-x').onclick=()=>$('prof').close();
 $('proff').onsubmit=async e=>{e.preventDefault();
   try{const r=await fetch('api/profile',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-BM':'1'},body:JSON.stringify({full:$('pf-full').value,phone:$('pf-phone').value,email:$('pf-email').value})});

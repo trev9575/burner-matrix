@@ -47,6 +47,14 @@ starts and after each edit, and the burner is switched to the local copy. Admin 
 **Saved RFQs.** RFQs are saved on the server (`/data/rfqs`). Reps see their own under **My RFQs**;
 editors and admins see everyone's (**RFQs**, with an *Only mine* filter). Saved RFQs open **read-only** (download, print or resend only); **Copy to new RFQ** starts a revision with a new number. The server also refuses changes once an RFQ is emailed or 2 hours old.
 
+**RFQ status.** Each RFQ shows Draft or Emailed automatically; the rep (or an editor/admin) can mark it
+Quoted, Won or Lost from the list. Counts per status and the win rate (won ÷ won + lost) sit above the list
+and filter it when clicked.
+
+**Oil-to-gas helper.** Enter the oil nozzle size, pump pressure and nozzle count; it works out the real firing
+rate (nozzle × √(psi ÷ 100), × 140 MBH per GPH), lists gas burners that cover it, and sets the matrix filters.
+RFQs made from there note the oil nozzle being replaced.
+
 **Email PDF.** The server turns the RFQ into a PDF (headless Chromium, built into the image) and emails it.
 Fill in the SMTP variables on the container: `SMTP_HOST`, `SMTP_PORT` (465 SSL or 587 STARTTLS), `SMTP_USER`,
 `SMTP_PASS`, optional `SMTP_FROM`. `RFQ_TO` is the default "Send to" address (reps can change it per RFQ).
