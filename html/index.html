@@ -254,7 +254,7 @@ const pass=x=>{
   if(S.volt.length&&!x.v.includes('none')&&!S.volt.some(v=>x.v.includes(v)))return false;
   if(S.mode!=='any'&&!x.m.includes(S.mode))return false;
   if(S.app&&!x.a.includes(S.app))return false;
-  if(S.bio&&!x.bio)return false;
+  if(S.bio&&!(x.bio&&/B\d|R\d/i.test(x.bio)))return false;
   if(S.lp&&!x.lp)return false;
   const h=parseFloat(S.maxh),w=parseFloat(S.maxw);
   if(h>0||w>0){if(!Array.isArray(x.dim)){if(!S.unk)return false}else{if(h>0&&x.dim[0]>h)return false;if(w>0&&x.dim[1]>w)return false}}

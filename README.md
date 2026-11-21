@@ -85,7 +85,8 @@ To throw away the live list and start again from the repo copy, stop the contain
 | `overfire` | Optional. Max overfire (combustion chamber) pressure the burner handles, inches WC |
 | `parts` | Optional. Aftermarket part availability: `"best"`, `"good"` or `"bad"` |
 | `service` | Optional. Ease of service: `"easy"`, `"medium"` or `"hard"` |
-| `biofuel`, `propane` | Optional. e.g. `"B20"`, `"Conversion kit"` |
+| `biofuel` | Optional. Fuel ratings, comma-separated, picked in admin from `#2`, `B100`, `R100` (e.g. `"B100, R100"`) |
+| `propane` | Optional. e.g. `"Conversion kit"` |
 
 The rules live in `html/schema.js`, shared by the admin screen, the server and the build check.
 

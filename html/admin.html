@@ -70,6 +70,12 @@ td{border-bottom:1px solid var(--rule);padding:8px;vertical-align:middle}
 .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:4px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
 .toast.on{opacity:1}
 [hidden]{display:none !important}
+details.ms{position:relative}
+details.ms summary{list-style:none;cursor:pointer;min-height:42px;padding:9px 34px 9px 10px;border:1px solid #b9b9b2;border-radius:3px;background:#fff;font-size:15px;position:relative}
+details.ms summary::-webkit-details-marker{display:none}
+details.ms summary::after{content:"";position:absolute;right:12px;top:50%;width:8px;height:8px;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:translateY(-70%) rotate(45deg)}
+details.ms[open] summary{border-color:var(--ink)}
+details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2px;background:#fff;border:1px solid #b9b9b2;border-radius:3px;padding:6px 10px;box-shadow:0 6px 18px rgba(0,0,0,.12)}
 @media(max-width:860px){.ed{grid-template-columns:minmax(0,1fr)}.list{position:static;max-height:none}.items{max-height:300px}}
 </style>
 </head>
@@ -139,7 +145,8 @@ td{border-bottom:1px solid var(--rule);padding:8px;vertical-align:middle}
             <div class="row" id="dims" style="max-width:420px;margin-top:6px;flex-wrap:nowrap"><input type="number" name="dh" step="any" min="0" placeholder="Height" aria-label="Height"><input type="number" name="dw" step="any" min="0" placeholder="Width" aria-label="Width"><input type="number" name="dd" step="any" min="0" placeholder="Depth" aria-label="Depth"></div>
           </fieldset>
           <div class="grid">
-            <label class="f"><span>Biofuel rating <span class="u">optional</span></span><input type="text" name="biofuel" placeholder="e.g. B20"></label>
+            <div class="f" style="display:flex;flex-direction:column;gap:4px"><span style="font-weight:700;font-size:13.5px">Fuel ratings <span class="u">optional, pick any</span></span>
+              <details class="ms" id="fuelms"><summary id="fuelsum">None</summary><div id="fuelopts"></div></details></div>
             <label class="f" id="lpw"><span>Propane / LP <span class="u">optional, gas only</span></span><input type="text" name="propane" placeholder="e.g. Conversion kit"></label>
           </div>
           <fieldset><legend>Combustion specs <span class="u">optional — used by the flame, turndown and overfire filters</span></legend>
@@ -248,6 +255,11 @@ const NEWB='__new__';
 function brandOpts(extra){const bs=[...new Set(list.map(b=>b.brand).concat(extra?[extra]:[]))].sort((a,b)=>a.localeCompare(b));
   E.brandSel.innerHTML=bs.map(b=>`<option value="${esc(b)}">${esc(b)}</option>`).join('')+`<option value="${NEWB}">+ Add a new brand…</option>`}
 const brandUI=()=>{const n=E.brandSel.value===NEWB;$('bnew').hidden=!n;if(n)$('bnew').focus()};
+const FUELR=['#2','B100','R100'];
+const splitF=v=>String(v||'').split(',').map(x=>x.trim()).filter(Boolean);
+function fuelOpts(cur){const have=splitF(cur);const opts=FUELR.concat(have.filter(x=>!FUELR.includes(x)));
+  $('fuelopts').innerHTML=opts.map(v=>`<label class="chk"><input type="checkbox" name="fuelOpt" value="${esc(v)}"${have.includes(v)?' checked':''}> ${esc(v)}${FUELR.includes(v)?'':' <span class="u">(existing value)</span>'}</label>`).join('');fuelSum()}
+const fuelSum=()=>{const c=[...document.querySelectorAll('[name=fuelOpt]:checked')].map(x=>x.value);$('fuelsum').textContent=c.length?c.join(', '):'None'};
 function fmt(b){return b.fuel==='oil'?`${b.min}–${b.max} GPH`:`${(+b.min).toLocaleString()}–${(+b.max).toLocaleString()} MBH`}
 function renderList(){const q=$('q').value.trim().toLowerCase();
   const rows=list.filter(b=>!q||(b.brand+' '+b.name+' '+b.fuel).toLowerCase().includes(q)).sort((a,b)=>a.brand.localeCompare(b.brand)||a.name.localeCompare(b.name,undefined,{numeric:true}));
@@ -272,9 +284,9 @@ const dimUI=()=>{$('dims').style.display=E.dimmode.value==='published'?'flex':'n
 const pic=()=>{const v=E.image.value.trim();$('pimg').src=v||'';$('pimg').style.visibility=v?'visible':'hidden'};
 function edit(b,isCopy){cur={key:b&&!isCopy?keyOf(b):null};$('none').hidden=true;f.hidden=false;$('delc').hidden=true;$('fmsg').hidden=true;
   f.reset();const o=b||{fuel:'oil',power:[],modes:[],applications:[],dims:'not published'};
-  for(const k of['name','fuel','min','max','link','powerText','airTube','biofuel','propane','notes','image','flameLength','flameWidth','turndown','overfire','parts','service'])E[k].value=o[k]??'';
+  for(const k of['name','fuel','min','max','link','powerText','airTube','propane','notes','image','flameLength','flameWidth','turndown','overfire','parts','service'])E[k].value=o[k]??'';
   if(isCopy)E.name.value=o.name+' (copy)';
-  brandOpts(o.brand);E.brandSel.value=o.brand||(list[0]?list[0].brand:NEWB);E.brandNew.value='';brandUI();
+  fuelOpts(o.biofuel);brandOpts(o.brand);E.brandSel.value=o.brand||(list[0]?list[0].brand:NEWB);E.brandNew.value='';brandUI();
   E.powerStd.value=o.powerStd||'';
   for(const [n,arr] of[['power',o.power],['modes',o.modes],['applications',o.applications]])f.querySelectorAll(`[name=${n}]`).forEach(c=>c.checked=(arr||[]).includes(c.value));
   const pub=Array.isArray(o.dims);E.dimmode.value=pub?'published':(o.dims||'not published');
@@ -282,19 +294,19 @@ function edit(b,isCopy){cur={key:b&&!isCopy?keyOf(b):null};$('none').hidden=true
   $('ft').textContent=b&&!isCopy?`${o.brand} ${o.name}`:'New burner';$('del').hidden=!cur.key;$('dup').hidden=!cur.key;$('cancel').textContent=cur.key?'Discard changes':'Cancel';
   units();dimUI();pic();dirty=!!isCopy;$('dirty').hidden=!dirty;renderList();E.name.focus()}
 f.addEventListener('input',e=>{dirty=true;$('dirty').hidden=false;if(e.target===E.fuel)units();if(e.target.name==='dimmode')dimUI();if(e.target===E.image)pic()});
-f.addEventListener('change',e=>{if(e.target===E.brandSel)brandUI();if(e.target===E.fuel)units();if(e.target.name==='dimmode')dimUI()});
+f.addEventListener('change',e=>{if(e.target.name==='fuelOpt')fuelSum();if(e.target===E.brandSel)brandUI();if(e.target===E.fuel)units();if(e.target.name==='dimmode')dimUI()});
 function read(){const t=k=>E[k].value.trim(),n=k=>E[k].value===''?undefined:Number(E[k].value),o={};
   o.name=t('name');o.brand=E.brandSel.value===NEWB?t('brandNew'):E.brandSel.value;o.fuel=E.fuel.value;o.min=n('min');o.max=n('max');
   o.power=[...f.querySelectorAll('[name=power]:checked')].map(x=>x.value);if(E.powerStd.value)o.powerStd=E.powerStd.value;o.powerText=t('powerText');
   o.modes=[...f.querySelectorAll('[name=modes]:checked')].map(x=>x.value);
   o.dims=E.dimmode.value==='published'?[n('dh'),n('dw'),n('dd')]:E.dimmode.value;if(Array.isArray(o.dims)&&o.dims.some(v=>v===undefined))o.dims=undefined;
   o.airTube=t('airTube');o.applications=[...f.querySelectorAll('[name=applications]:checked')].map(x=>x.value);
-  if(t('biofuel'))o.biofuel=t('biofuel');if(o.fuel==='gas'&&t('propane'))o.propane=t('propane');
+  const fr=[...f.querySelectorAll('[name=fuelOpt]:checked')].map(x=>x.value);if(fr.length)o.biofuel=fr.join(', ');if(o.fuel==='gas'&&t('propane'))o.propane=t('propane');
   for(const k of['flameLength','flameWidth','turndown','overfire'])if(E[k].value!=='')o[k]=Number(E[k].value);
   if(E.parts.value)o.parts=E.parts.value;if(E.service.value)o.service=E.service.value;
   o.notes=t('notes');o.link=t('link');if(t('image'))o.image=t('image');
   for(const k of Object.keys(o))if(o[k]===undefined||o[k]==='')delete o[k];return o}
-const LBL={name:'Model name',brand:'Brand',fuel:'Fuel',min:'Min firing rate',max:'Max firing rate',power:'Power available',powerText:'Power notes',powerStd:'Standard supply',modes:'Firing modes',dims:'Chassis dimensions',airTube:'Air tube',applications:'Applications',notes:'Selling note',link:'Link',biofuel:'Biofuel rating',propane:'Propane',image:'Photo',flameLength:'Flame length',flameWidth:'Flame width',turndown:'Turndown',overfire:'Overfire pressure',parts:'Part availability',service:'Ease of service'};
+const LBL={name:'Model name',brand:'Brand',fuel:'Fuel',min:'Min firing rate',max:'Max firing rate',power:'Power available',powerText:'Power notes',powerStd:'Standard supply',modes:'Firing modes',dims:'Chassis dimensions',airTube:'Air tube',applications:'Applications',notes:'Selling note',link:'Link',biofuel:'Fuel ratings',propane:'Propane',image:'Photo',flameLength:'Flame length',flameWidth:'Flame width',turndown:'Turndown',overfire:'Overfire pressure',parts:'Part availability',service:'Ease of service'};
 const nice=m=>{let k=m.match(/^Missing "(\w+)"$/);if(k)return`${LBL[k[1]]||k[1]}: required`;k=m.match(/^(\w+):(.*)$/);return k&&LBL[k[1]]?LBL[k[1]]+':'+k[2]:m};
 const showMsg=(el,kind,html)=>{el.className='msg '+kind;el.innerHTML=html;el.hidden=false};
 f.onsubmit=async e=>{e.preventDefault();const b=read();const errs=S.check(b);
@@ -343,6 +355,7 @@ $('pclose').onclick=()=>$('pwd').close();
 $('pf').onsubmit=async e=>{e.preventDefault();const P=e.target.elements;
   try{await call('POST','/api/password',{current:P.current.value,next:P.next.value});$('pwd').close();toast('Password changed')}catch(err){showMsg($('pmsg'),'err',esc(err.message))}};
 
+document.addEventListener('click',e=>{const d=$('fuelms');if(d.open&&!d.contains(e.target))d.open=false});
 boot();
 }
 </script>
