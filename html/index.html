@@ -93,7 +93,13 @@ tbody tr:nth-child(even) td{background:#f7f7f4}
 .pw i{font-style:normal;font-size:11px;font-weight:700;background:currentColor;border-radius:2px;padding:0 4px;margin-left:4px;vertical-align:1px}
 .pw i{color:inherit}
 .pw.ac1 i{background:#1d4f86;color:#fff}.pw.ac3 i{background:#55307f;color:#fff}.pw.dc i{background:#246327;color:#fff}
-#tbl td:nth-child(8){min-width:240px}
+#tbl td:nth-child(11){min-width:240px}
+#tbl td.spec{min-width:175px;font-size:13px;line-height:1.5}
+.sl{display:inline-block;min-width:66px;color:var(--mute);font-size:12px}
+.rate{display:inline-block;font-weight:700;font-size:12.5px;border-radius:3px;padding:2px 9px;white-space:nowrap}
+.p-best,.s-easy{background:#e2f3e7;color:#1d6b35}
+.p-good,.s-medium{background:#fdf0d5;color:#8a5a00}
+.p-bad,.s-hard{background:#fde3e5;color:#b3141f}
 #tbl td:nth-child(2){width:1%}
 td.n{white-space:nowrap;font-variant-numeric:tabular-nums}
 td b{font-size:14.5px}
@@ -163,6 +169,18 @@ a.bn[data-img]{cursor:zoom-in}
       <div class="row"><input type="number" id="maxh" min="0" step="0.5" placeholder="Max H in" aria-label="Maximum height in inches"><input type="number" id="maxw" min="0" step="0.5" placeholder="Max W in" aria-label="Maximum width in inches"></div>
       <label class="chk"><input type="checkbox" id="unk" checked> Keep unpublished sizes</label>
     </fieldset>
+    <fieldset><legend>Flame must fit (in)</legend>
+      <div class="row"><input type="number" id="fl" min="0" step="0.5" placeholder="Max length" aria-label="Maximum flame length in inches"><input type="number" id="fw" min="0" step="0.5" placeholder="Max width" aria-label="Maximum flame width in inches"></div>
+    </fieldset>
+    <fieldset><legend>Modulation turndown</legend>
+      <select id="td" aria-label="Minimum turndown ratio"><option value="">Any</option><option value="2">2:1 or more</option><option value="3">3:1 or more</option><option value="4">4:1 or more</option><option value="5">5:1 or more</option><option value="8">8:1 or more</option><option value="10">10:1 or more</option></select>
+    </fieldset>
+    <fieldset><legend>Overfire pressure needed</legend>
+      <div class="row"><input type="number" id="op" min="0" step="0.05" placeholder="e.g. 0.5" aria-label="Overfire pressure needed, inches WC"><span class="hint" style="align-self:center;white-space:nowrap">in. WC</span></div>
+    </fieldset>
+    <fieldset><legend>Missing spec data</legend>
+      <label class="chk"><input type="checkbox" id="unks" checked> Keep burners without flame, turndown or overfire data</label>
+    </fieldset>
     <div class="f-last">
       <div class="opts">
         <label class="chk"><input type="checkbox" id="bio"> Biofuel rated (B20 or higher)</label>
@@ -186,7 +204,7 @@ a.bn[data-img]{cursor:zoom-in}
 <section class="band" style="padding-top:0"><div class="mx">
   <h2 style="margin-bottom:12px">Decision matrix</h2>
   <div class="scroll"><table class="stack" id="tbl">
-    <thead><tr><th>Burner</th><th>Fuel</th><th>Firing rate</th><th>Power</th><th>Mode</th><th>H × W × D (in)</th><th>Best for</th><th>Notes</th></tr></thead>
+    <thead><tr><th>Burner</th><th>Fuel</th><th>Firing rate</th><th>Power</th><th>Mode</th><th>Flame · turndown · overfire</th><th>Parts</th><th>Service</th><th>H × W × D (in)</th><th>Best for</th><th>Notes</th></tr></thead>
     <tbody id="tb"></tbody>
   </table></div>
 </div></section>
@@ -207,7 +225,7 @@ const PW={'12 VDC':'12dc','24 VDC':'24dc','120 VAC':'120','208-240 VAC 1P':'240'
 const MW={'on/off':'onoff','low-high-low':'hilo','modulating':'mod'};
 const AW={'residential':'res','light commercial':'lc','commercial/industrial':'ci','pressure washers/road equipment':'mob','oil-to-gas conversion':'conv','ovens/process':'proc'};
 // readable burners.json entry -> internal record
-const toRec=o=>({img:o.image||null,std:o.powerStd?PW[o.powerStd]:null,n:o.name,b:o.brand,f:o.fuel,lo:o.min,hi:o.max,v:o.power.map(x=>PW[x]),vt:o.powerText,m:o.modes.map(x=>MW[x]),dim:Array.isArray(o.dims)?o.dims:o.dims==='spec sheet'?'spec':null,tube:o.airTube,a:o.applications.map(x=>AW[x]),bio:o.biofuel,lp:o.propane,disc:!!o.discontinued,note:o.notes,u:o.link,raw:o});
+const toRec=o=>({fl:o.flameLength??null,fw:o.flameWidth??null,td:o.turndown??(o.modes.length===1&&o.modes[0]==='on/off'?1:null),tdx:o.turndown==null,op:o.overfire??null,parts:o.parts||null,svc:o.service||null,img:o.image||null,std:o.powerStd?PW[o.powerStd]:null,n:o.name,b:o.brand,f:o.fuel,lo:o.min,hi:o.max,v:o.power.map(x=>PW[x]),vt:o.powerText,m:o.modes.map(x=>MW[x]),dim:Array.isArray(o.dims)?o.dims:o.dims==='spec sheet'?'spec':null,tube:o.airTube,a:o.applications.map(x=>AW[x]),bio:o.biofuel,lp:o.propane,disc:!!o.discontinued,note:o.notes,u:o.link,raw:o});
 let D=[],RAW=[],PREV=[];
 const APPS={res:'Residential heating',lc:'Light commercial',ci:'Commercial / industrial',mob:'Pressure washers / road equipment',conv:'Oil-to-gas conversion',proc:'Ovens & process heat'};
 const VOLTS={'12dc':'12 VDC','24dc':'24 VDC','120':'120 VAC','240':'208-240 VAC 1P','3p240':'208-240 VAC 3P','3p480':'480 VAC 3P'};
@@ -218,13 +236,20 @@ const L0=Math.log10(15),L1=Math.log10(15000);
 const pos=v=>(Math.log10(v)-L0)/(L1-L0)*100;
 const $=id=>document.getElementById(id);
 const VOLTS0={'12dc':1,'24dc':1,'120':1,'240':1,'3p240':1,'3p480':1};
-const DEF={fuel:'all',brand:'all',rate:'',unit:'gph',volt:[],mode:'any',app:'',maxh:'',maxw:'',unk:true,bio:false,lp:false};
+const DEF={fuel:'all',brand:'all',rate:'',unit:'gph',volt:[],mode:'any',app:'',maxh:'',maxw:'',unk:true,bio:false,lp:false,fl:'',fw:'',td:'',op:'',unks:true};
 let S=JSON.parse(JSON.stringify(DEF));try{localStorage.removeItem('burnerSel2')}catch(e){}
 const save=()=>{};
 const seg=(el,opts,key)=>{$(el).innerHTML=opts.map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="${S[key]===v}">${t}</button>`).join('');$(el).onclick=e=>{const b=e.target.closest('button');if(!b)return;S[key]=b.dataset.v;sync();}};
 const reqMBH=()=>{const r=parseFloat(S.rate);if(!(r>0))return null;return S.unit==='gph'?r*G:r};
 const fit=(x,r)=>{if(r==null)return null;const[a,b]=mb(x);if(r<a||r>b)return 'out';const t=(Math.log(r)-Math.log(a))/(Math.log(b)-Math.log(a)||1);return t>=.15&&t<=.85?'ok':'edge'};
 const PCH={'12dc':['12 VDC','dc'],'24dc':['24 VDC','dc'],'120':['120 VAC','ac1'],'240':['208–240 VAC 1Φ','ac1'],'3p240':['208–240 VAC 3Φ','ac3'],'3p480':['480 VAC 3Φ','ac3'],'none':['No power needed','np']};
+const CAP=t=>t[0].toUpperCase()+t.slice(1);
+const n2=v=>+(+v).toFixed(2);
+const specCell=x=>{const L=[];
+  L.push(x.fl!=null||x.fw!=null?`<div><span class="sl">Flame</span> ${x.fl!=null?n2(x.fl):'?'} × ${x.fw!=null?n2(x.fw):'?'} in</div>`:'<div><span class="sl">Flame</span> <span class="note">not set</span></div>');
+  L.push(x.td!=null?`<div><span class="sl">Turndown</span> ${x.td===1&&x.tdx?'none (on/off)':n2(x.td)+':1'}</div>`:'<div><span class="sl">Turndown</span> <span class="note">not set</span></div>');
+  L.push(x.op!=null?`<div><span class="sl">Overfire</span> up to ${n2(x.op)}" WC</div>`:'<div><span class="sl">Overfire</span> <span class="note">not set</span></div>');
+  return L.join('')};
 const where=(x,r)=>{const[a,b]=mb(x);const t=(Math.log(r)-Math.log(a))/(Math.log(b)-Math.log(a)||1);return t<.5?'min':'max'};
 const pctOf=(x,r)=>{const[a,b]=mb(x);return Math.round(r/b*100)};
 const fmt=x=>x.f==='oil'?`${x.lo.toFixed(2)}–${x.hi.toFixed(2)} GPH`:`${x.lo.toLocaleString()}–${x.hi.toLocaleString()} MBH`;
@@ -239,6 +264,11 @@ const pass=x=>{
   if(S.lp&&!x.lp)return false;
   const h=parseFloat(S.maxh),w=parseFloat(S.maxw);
   if(h>0||w>0){if(!Array.isArray(x.dim)){if(!S.unk)return false}else{if(h>0&&x.dim[0]>h)return false;if(w>0&&x.dim[1]>w)return false}}
+  const fl=parseFloat(S.fl),fw=parseFloat(S.fw);
+  if(fl>0){if(x.fl==null){if(!S.unks)return false}else if(x.fl>fl)return false}
+  if(fw>0){if(x.fw==null){if(!S.unks)return false}else if(x.fw>fw)return false}
+  const tdn=parseFloat(S.td);if(tdn>0){if(x.td==null){if(!S.unks)return false}else if(x.td<tdn)return false}
+  const opn=parseFloat(S.op);if(opn>0){if(x.op==null){if(!S.unks)return false}else if(x.op<opn)return false}
   const r=reqMBH();if(r!=null&&fit(x,r)==='out')return false;
   return true};
 let list=[];
@@ -254,27 +284,27 @@ function render(){
   const req=r!=null?`<div class="req" style="left:${pos(Math.min(Math.max(r,15),15000))}%"></div>`:'';
   $('lad').innerHTML=list.length?list.map(x=>{const[a,b]=mb(x);const fz=fit(x,r);return`<div class="lr" data-n="${esc(x.n)}" title="${esc(x.b+' '+x.n)}: ${fmt(x)}"><div class="nm">${esc(x.n)}<small>${x.prev?'Preview':esc(x.b)}</small></div><div class="track">${gl}${req}<div class="bar ${x.f}${x.disc?' off':''}${fz==='edge'?' edgebar':''}" style="left:${pos(a)}%;width:${Math.max(pos(b)-pos(a),.8)}%"></div></div></div>`}).join(''):'<div class="empty">No burner meets every filter. Loosen the footprint or power limits, or check the firing rate unit.</div>';
   $('tb').innerHTML=list.map(x=>{const fz=fit(x,r);const d=Array.isArray(x.dim)?x.dim.map(n=>+n.toFixed(2)).join(' × '):x.dim==='spec'?'See spec sheet':'Not published';
-    return`<tr id="r-${x.n.replace(/\W/g,'')}" class="${fz==='edge'?'edge':''}"><td><b class="nm-${x.f}"><a class="bn" href="${esc(x.u)}"${x.img?` data-img="${esc(x.img)}"`:''} target="_blank" rel="noopener">${esc(x.n)}</a></b><br><span class="note">${esc(x.b)}${x.disc?' · discontinued':''}${x.prev?' · <b class=pv>preview, not saved</b>':''}</span></td><td><span class="fuel ${x.f}">${x.f==='oil'?'Oil':'Gas'}</span>${x.bio?`<br><span class="tag">${esc(x.bio)}</span>`:''}${x.lp?`<br><span class="tag">LP: ${esc(x.lp)}</span>`:''}</td><td class="n">${fmt(x)}${sub(x)?`<br><span class="note">${sub(x)}</span>`:''}${fz==='ok'?`<br><span class="fit ok">Sweet spot</span>`:fz==='edge'?`<br><span class="fit edge">${where(x,r)==='max'?`Near MAX · ${pctOf(x,r)}% of max`:`Near MIN · ${Math.round((r/mb(x)[0]-1)*100)}% above min`}</span>`:''}</td><td><div class="pws">${['12dc','24dc','120','240','3p240','3p480','none'].filter(k=>x.v.includes(k)).map(k=>`<span class="pw ${PCH[k][1]}">${PCH[k][0]}${x.std===k&&x.v.length>1?' <i>Std</i>':''}</span>`).join('')}</div></td><td>${x.m.map(m=>`<span class="tag">${MODES[m]}</span>`).join('')}</td><td class="n">${d}</td><td>${x.a.map(a=>`<span class="tag">${APPS[a]}</span>`).join('')}</td><td>${esc(x.note)}</td></tr>`}).join('');
+    return`<tr id="r-${x.n.replace(/\W/g,'')}" class="${fz==='edge'?'edge':''}"><td><b class="nm-${x.f}"><a class="bn" href="${esc(x.u)}"${x.img?` data-img="${esc(x.img)}"`:''} target="_blank" rel="noopener">${esc(x.n)}</a></b><br><span class="note">${esc(x.b)}${x.disc?' · discontinued':''}${x.prev?' · <b class=pv>preview, not saved</b>':''}</span></td><td><span class="fuel ${x.f}">${x.f==='oil'?'Oil':'Gas'}</span>${x.bio?`<br><span class="tag">${esc(x.bio)}</span>`:''}${x.lp?`<br><span class="tag">LP: ${esc(x.lp)}</span>`:''}</td><td class="n">${fmt(x)}${sub(x)?`<br><span class="note">${sub(x)}</span>`:''}${fz==='ok'?`<br><span class="fit ok">Sweet spot</span>`:fz==='edge'?`<br><span class="fit edge">${where(x,r)==='max'?`Near MAX · ${pctOf(x,r)}% of max`:`Near MIN · ${Math.round((r/mb(x)[0]-1)*100)}% above min`}</span>`:''}</td><td><div class="pws">${['12dc','24dc','120','240','3p240','3p480','none'].filter(k=>x.v.includes(k)).map(k=>`<span class="pw ${PCH[k][1]}">${PCH[k][0]}${x.std===k&&x.v.length>1?' <i>Std</i>':''}</span>`).join('')}</div></td><td>${x.m.map(m=>`<span class="tag">${MODES[m]}</span>`).join('')}</td><td class="spec">${specCell(x)}</td><td>${x.parts?`<span class="rate p-${x.parts}">${CAP(x.parts)}</span>`:'<span class="note" style="white-space:nowrap">Not set</span>'}</td><td>${x.svc?`<span class="rate s-${x.svc}">${CAP(x.svc)}</span>`:'<span class="note" style="white-space:nowrap">Not set</span>'}</td><td class="n">${d}</td><td>${x.a.map(a=>`<span class="tag">${APPS[a]}</span>`).join('')}</td><td>${esc(x.note)}</td></tr>`}).join('');
 }
 function sync(){
   seg('f-fuel',[['all','All'],['oil','Oil'],['gas','Gas']],'fuel');
   seg('f-brand',[['all','All'],...[...new Set(D.map(x=>x.b))].map(b=>[b,b])],'brand');
   seg('f-mode',[['any','Any'],...Object.entries(MODES)],'mode');
   $('f-volt').innerHTML=['12dc','24dc','120','240','3p240','3p480'].map(k=>[k,VOLTS[k]]).map(([k,t])=>`<label class="chk"><input type="checkbox" data-v="${k}" ${S.volt.includes(k)?'checked':''}> ${t}</label>`).join('');
-  $('rate').value=S.rate;$('unit').value=S.unit;$('app').value=S.app;$('maxh').value=S.maxh;$('maxw').value=S.maxw;
-  for(const k of['unk','bio','lp'])$(k).checked=S[k];
+  $('rate').value=S.rate;$('unit').value=S.unit;$('app').value=S.app;$('maxh').value=S.maxh;$('maxw').value=S.maxw;$('fl').value=S.fl;$('fw').value=S.fw;$('td').value=S.td;$('op').value=S.op;
+  for(const k of['unk','bio','lp','unks'])$(k).checked=S[k];
   save();render();
 }
 $('app').innerHTML+=Object.entries(APPS).map(([k,t])=>`<option value="${k}">${t}</option>`).join('');
 $('f-volt').onchange=e=>{const v=e.target.dataset.v;S.volt=e.target.checked?[...S.volt,v]:S.volt.filter(x=>x!==v);save();render()};
-for(const k of['rate','maxh','maxw'])$(k).oninput=e=>{S[k]=e.target.value;save();render()};
-for(const k of['unit','app'])$(k).onchange=e=>{S[k]=e.target.value;save();render()};
-for(const k of['unk','bio','lp'])$(k).onchange=e=>{S[k]=e.target.checked;save();render()};
+for(const k of['rate','maxh','maxw','fl','fw','op'])$(k).oninput=e=>{S[k]=e.target.value;save();render()};
+for(const k of['unit','app','td'])$(k).onchange=e=>{S[k]=e.target.value;save();render()};
+for(const k of['unk','bio','lp','unks'])$(k).onchange=e=>{S[k]=e.target.checked;save();render()};
 $('reset').onclick=()=>{S=JSON.parse(JSON.stringify(DEF));sync()};
 $('lad').onclick=e=>{const row=e.target.closest('.lr');if(!row)return;const t=$('r-'+row.dataset.n.replace(/\W/g,''));if(!t)return;document.querySelectorAll('tr.hl').forEach(x=>x.classList.remove('hl'));t.classList.add('hl');t.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'center'})};
 const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1800)};
 $('copy').onclick=async()=>{const r=reqMBH();const head=r!=null?`Required input: ${S.rate} ${S.unit.toUpperCase()} (~${Math.round(r).toLocaleString()} MBH)\n`:'';
-  const txt=head+list.map(x=>{const fz=fit(x,r);return`${x.b} ${x.n} | ${x.f==='oil'?'Oil':'Gas'} | ${fmt(x)} | ${x.vt} | ${x.m.map(m=>MODES[m]).join('/')}${fz?' | '+(fz==='ok'?'sweet spot':'edge of range'):''}\n  ${x.u}`}).join('\n');
+  const txt=head+list.map(x=>{const fz=fit(x,r);return`${x.b} ${x.n} | ${x.f==='oil'?'Oil':'Gas'} | ${fmt(x)} | ${x.vt} | ${x.m.map(m=>MODES[m]).join('/')}${x.parts?' | Parts: '+CAP(x.parts):''}${x.svc?' | Service: '+CAP(x.svc):''}${fz?' | '+(fz==='ok'?'sweet spot':'edge of range'):''}\n  ${x.u}`}).join('\n');
   try{await navigator.clipboard.writeText(txt||'No matches');toast(`Copied ${list.length} burners`)}catch(e){toast('Copy blocked by browser')}};
 /* ---------- Hover photo ---------- */
 const pic=$('pic'),pimg=pic.querySelector('img'),pcap=pic.querySelector('span');

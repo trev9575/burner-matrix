@@ -142,6 +142,18 @@ td{border-bottom:1px solid var(--rule);padding:8px;vertical-align:middle}
             <label class="f"><span>Biofuel rating <span class="u">optional</span></span><input type="text" name="biofuel" placeholder="e.g. B20"></label>
             <label class="f" id="lpw"><span>Propane / LP <span class="u">optional, gas only</span></span><input type="text" name="propane" placeholder="e.g. Conversion kit"></label>
           </div>
+          <fieldset><legend>Combustion specs <span class="u">optional — used by the flame, turndown and overfire filters</span></legend>
+            <div class="grid">
+              <label class="f"><span>Flame length <span class="u">in</span></span><input type="number" name="flameLength" step="any" min="0"></label>
+              <label class="f"><span>Flame width / diameter <span class="u">in</span></span><input type="number" name="flameWidth" step="any" min="0"></label>
+              <label class="f"><span>Turndown ratio <span class="u">e.g. 8 = 8:1; blank for on/off</span></span><input type="number" name="turndown" step="any" min="1"></label>
+              <label class="f"><span>Max overfire pressure <span class="u">in. WC</span></span><input type="number" name="overfire" step="any" min="0"></label>
+            </div>
+          </fieldset>
+          <div class="grid">
+            <label class="f">Aftermarket part availability<select name="parts"><option value="">Not set</option><option value="best">Best</option><option value="good">Good</option><option value="bad">Bad</option></select></label>
+            <label class="f">Ease of service<select name="service"><option value="">Not set</option><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></label>
+          </div>
           <label class="f">Selling note<textarea name="notes"></textarea></label>
           <fieldset><legend>Photo</legend>
             <div class="pic"><img id="pimg" alt=""><div style="display:grid;gap:8px;flex:1;min-width:220px">
@@ -256,7 +268,7 @@ const dimUI=()=>{$('dims').style.display=E.dimmode.value==='published'?'flex':'n
 const pic=()=>{const v=E.image.value.trim();$('pimg').src=v||'';$('pimg').style.visibility=v?'visible':'hidden'};
 function edit(b,isCopy){cur={key:b&&!isCopy?keyOf(b):null};$('none').hidden=true;f.hidden=false;$('delc').hidden=true;$('fmsg').hidden=true;
   f.reset();const o=b||{fuel:'oil',power:[],modes:[],applications:[],dims:'not published'};
-  for(const k of['name','brand','fuel','min','max','link','powerText','airTube','biofuel','propane','notes','image'])E[k].value=o[k]??'';
+  for(const k of['name','brand','fuel','min','max','link','powerText','airTube','biofuel','propane','notes','image','flameLength','flameWidth','turndown','overfire','parts','service'])E[k].value=o[k]??'';
   if(isCopy)E.name.value=o.name+' (copy)';
   E.powerStd.value=o.powerStd||'';
   for(const [n,arr] of[['power',o.power],['modes',o.modes],['applications',o.applications]])f.querySelectorAll(`[name=${n}]`).forEach(c=>c.checked=(arr||[]).includes(c.value));
@@ -273,9 +285,11 @@ function read(){const t=k=>E[k].value.trim(),n=k=>E[k].value===''?undefined:Numb
   o.dims=E.dimmode.value==='published'?[n('dh'),n('dw'),n('dd')]:E.dimmode.value;if(Array.isArray(o.dims)&&o.dims.some(v=>v===undefined))o.dims=undefined;
   o.airTube=t('airTube');o.applications=[...f.querySelectorAll('[name=applications]:checked')].map(x=>x.value);
   if(t('biofuel'))o.biofuel=t('biofuel');if(o.fuel==='gas'&&t('propane'))o.propane=t('propane');
+  for(const k of['flameLength','flameWidth','turndown','overfire'])if(E[k].value!=='')o[k]=Number(E[k].value);
+  if(E.parts.value)o.parts=E.parts.value;if(E.service.value)o.service=E.service.value;
   o.notes=t('notes');o.link=t('link');if(t('image'))o.image=t('image');
   for(const k of Object.keys(o))if(o[k]===undefined||o[k]==='')delete o[k];return o}
-const LBL={name:'Model name',brand:'Brand',fuel:'Fuel',min:'Min firing rate',max:'Max firing rate',power:'Power available',powerText:'Power notes',powerStd:'Standard supply',modes:'Firing modes',dims:'Chassis dimensions',airTube:'Air tube',applications:'Applications',notes:'Selling note',link:'Link',biofuel:'Biofuel rating',propane:'Propane',image:'Photo'};
+const LBL={name:'Model name',brand:'Brand',fuel:'Fuel',min:'Min firing rate',max:'Max firing rate',power:'Power available',powerText:'Power notes',powerStd:'Standard supply',modes:'Firing modes',dims:'Chassis dimensions',airTube:'Air tube',applications:'Applications',notes:'Selling note',link:'Link',biofuel:'Biofuel rating',propane:'Propane',image:'Photo',flameLength:'Flame length',flameWidth:'Flame width',turndown:'Turndown',overfire:'Overfire pressure',parts:'Part availability',service:'Ease of service'};
 const nice=m=>{let k=m.match(/^Missing "(\w+)"$/);if(k)return`${LBL[k[1]]||k[1]}: required`;k=m.match(/^(\w+):(.*)$/);return k&&LBL[k[1]]?LBL[k[1]]+':'+k[2]:m};
 const showMsg=(el,kind,html)=>{el.className='msg '+kind;el.innerHTML=html;el.hidden=false};
 f.onsubmit=async e=>{e.preventDefault();const b=read();const errs=S.check(b);

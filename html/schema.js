@@ -6,7 +6,9 @@
   const APPS = ['residential', 'light commercial', 'commercial/industrial', 'pressure washers/road equipment', 'oil-to-gas conversion', 'ovens/process'];
   const DIMS_TEXT = ['spec sheet', 'not published'];
   const REQUIRED = ['name', 'brand', 'fuel', 'min', 'max', 'power', 'powerText', 'modes', 'dims', 'airTube', 'applications', 'notes', 'link'];
-  const OPTIONAL = ['powerStd', 'biofuel', 'propane', 'discontinued', 'image'];
+  const OPTIONAL = ['powerStd', 'biofuel', 'propane', 'discontinued', 'image', 'flameLength', 'flameWidth', 'turndown', 'overfire', 'parts', 'service'];
+  const PARTS = ['best', 'good', 'bad'];
+  const SERVICE = ['easy', 'medium', 'hard'];
 
   const str = v => typeof v === 'string' && v.trim().length > 0;
   const num = v => typeof v === 'number' && isFinite(v) && v > 0;
@@ -41,6 +43,12 @@
     if ('notes' in b && !str(b.notes)) e.push('notes: add a short selling note');
     if ('link' in b && !(str(b.link) && /^https:\/\/\S+$/.test(b.link))) e.push('link: must be a full https:// address to the product page or spec sheet');
     if ('image' in b && !(str(b.image) && (/^https:\/\/\S+$/.test(b.image) || /^photos\/[\w.-]+\.(jpg|jpeg|png|webp)$/i.test(b.image) || /^data:image\//.test(b.image)))) e.push('image: a full https:// photo address, or photos/<file> for a photo stored in the repo');
+    if ('flameLength' in b && !num(b.flameLength)) e.push('flameLength: flame length in inches (a number above 0), or leave it out');
+    if ('flameWidth' in b && !num(b.flameWidth)) e.push('flameWidth: flame width/diameter in inches (a number above 0), or leave it out');
+    if ('turndown' in b && !(typeof b.turndown === 'number' && b.turndown >= 1 && b.turndown <= 100)) e.push('turndown: ratio as a number, e.g. 8 for 8:1 (1 = on/off), or leave it out');
+    if ('overfire' in b && !(typeof b.overfire === 'number' && b.overfire >= 0 && b.overfire <= 50)) e.push('overfire: max overfire (combustion chamber) pressure in inches WC, or leave it out');
+    if ('parts' in b && !PARTS.includes(b.parts)) e.push('parts: best, good or bad, or leave it out');
+    if ('service' in b && !SERVICE.includes(b.service)) e.push('service: easy, medium or hard, or leave it out');
     if ('biofuel' in b && !str(b.biofuel)) e.push('biofuel: remove it or describe the rating (e.g. "B20")');
     if ('propane' in b && !str(b.propane)) e.push('propane: remove it or describe how (e.g. "Conversion kit")');
     if ('propane' in b && b.fuel === 'oil') e.push('propane: only applies to gas burners');
@@ -62,6 +70,6 @@
     return out;
   }
 
-  const S = { POWER, MODES, APPS, DIMS_TEXT, REQUIRED, OPTIONAL, check, checkAll };
+  const S = { POWER, MODES, APPS, DIMS_TEXT, REQUIRED, OPTIONAL, PARTS, SERVICE, check, checkAll };
   if (typeof module !== 'undefined' && module.exports) module.exports = S; else root.BurnerSchema = S;
 })(this);

@@ -80,6 +80,11 @@ To throw away the live list and start again from the repo copy, stop the contain
 | `notes` | Short selling note |
 | `link` | `https://` product page |
 | `image` | Optional. `https://` photo, or `photos/<file>` |
+| `flameLength`, `flameWidth` | Optional. Flame size in inches (used by the "Flame must fit" filter) |
+| `turndown` | Optional. Modulation turndown as a number, e.g. `8` for 8:1. On/off-only burners count as 1:1 |
+| `overfire` | Optional. Max overfire (combustion chamber) pressure the burner handles, inches WC |
+| `parts` | Optional. Aftermarket part availability: `"best"`, `"good"` or `"bad"` |
+| `service` | Optional. Ease of service: `"easy"`, `"medium"` or `"hard"` |
 | `biofuel`, `propane` | Optional. e.g. `"B20"`, `"Conversion kit"` |
 
 The rules live in `html/schema.js`, shared by the admin screen, the server and the build check.
