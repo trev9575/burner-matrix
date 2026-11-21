@@ -100,6 +100,15 @@ const send = (res, code, body, type = 'application/json; charset=utf-8', extra =
   res.writeHead(code, { 'Content-Type': type, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', ...extra });
   res.end(typeof body === 'string' || Buffer.isBuffer(body) ? body : JSON.stringify(body));
 };
+// HTML pages get versioned script/style links so browsers never use a stale copy after an update.
+const VERSIONED = ['schema.js', 'favicon.svg'];
+const ver = f => { try { return crypto.createHash('sha1').update(fs.readFileSync(path.join(HTML, f))).digest('hex').slice(0, 10); } catch { return '0'; } };
+const VER = Object.fromEntries(VERSIONED.map(f => [f, ver(f)]));
+const sendPage = (res, file) => fs.readFile(file, 'utf8', (err, html) => {
+  if (err) return send(res, 404, 'Not found', 'text/plain');
+  for (const f of VERSIONED) html = html.split(`="${f}"`).join(`="${f}?v=${VER[f]}"`);
+  send(res, 200, html, 'text/html; charset=utf-8');
+});
 const sendFile = (res, file, cache) => {
   fs.stat(file, (err, st) => {
     if (err || !st.isFile()) return send(res, 404, 'Not found', 'text/plain');
@@ -248,7 +257,8 @@ const server = http.createServer(async (req, res) => {
     if (p.startsWith('/api/')) return await api(req, res, url);
     if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, 'Method not allowed', 'text/plain');
     if (p === '/burners.json') return sendFile(res, F.burners);
-    if (p === '/admin' || p === '/admin/') return sendFile(res, path.join(HTML, 'admin.html'));
+    if (p === '/admin' || p === '/admin/') return sendPage(res, path.join(HTML, 'admin.html'));
+    if (p === '/' || p === '/index.html') return sendPage(res, path.join(HTML, 'index.html'));
     if (p.startsWith('/photos/')) { // uploaded photos first, then the ones shipped in the image
       const name = path.basename(p);
       const up = path.join(F.photos, name);
