@@ -354,11 +354,19 @@ const MODEW={onoff:'On/Off',hilo:'Lo-Hi-Lo',mod:'Modulating'};
 const vlabel=k=>({'12dc':'12 VDC','24dc':'24 VDC','120':'120 VAC','240':'208–240 VAC 1Φ','3p240':'208–240 VAC 3Φ','3p480':'480 VAC 3Φ','none':'No power needed'}[k]);
 let rfqB=null;
 const today=()=>new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
-const rfqNo=x=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return`RFQ-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${x.n.replace(/[^A-Za-z0-9]+/g,'').toUpperCase()}`};
+const ymd=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return`${String(d.getFullYear()).slice(2)}${p(d.getMonth()+1)}${p(d.getDate())}`};
+let seqMem={};
+// Daily RFQ sequence: shared counter on the server when available, otherwise per-browser.
+async function nextSeq(){const date=ymd();
+  try{const r=await fetch('api/rfq-seq',{method:'POST',headers:{'Content-Type':'application/json','X-BM':'1'},body:JSON.stringify({date})});
+    if(r.ok){const j=await r.json();if(j.date===date&&j.n>0)return j.n}}catch(e){}
+  let o=seqMem;try{o=JSON.parse(localStorage.getItem('bm-rfq-seq')||'{}')}catch(e){}
+  const n=o.date===date?(o.n||0)+1:1;seqMem={date,n};try{localStorage.setItem('bm-rfq-seq',JSON.stringify(seqMem))}catch(e){}return n}
+const rfqNo=(x,n)=>`${ymd()}-${String(n).padStart(2,'0')}${x.n.replace(/[^A-Za-z0-9]+/g,'').toUpperCase()}`;
 const inp=(id,label,val='',ph='',wide)=>`<div${wide?' class="w"':''}><label for="${id}">${label}</label><input id="${id}" type="text" value="${esc(val)}" placeholder="${esc(ph)}"></div>`;
 const sel=(id,label,opts,val)=>`<div><label for="${id}">${label}</label><select id="${id}">${opts.map(o=>`<option${o===val?' selected':''}>${esc(o)}</option>`).join('')}</select></div>`;
 const ro=(label,val)=>`<div><span class="k">${label}</span><span class="v">${val}</span></div>`;
-function openRFQ(x){rfqB=x;const r=reqMBH(),fz=fit(x,r);const[a,b]=mb(x);
+function openRFQ(x,seq){rfqB=x;const r=reqMBH(),fz=fit(x,r);const[a,b]=mb(x);
   const rateTxt=r==null?'':(S.unit==='gph'?`${S.rate} GPH (≈ ${Math.round(r).toLocaleString()} MBH)`:`${Number(S.rate).toLocaleString()} MBH${x.f==='oil'?` (≈ ${(r/G).toFixed(2)} GPH)`:''}`);
   const siteKeys=S.volt.filter(v=>x.v.includes(v));const site=siteKeys.map(vlabel).join(', ');
   const pKeys=['12dc','24dc','120','240','3p240','3p480','none'].filter(k=>x.v.includes(k));
@@ -370,7 +378,7 @@ function openRFQ(x){rfqB=x;const r=reqMBH(),fz=fit(x,r);const[a,b]=mb(x);
   const logos=[...document.querySelectorAll('.brand img')].map(i=>`<img src="${i.currentSrc||i.src}" alt="${esc(i.alt)}">`).join('');
   $('sheet').innerHTML=`
   <div class="sh-top">${logos?`<div class="lg">${logos}</div>`:''}<div><h1>Burner Request for Quotation</h1><div style="font-size:12px;color:#66665f">Specification sheet</div></div>
-    <div class="meta"><b>${rfqNo(x)}</b><br>${today()}</div></div>
+    <div class="meta"><b>${rfqNo(x,seq)}</b><br>${today()}</div></div>
   <h3>Customer &amp; job</h3>
   <div class="kv">${inp('q-co','Company')}${inp('q-ct','Contact')}${inp('q-ph','Phone')}${inp('q-em','Email')}${inp('q-job','Project / job name')}${inp('q-qty','Quantity','1')}${inp('q-addr','Site address','','',true)}${inp('q-need','Required by date')}${inp('q-po','Customer ref / PO')}</div>
   <h3>Application</h3>
@@ -406,7 +414,7 @@ function openRFQ(x){rfqB=x;const r=reqMBH(),fz=fit(x,r);const[a,b]=mb(x);
   <div class="sh-foot">Specifications from the Burner Selection Matrix (${today()}). Confirm against the current manufacturer spec sheet and the appliance maker's burner specification before quoting.</div>`;
   $('matrixv').hidden=true;$('rfqv').hidden=false;scrollTo(0,0);$('q-co').focus({preventScroll:true})}
 function closeRFQ(){$('rfqv').hidden=true;$('matrixv').hidden=false;if(rfqB){const t=$('r-'+rfqB.n.replace(/\W/g,''));if(t)t.scrollIntoView({block:'center'})}}
-$('tb').addEventListener('click',e=>{const b=e.target.closest('.rfqb');if(!b)return;const x=D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===b.dataset.k);if(x)openRFQ(x)});
+$('tb').addEventListener('click',e=>{const b=e.target.closest('.rfqb');if(!b)return;const x=D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===b.dataset.k);if(x){b.disabled=true;nextSeq().then(n=>openRFQ(x,n)).finally(()=>b.disabled=false)}});
 $('rfqback').onclick=closeRFQ;
 addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('rfqv').hidden)closeRFQ()});
 $('rfqprint').onclick=()=>{try{window.print()}catch(e){toast('Printing is blocked here. Open the page on your server to print.')}};

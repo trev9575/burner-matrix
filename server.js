@@ -156,6 +156,16 @@ async function api(req, res, url) {
     attempts.delete(ip);
     return send(res, 200, { name: u.name, role: u.role }, undefined, { 'Set-Cookie': cookie(makeToken(u.name, u.ver || 0), SESSION_HOURS * 3600) });
   }
+  // public: next RFQ sequence number for the day (shared by every rep using this server)
+  if (p === '/api/rfq-seq' && m === 'POST') {
+    const { date = '' } = await readBody(req, 256);
+    if (!/^\d{6}$/.test(String(date))) return send(res, 400, { error: 'Bad date' });
+    const f = path.join(DATA, 'rfq-seq.json');
+    const cur = readJSON(f, {});
+    const n = cur.date === date ? (cur.n || 0) + 1 : 1;
+    writeJSON(f, { date, n });
+    return send(res, 200, { date, n });
+  }
   if (p === '/api/logout' && m === 'POST') return send(res, 200, { ok: true }, undefined, { 'Set-Cookie': cookie('', 0) });
 
   const me = readSession(req);
