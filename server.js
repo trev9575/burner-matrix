@@ -316,6 +316,12 @@ async function api(req, res, url) {
       writeJSON(rfqFile(r.id), r);
       return send(res, 200, { ok: true, ...out });
     }
+    if (!rm[2] && m === 'DELETE') { // only RFQs that were never emailed; by the person who made it, or an admin
+      if ((r.sends || []).length) return send(res, 409, { error: 'Emailed RFQs can’t be deleted' });
+      if (r.by !== me.name && me.role !== 'admin') return send(res, 403, { error: 'Only the person who made it (or an admin) can delete it' });
+      fs.unlinkSync(rfqFile(r.id));
+      return send(res, 200, { ok: true });
+    }
     return send(res, 405, { error: 'Not allowed' });
   }
   if (p === '/api/profile' && m === 'POST') { // anyone can update their own name / phone / email

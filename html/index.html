@@ -26,7 +26,7 @@ h2{font-size:22px}
 #prof{border:0;border-radius:6px;padding:22px;max-width:380px;width:92vw}#prof::backdrop{background:rgba(0,0,0,.4)}
 #prof form{display:grid;gap:12px}#prof label{display:grid;gap:4px;font-size:13px;font-weight:600}#prof input{font:inherit;padding:8px 10px;border:1px solid #b9b9b2;border-radius:3px}
 #prof .row{display:flex;gap:8px;justify-content:flex-end}
-.brand{background:var(--ink);display:flex;align-items:center;justify-content:center;gap:clamp(18px,4vw,48px);padding:14px max(4vw,16px);flex-wrap:wrap}
+.brand{cursor:pointer;background:var(--ink);display:flex;align-items:center;justify-content:center;gap:clamp(18px,4vw,48px);padding:14px max(4vw,16px);flex-wrap:wrap}
 .brand img{height:clamp(40px,6vw,64px);width:auto;max-width:42vw;object-fit:contain;display:block}
 .brand .bk{color:var(--red);font:italic 700 44px Bitter,Georgia,serif}
 .brand .wy{font:700 34px Montserrat,sans-serif;letter-spacing:.04em;color:#fff}
@@ -182,7 +182,7 @@ a.bn[data-img]{cursor:zoom-in}
 </head>
 <body>
 <div class="util"><span class="acct" id="acct" hidden><span id="whoami"></span><button type="button" id="rfqsb">My RFQs</button><button type="button" id="profb">My profile</button><button type="button" id="outb">Sign out</button></span><a href="https://www.beckettcorp.com" target="_blank" rel="noopener">beckettcorp.com</a><a href="https://waynecombustion.com/products" target="_blank" rel="noopener">waynecombustion.com</a></div>
-<div class="brand" role="banner">
+<div class="brand" role="banner" id="home" title="Back to the burner matrix" tabindex="0">
   <img src="logos/beckett.png" alt="Beckett" onerror="this.outerHTML='<span class=bk>Beckett</span>'">
   <span class="div" aria-hidden="true"></span>
   <img src="logos/wayne.png" alt="Wayne Combustion Systems" onerror="this.outerHTML='<span class=wy>WAYNE</span>'">
@@ -265,6 +265,7 @@ a.bn[data-img]{cursor:zoom-in}
     <span id="rfqst"></span>
     <span style="flex:1"></span>
     <button class="btn" id="rfqsave" hidden>Save</button>
+    <button class="btn" id="rfqdel" hidden style="color:#b3141f">Delete</button>
     <button class="btn" id="rfqdup" hidden title="Start a new RFQ with a new number, filled in from this one">Copy to new RFQ</button>
     <button class="btn" id="rfqcopy">Copy as text</button>
     <button class="btn" id="rfqpdf" hidden>Download PDF</button>
@@ -278,7 +279,7 @@ a.bn[data-img]{cursor:zoom-in}
     <div class="lbar"><button class="btn" id="lback">← Back to matrix</button><h2 id="ltitle" style="margin:0 8px">My RFQs</h2><span style="flex:1"></span>
       <select id="lwho" aria-label="Whose RFQs" hidden><option value="all">Everyone's RFQs</option><option value="mine">Only mine</option></select>
       <input id="lq" type="search" placeholder="Search number, customer, job, burner…" aria-label="Search RFQs" style="min-width:260px"></div>
-    <div style="overflow-x:auto"><table><thead><tr><th>RFQ #</th><th>Date</th><th>Customer</th><th>Job</th><th>Burner</th><th id="lrepth" hidden>Rep</th><th>Emailed</th></tr></thead><tbody id="lbody"></tbody></table></div>
+    <div style="overflow-x:auto"><table><thead><tr><th>RFQ #</th><th>Date</th><th>Customer</th><th>Job</th><th>Burner</th><th id="lrepth" hidden>Rep</th><th>Emailed</th><th></th></tr></thead><tbody id="lbody"></tbody></table></div>
   </div>
 </section>
 <dialog id="sendd"><form id="sendf">
@@ -475,11 +476,14 @@ function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);
   locks.forEach(id=>{const el=$(id);if(el&&el.value.trim()){el.readOnly=true;el.dataset.lock='1';el.title='Set by your selections on the matrix page. Change the filter there to change this.'}});
   if(RFQ.ro)lockSheet();
   $('matrixv').hidden=true;$('listv').hidden=true;$('rfqv').hidden=false;rfqStatus();scrollTo(0,0);if(!PDFMODE)$('q-co').focus({preventScroll:true})}
+const canDel=r=>!!(r&&ME&&!r.sent&&(r.by===ME.name||ME.role==='admin'));
+async function delRFQ(id,btn){if(!btn.dataset.armed){btn.dataset.armed=1;const t=btn.textContent;btn.textContent='Click again to delete';setTimeout(()=>{delete btn.dataset.armed;btn.textContent=t},4000);return false}
+  await J('DELETE','api/rfqs/'+id,{});toast('RFQ deleted');return true}
 function lockSheet(){RFQ.ro=true;RFQ.dirty=false;const sh=$('sheet');sh.classList.add('ro');
   sh.querySelectorAll('input,textarea').forEach(el=>el.readOnly=true);sh.querySelectorAll('select').forEach(el=>el.disabled=true);rfqStatus()}
 $('sheet').addEventListener('input',()=>{if(RFQ&&!RFQ.ro){RFQ.dirty=true;rfqStatus()}});
 $('sheet').addEventListener('change',()=>{if(RFQ&&!RFQ.ro){RFQ.dirty=true;rfqStatus()}});
-function rfqStatus(){const on=!!ME;['rfqpdf','rfqsend'].forEach(i=>$(i).hidden=!on);$('rfqsave').hidden=!on||!!(RFQ&&RFQ.ro);$('rfqdup').hidden=!on||!(RFQ&&RFQ.ro);if(!on||!RFQ){$('rfqst').textContent='';return}
+function rfqStatus(){const on=!!ME;['rfqpdf','rfqsend'].forEach(i=>$(i).hidden=!on);$('rfqsave').hidden=!on||!!(RFQ&&RFQ.ro);$('rfqdup').hidden=!on||!(RFQ&&RFQ.ro);$('rfqdel').hidden=!canDel(RFQ&&RFQ.id&&{by:RFQ.by||(ME&&ME.name),sent:RFQ.sends.length});if(!on||!RFQ){$('rfqst').textContent='';return}
   const last=RFQ.sends.slice(-1)[0];
   $('rfqst').innerHTML=esc((RFQ.id?(RFQ.dirty?'Unsaved changes':'Saved'):'Not saved yet')+(last?` · emailed ${fmtD(last.at)} to ${last.to.join(', ')}`:'')+(RFQ.by&&ME&&RFQ.by!==ME.name?` · by ${RFQ.byFull||RFQ.by}`:''))+(RFQ.ro?'<span class="robadge">Read-only</span>':'');
   $('rfqsave').disabled=!!RFQ.id&&!RFQ.dirty}
@@ -508,6 +512,7 @@ $('rfqdup').onclick=async e=>{const b=e.currentTarget;if(!RFQ)return;b.disabled=
   try{const f=rfqFields(),raw=RFQ.raw,fk=RFQ.fit,from=RFQ.from,locks=RFQ.locks||[];delete f['q-rep'];delete f['q-repp'];delete f['q-repe'];
     const x=toRec(raw),n=await nextSeq();openRFQ(x,{no:rfqNo(x,n),raw,fit:fk,fields:f,from,locks});toast('New RFQ '+RFQ.no+' – make your changes, then save or email it')}
   catch(err){toast(err.message)}finally{b.disabled=false}};
+$('rfqdel').onclick=async e=>{try{if(await delRFQ(RFQ.id,e.currentTarget)){const from=RFQ.from;RFQ=null;$('rfqv').hidden=true;from==='list'?openList():($('matrixv').hidden=false)}}catch(err){toast(err.message)}};
 $('rfqsave').onclick=async()=>{try{await saveRFQ()}catch(e){toast('Could not save: '+e.message)}};
 $('rfqpdf').onclick=async e=>{const b=e.currentTarget;b.disabled=true;const t=b.textContent;b.textContent='Building PDF…';
   try{const id=await saveRFQ(true);const r=await fetch('api/rfqs/'+id+'/pdf',{credentials:'same-origin'});
@@ -528,20 +533,25 @@ $('sendf').onsubmit=async e=>{e.preventDefault();const g=$('sendgo');g.disabled=
 let LIST=[];
 async function openList(){$('matrixv').hidden=true;$('rfqv').hidden=true;$('listv').hidden=false;scrollTo(0,0);
   const staff=ME&&ME.role!=='rep';$('lwho').hidden=!staff;$('lrepth').hidden=!staff;
-  $('lbody').innerHTML='<tr><td colspan="7" class="sm">Loading…</td></tr>';
-  try{LIST=await J('GET','api/rfqs');renderList()}catch(e){$('lbody').innerHTML=`<tr><td colspan="7">${esc(e.message)}</td></tr>`}}
+  $('lbody').innerHTML='<tr><td colspan="8" class="sm">Loading…</td></tr>';
+  try{LIST=await J('GET','api/rfqs');renderList()}catch(e){$('lbody').innerHTML=`<tr><td colspan="8">${esc(e.message)}</td></tr>`}}
 function renderList(){const staff=ME&&ME.role!=='rep',mine=!staff||$('lwho').value==='mine';
   $('ltitle').textContent=mine?'My RFQs':'All RFQs';
   const q=$('lq').value.trim().toLowerCase();
   const rows=LIST.filter(r=>(!mine||r.by===ME.name)&&(!q||[r.no,r.company,r.contact,r.job,r.burner,r.by,r.byFull].join(' ').toLowerCase().includes(q)));
   $('lbody').innerHTML=rows.map(r=>`<tr data-id="${esc(r.id)}"><td class="no">${esc(r.no)}</td><td style="white-space:nowrap">${fmtD(r.date)}</td><td>${esc(r.company)}${r.contact?`<div class="sm">${esc(r.contact)}</div>`:''}</td><td>${esc(r.job)}</td>
     <td><span style="color:${r.fuel==='gas'?'var(--gas)':'var(--oil)'};font-weight:600">${esc(r.burner)}</span></td>${staff?`<td${$('lrepth').hidden?' hidden':''}>${esc(r.byFull||r.by)}</td>`:''}
-    <td class="sm">${r.sent?`${fmtD(r.sent.at)}<br>${esc(r.sent.to.join(', '))}`:'—'}</td></tr>`).join('')||`<tr><td colspan="7" class="sm" style="padding:24px 8px">${LIST.length?'No RFQs match.':'No saved RFQs yet. Use “Create RFQ” in the matrix, then Save or Email PDF.'}</td></tr>`}
+    <td class="sm">${r.sent?`${fmtD(r.sent.at)}<br>${esc(r.sent.to.join(', '))}`:'—'}</td><td>${canDel({by:r.by,sent:r.sent})?'<button class="btn ldel" style="min-height:30px;padding:3px 10px;color:#b3141f">Delete</button>':''}</td></tr>`).join('')||`<tr><td colspan="8" class="sm" style="padding:24px 8px">${LIST.length?'No RFQs match.':'No saved RFQs yet. Use “Create RFQ” in the matrix, then Save or Email PDF.'}</td></tr>`}
+async function goHome(){if(!$('rfqv').hidden&&RFQ&&RFQ.dirty&&ME){try{await saveRFQ(true);toast('RFQ saved')}catch(e){toast('Could not save: '+e.message);return}}
+  RFQ=null;$('rfqv').hidden=true;$('listv').hidden=true;$('matrixv').hidden=false;scrollTo(0,0)}
+$('home').onclick=goHome;$('home').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();goHome()}};
 $('lwho').onchange=renderList;$('lq').oninput=renderList;
 $('lback').onclick=()=>{$('listv').hidden=true;$('matrixv').hidden=false};
 async function openSaved(id,from){const rec=await J('GET','api/rfqs/'+id);
   openRFQ(toRec(rec.burner),{id:rec.id,no:rec.no,date:rec.date,raw:rec.burner,fit:rec.fit||'',fields:rec.fields,sends:rec.sends||[],by:rec.by,byFull:rec.byFull,from,ro:true})}
-$('lbody').onclick=e=>{const tr=e.target.closest('tr[data-id]');if(tr)openSaved(tr.dataset.id,'list').catch(err=>toast(err.message))};
+$('lbody').onclick=async e=>{const tr=e.target.closest('tr[data-id]');const d=e.target.closest('.ldel');
+  if(d&&tr){try{if(await delRFQ(tr.dataset.id,d)){LIST=LIST.filter(r=>r.id!==tr.dataset.id);renderList()}}catch(err){toast(err.message)}return}
+  if(tr)openSaved(tr.dataset.id,'list').catch(err=>toast(err.message))};
 $('rfqsb').onclick=()=>{if(!$('rfqv').hidden&&RFQ&&RFQ.dirty){saveRFQ(true).then(openList,err=>toast('Could not save: '+err.message))}else openList()};
 
 /* ---------- Load data ---------- */
