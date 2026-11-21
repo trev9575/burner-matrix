@@ -187,11 +187,12 @@ a.bn[data-img]{cursor:zoom-in}
 .st-won{background:#e2f3e7;color:#1d6b35}.st-lost{background:#fde3e5;color:#b3141f}
 #o2g{border:0;border-radius:6px;padding:22px;max-width:560px;width:94vw}#o2g::backdrop{background:rgba(0,0,0,.4)}
 #o2g form{display:grid;gap:12px}#o2g .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-#o2g label{display:grid;gap:4px;font-size:13px;font-weight:600}#o2g input[type=number]{font:inherit;padding:8px 10px;border:1px solid #b9b9b2;border-radius:3px;width:100%}
+#o2g label{display:grid;gap:4px;font-size:13px;font-weight:600}#o2g select{font:inherit;padding:8px 10px;border:1px solid #b9b9b2;border-radius:3px;background:#fff;min-height:0}#o2g input[type=number]{font:inherit;padding:8px 10px;border:1px solid #b9b9b2;border-radius:3px;width:100%}
 #o2g .calc{background:#f6f6f3;border-left:4px solid var(--gas);padding:10px 12px;font-size:14px;border-radius:3px}#o2g .calc b{font-size:17px}
 #o2g ul{list-style:none;margin:0;padding:0;max-height:260px;overflow:auto;border:1px solid var(--rule);border-radius:3px}
 #o2g li{display:flex;gap:10px;align-items:center;padding:7px 10px;border-bottom:1px solid var(--rule);font-size:14px}#o2g li:last-child{border:0}
-#o2g li .r{margin-left:auto;color:var(--mute);font-size:12.5px;white-space:nowrap}#o2g .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+#o2g li .r{margin-left:auto;color:var(--mute);font-size:12.5px;white-space:nowrap}#o2g li .rfqb{margin:0}#o2g li b{white-space:nowrap}#o2g li .cv{font-size:11px;font-weight:700;background:#e6eef8;color:#1d4f86;border-radius:3px;padding:1px 6px}
+#o2g h4{margin:4px 0 -4px;font-size:13px}#o2g .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 @media(max-width:500px){#o2g .g3{grid-template-columns:1fr 1fr}}
 #sendd{border:0;border-radius:6px;padding:22px;max-width:420px;width:92vw}#sendd::backdrop{background:rgba(0,0,0,.4)}
 #sendd form{display:grid;gap:12px}#sendd label{display:grid;gap:4px;font-size:13px;font-weight:600}#sendd input[type=text]{font:inherit;padding:8px 10px;border:1px solid #b9b9b2;border-radius:3px}
@@ -343,12 +344,12 @@ a.bn[data-img]{cursor:zoom-in}
   <h2 style="font-size:20px">Oil-to-gas helper</h2>
   <p style="margin:0;font-size:13px;color:var(--mute)">Enter the oil nozzle in the appliance now. The gas burner should match the same firing rate.</p>
   <div class="g3">
-    <label>Nozzle size (GPH)<input type="number" id="o-gph" min="0.2" max="60" step="0.05" placeholder="e.g. 0.85" inputmode="decimal"></label>
+    <label>Number of nozzles<select id="o-n"><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
     <label>Pump pressure (psi)<input type="number" id="o-psi" min="60" max="300" step="5" value="100" inputmode="decimal"></label>
-    <label>Number of nozzles<input type="number" id="o-n" min="1" max="6" step="1" value="1" inputmode="numeric"></label>
   </div>
+  <div class="g3" id="o-nz"></div>
   <div class="calc" id="o-calc">Nozzles are rated at 100 psi. Higher pump pressure fires more oil than the stamped size.</div>
-  <label class="chk" style="display:flex;font-weight:500"><input type="checkbox" id="o-conv" checked> Only burners made for oil-to-gas conversion</label>
+  <h4 id="o-h" hidden></h4>
   <ul id="o-list" hidden></ul>
   <div class="row"><button type="button" class="btn" id="o-x">Close</button><button type="button" class="btn pri" id="o-go" disabled>Show in the matrix</button></div>
 </form></dialog>
@@ -456,21 +457,31 @@ $('reset').onclick=()=>{S=JSON.parse(JSON.stringify(DEF));CONV=null;sync()};
 /* ---------- Oil-to-gas helper ---------- */
 // Actual oil flow = stamped nozzle size × √(pump psi ÷ 100) × nozzles; input ≈ GPH × 140 MBH (same factor as the chart).
 let CONV=null;
-const o2gCalc=()=>{const g=parseFloat($('o-gph').value),p=parseFloat($('o-psi').value)||100,n=Math.max(1,parseInt($('o-n').value)||1);
-  if(!(g>0))return null;const gph=g*Math.sqrt(p/100)*n;return{g,p,n,gph,mbh:Math.round(gph*G)}};
+function o2gNozzles(){const n=+$('o-n').value||1,box=$('o-nz'),old=[...box.querySelectorAll('input')].map(i=>i.value);
+  box.innerHTML=Array.from({length:n},(_,i)=>`<label>${n>1?'Nozzle '+(i+1)+' (GPH)':'Nozzle size (GPH)'}<input type="number" class="o-g" min="0.2" max="60" step="0.05" placeholder="e.g. 0.85" inputmode="decimal" value="${esc(old[i]||'')}"></label>`).join('');
+  box.querySelectorAll('input').forEach(i=>i.addEventListener('input',o2gRender))}
+// Each nozzle flows its stamped size × √(pump psi ÷ 100); one pump feeds them all.
+const o2gCalc=()=>{const sizes=[...document.querySelectorAll('#o-nz .o-g')].map(i=>parseFloat(i.value));const p=parseFloat($('o-psi').value)||100;
+  if(!sizes.length||sizes.some(g=>!(g>0)))return null;const stamped=sizes.reduce((a,b)=>a+b,0),gph=stamped*Math.sqrt(p/100);
+  return{sizes,p,stamped,gph,mbh:Math.round(gph*G)}};
+const nzTxt=c=>c.sizes.length>1?`${c.sizes.join(' + ')} GPH nozzles`:`${c.sizes[0]} GPH nozzle`;
 function o2gRender(){const c=o2gCalc();$('o-go').disabled=!c;const ul=$('o-list');
-  if(!c){$('o-calc').innerHTML='Nozzles are rated at 100 psi. Higher pump pressure fires more oil than the stamped size.';ul.hidden=true;return}
-  $('o-calc').innerHTML=`${c.n>1?c.n+' × ':''}${c.g} GPH at ${c.p} psi fires <b>${c.gph.toFixed(2)} GPH</b> ≈ <b>${c.mbh.toLocaleString()} MBH</b> input.<br><span style="font-size:12.5px;color:var(--mute)">Check the appliance's rated input too; many oil appliances are over-fired.</span>`;
-  const only=$('o-conv').checked;
-  const m=D.filter(x=>x.f==='gas'&&(!only||x.a.includes('conv'))&&fit(x,c.mbh)!=='out').sort((a,b)=>({ok:0,edge:1}[fit(a,c.mbh)]-{ok:0,edge:1}[fit(b,c.mbh)])||mb(a)[0]-mb(b)[0]);
-  ul.hidden=false;ul.innerHTML=m.map(x=>{const fz=fit(x,c.mbh);return`<li><b class="nm-gas" style="color:var(--gas)">${esc(x.n)}</b><span class="note">${esc(x.b)}</span><span class="fit ${fz}">${fz==='ok'?'Sweet spot':where(x,c.mbh)==='max'?'Near MAX':'Near MIN'}</span><span class="r">${fmt(x)}</span></li>`}).join('')||
-    `<li>No ${only?'conversion ':''}gas burner covers ${c.mbh.toLocaleString()} MBH.${only?' Untick the box to see every gas burner.':''}</li>`}
-['o-gph','o-psi','o-n','o-conv'].forEach(i=>$(i).addEventListener('input',o2gRender));
-$('o2gb').onclick=()=>{o2gRender();$('o2g').showModal();$('o-gph').focus()};
+  if(!c){$('o-calc').innerHTML='Nozzles are rated at 100 psi. Higher pump pressure fires more oil than the stamped size.';ul.hidden=true;$('o-h').hidden=true;return}
+  $('o-calc').innerHTML=`${nzTxt(c)}${c.sizes.length>1?` (${+c.stamped.toFixed(2)} GPH total)`:''} at ${c.p} psi fire${c.sizes.length>1?'':'s'} <b>${c.gph.toFixed(2)} GPH</b> ≈ <b>${c.mbh.toLocaleString()} MBH</b> input.<br><span style="font-size:12.5px;color:var(--mute)">Check the appliance's rated input too; many oil appliances are over-fired.</span>`;
+  const rk=x=>({ok:0,edge:2}[fit(x,c.mbh)])+(x.a.includes('conv')?0:1);
+  const m=D.filter(x=>x.f==='gas'&&fit(x,c.mbh)!=='out').sort((a,b)=>rk(a)-rk(b)||mb(a)[0]-mb(b)[0]);
+  $('o-h').hidden=!m.length;$('o-h').textContent=`${m.length} gas burner${m.length>1?'s':''} cover ${c.mbh.toLocaleString()} MBH`;
+  ul.hidden=false;ul.innerHTML=m.map(x=>{const fz=fit(x,c.mbh);return`<li><b style="color:var(--gas)">${esc(x.n)}</b><span class="note">${esc(x.b)}</span>${x.a.includes('conv')?'<span class="cv" title="Marketed for oil-to-gas conversions">Conversion</span>':''}<span class="fit ${fz}">${fz==='ok'?'Sweet spot':where(x,c.mbh)==='max'?'Near MAX':'Near MIN'}</span><span class="r">${fmt(x)}</span><button type="button" class="rfqb" data-k="${esc((x.b+'|'+x.n).toLowerCase())}">Create RFQ</button></li>`}).join('')||
+    `<li>No gas burner covers ${c.mbh.toLocaleString()} MBH. Check the nozzle sizes and pressure.</li>`}
+$('o-n').addEventListener('change',()=>{o2gNozzles();o2gRender()});$('o-psi').addEventListener('input',o2gRender);o2gNozzles();
+const o2gApply=c=>{CONV=c;Object.assign(S,{fuel:'gas',rate:String(c.mbh),unit:'mbh',app:''});sync();$('o2g').close()};
+$('o-list').onclick=e=>{const b=e.target.closest('.rfqb');const c=o2gCalc();if(!b||!c)return;const x=D.find(o=>(o.b+'|'+o.n).toLowerCase()===b.dataset.k);if(!x)return;
+  o2gApply(c);b.disabled=true;nextSeq().then(n=>openRFQ(x,{no:rfqNo(x,n)})).finally(()=>b.disabled=false)};
+$('o2gb').onclick=()=>{o2gRender();$('o2g').showModal();const f=document.querySelector('#o-nz .o-g');if(f)f.focus()};
 $('o-x').onclick=()=>$('o2g').close();
-$('o-go').onclick=()=>{const c=o2gCalc();if(!c)return;CONV=c;
-  Object.assign(S,{fuel:'gas',rate:String(c.mbh),unit:'mbh',app:$('o-conv').checked?'conv':''});sync();$('o2g').close();
+$('o-go').onclick=()=>{const c=o2gCalc();if(!c)return;o2gApply(c);
   (document.querySelector('.ladder')||$('lad')).scrollIntoView({behavior:'smooth',block:'start'});toast(`Showing gas burners for ${c.mbh.toLocaleString()} MBH`)};
+
 $('lad').onclick=e=>{const row=e.target.closest('.lr');if(!row)return;const t=$('r-'+row.dataset.n.replace(/\W/g,''));if(!t)return;document.querySelectorAll('tr.hl').forEach(x=>x.classList.remove('hl'));t.classList.add('hl');t.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'center'})};
 const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1800)};
 $('copy').onclick=async()=>{const r=reqMBH();const head=r!=null?`Required input: ${S.rate} ${S.unit.toUpperCase()} (~${Math.round(r).toLocaleString()} MBH)\n`:'';
@@ -566,7 +577,7 @@ function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);
   const locks=meta.locks||LOCKABLE.filter(id=>$(id).value.trim());RFQ.locks=locks;
   locks.forEach(id=>{const el=$(id);if(el&&el.value.trim()){el.readOnly=true;el.dataset.lock='1';el.title='Set by your selections on the matrix page. Change the filter there to change this.'}});
   if(!meta.fields&&CONV&&x.f==='gas'&&String(CONV.mbh)===String(S.rate)&&S.unit==='mbh'){
-    $('q-notes').value=`Oil-to-gas conversion. Replaces ${CONV.n>1?CONV.n+' × ':''}${CONV.g} GPH oil nozzle at ${CONV.p} psi (≈ ${CONV.gph.toFixed(2)} GPH, ${CONV.mbh.toLocaleString()} MBH).`;
+    $('q-notes').value=`Oil-to-gas conversion. Replaces ${nzTxt(CONV)} at ${CONV.p} psi (≈ ${CONV.gph.toFixed(2)} GPH, ${CONV.mbh.toLocaleString()} MBH).`;
     if(!$('q-type').value)$('q-type').value='Oil-fired appliance, converting to gas'}
   if(RFQ.ro)lockSheet();
   $('matrixv').hidden=true;$('listv').hidden=true;$('rfqv').hidden=false;rfqStatus();scrollTo(0,0);if(!PDFMODE)$('q-co').focus({preventScroll:true})}
