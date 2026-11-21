@@ -135,7 +135,18 @@ a.bn[data-img]{cursor:zoom-in}
 .rfqb{margin-top:6px;font:600 12px Montserrat,sans-serif;padding:4px 10px;min-height:30px;border-radius:3px;border:1px solid var(--red);background:#fff;color:var(--red);cursor:pointer;white-space:nowrap}
 .rfqb:hover{background:var(--red);color:#fff}
 #rfqv{padding:16px max(3vw,16px) 40px}
-.rfqbar{display:flex;flex-wrap:wrap;gap:8px;max-width:8.5in;margin:0 auto 14px}
+.rfqbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;max-width:8.5in;margin:0 auto 14px}
+#rfqst{font-size:13px;color:var(--mute)}
+#listv{padding:20px max(3vw,16px) 40px}#listv .panel{background:#fff;max-width:1200px;margin:0 auto;padding:20px;border-radius:4px}
+#listv .lbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 14px}
+#listv .lbar input,#listv .lbar select{width:auto;min-height:0;font:inherit;padding:7px 10px;border:1px solid #b9b9b2;border-radius:3px;background:#fff}
+#listv table{width:100%;border-collapse:collapse;font-size:14px}#listv th{text-align:left;background:var(--ink);color:#fff;font-size:13px;padding:8px}
+#listv td{padding:8px;border-bottom:1px solid var(--rule);vertical-align:top}#listv tbody tr{cursor:pointer}#listv tbody tr:hover td{background:#f6f6f3}
+#listv .no{font-weight:700;white-space:nowrap}#listv .sm{font-size:12.5px;color:var(--mute)}
+#sendd{border:0;border-radius:6px;padding:22px;max-width:420px;width:92vw}#sendd::backdrop{background:rgba(0,0,0,.4)}
+#sendd form{display:grid;gap:12px}#sendd label{display:grid;gap:4px;font-size:13px;font-weight:600}#sendd input[type=text]{font:inherit;padding:8px 10px;border:1px solid #b9b9b2;border-radius:3px}
+#sendd .ck{display:flex;gap:8px;align-items:center;font-weight:500}#sendd .row{display:flex;gap:8px;justify-content:flex-end}
+.msg.err{background:#fde8ea;color:#8a1020;padding:8px 10px;border-radius:3px;font-size:14px}
 .sheet{background:#fff;max-width:8.5in;margin:0 auto;padding:.55in .6in;box-shadow:0 2px 10px rgba(0,0,0,.12);font-size:12.5px;line-height:1.4;color:#1d1d1d}
 .sh-top{display:flex;align-items:center;gap:18px;border-bottom:3px solid var(--red);padding-bottom:10px}
 .sh-top img{height:34px;width:auto}
@@ -157,7 +168,7 @@ a.bn[data-img]{cursor:zoom-in}
 .sh-fit{display:inline-block;font-weight:700;font-size:11px;border-radius:3px;padding:1px 7px;margin-left:6px}
 .sh-fit.ok{background:#e2f3e7;color:#1d6b35}.sh-fit.edge{background:#fff3e8;color:#b35c00}.sh-fit.out{background:#fde3e5;color:#b3141f}
 @media(max-width:700px){.kv{grid-template-columns:minmax(0,1fr)}.kv>div{grid-template-columns:120px minmax(0,1fr)}.sh-burner{grid-template-columns:minmax(0,1fr)}.sheet{padding:18px}}
-@media print{@page{size:letter;margin:.4in}body{background:#fff}#matrixv,.noprint,.toast,#pic,.util,.brand{display:none !important}.sheet ::placeholder{color:transparent}.sheet{font-size:10.5px !important;line-height:1.3}.sheet h3{margin:9px 0 3px;padding:3px 7px;font-size:11px}.kv>div{min-height:0;padding:2px 0;grid-template-columns:135px minmax(0,1fr)}.kv label,.kv .k{font-size:10px}.kv input,.kv select{font-size:11px;padding:1px 2px}.sh-burner{grid-template-columns:minmax(0,1fr) 115px}.sh-burner img{width:115px;height:115px}.sheet textarea{min-height:38px;font-size:11px;resize:none}.sh-top{padding-bottom:6px}.sh-top img{height:28px}.sh-top h1{font-size:17px}.sh-foot{margin-top:8px}#rfqv{display:block !important;padding:0}.sheet{box-shadow:none;max-width:none;padding:0;font-size:11.5px}.kv input,.kv select,.sheet textarea{background:transparent;border-bottom:1px solid #ccc;-webkit-appearance:none;appearance:none}.sheet textarea{border:1px solid #ccc}.sheet h3,.sh-top .lg,.sh-fit{-webkit-print-color-adjust:exact;print-color-adjust:exact}.kv>div{break-inside:avoid}}
+@media print{@page{size:letter;margin:.4in}body{background:#fff}#matrixv,#listv,.noprint,.toast,#pic,.util,.brand{display:none !important}.sheet ::placeholder{color:transparent}.sheet{font-size:10.5px !important;line-height:1.3}.sheet h3{margin:9px 0 3px;padding:3px 7px;font-size:11px}.kv>div{min-height:0;padding:2px 0;grid-template-columns:135px minmax(0,1fr)}.kv label,.kv .k{font-size:10px}.kv input,.kv select{font-size:11px;padding:1px 2px}.sh-burner{grid-template-columns:minmax(0,1fr) 115px}.sh-burner img{width:115px;height:115px}.sheet textarea{min-height:38px;font-size:11px;resize:none}.sh-top{padding-bottom:6px}.sh-top img{height:28px}.sh-top h1{font-size:17px}.sh-foot{margin-top:8px}#rfqv{display:block !important;padding:0}.sheet{box-shadow:none;max-width:none;padding:0;font-size:11.5px}.kv input,.kv select,.sheet textarea{background:transparent;border-bottom:1px solid #ccc;-webkit-appearance:none;appearance:none}.sheet textarea{border:1px solid #ccc}.sheet h3,.sh-top .lg,.sh-fit{-webkit-print-color-adjust:exact;print-color-adjust:exact}.kv>div{break-inside:avoid}}
 @media(max-width:1000px){.rail{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.rail{grid-template-columns:minmax(0,1fr)}.rail .f-power{grid-column:auto}}
 @media(max-width:600px){.util>a{display:none}.brand .div{display:none}.axis,.lr{grid-template-columns:140px minmax(0,1fr)}.lr .nm small{display:none}.axis span:nth-child(even){display:none}table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--rule)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:7.5em;background:none !important}.stack td::before{content:attr(data-l);float:inline-start;width:7em;margin-inline-start:-7.5em;color:var(--mute);font-size:12.5px}.stack td:empty{display:none}}
@@ -165,7 +176,7 @@ a.bn[data-img]{cursor:zoom-in}
 </style>
 </head>
 <body>
-<div class="util"><span class="acct" id="acct" hidden><span id="whoami"></span><button type="button" id="profb">My profile</button><button type="button" id="outb">Sign out</button></span><a href="https://www.beckettcorp.com" target="_blank" rel="noopener">beckettcorp.com</a><a href="https://waynecombustion.com/products" target="_blank" rel="noopener">waynecombustion.com</a></div>
+<div class="util"><span class="acct" id="acct" hidden><span id="whoami"></span><button type="button" id="rfqsb">My RFQs</button><button type="button" id="profb">My profile</button><button type="button" id="outb">Sign out</button></span><a href="https://www.beckettcorp.com" target="_blank" rel="noopener">beckettcorp.com</a><a href="https://waynecombustion.com/products" target="_blank" rel="noopener">waynecombustion.com</a></div>
 <div class="brand" role="banner">
   <img src="logos/beckett.png" alt="Beckett" onerror="this.outerHTML='<span class=bk>Beckett</span>'">
   <span class="div" aria-hidden="true"></span>
@@ -245,14 +256,33 @@ a.bn[data-img]{cursor:zoom-in}
 </div>
 <section id="rfqv" hidden>
   <div class="rfqbar noprint">
-    <button class="btn" id="rfqback">← Back to matrix</button>
+    <button class="btn" id="rfqback">← Back</button>
+    <span id="rfqst"></span>
     <span style="flex:1"></span>
+    <button class="btn" id="rfqsave" hidden>Save</button>
     <button class="btn" id="rfqcopy">Copy as text</button>
-    <button class="btn" id="rfqmail">Email</button>
-    <button class="btn pri" id="rfqprint">Print / Save PDF</button>
+    <button class="btn" id="rfqpdf" hidden>Download PDF</button>
+    <button class="btn" id="rfqprint">Print</button>
+    <button class="btn pri" id="rfqsend" hidden>Email PDF…</button>
   </div>
   <div class="sheet" id="sheet"></div>
 </section>
+<section id="listv" hidden>
+  <div class="panel">
+    <div class="lbar"><button class="btn" id="lback">← Back to matrix</button><h2 id="ltitle" style="margin:0 8px">My RFQs</h2><span style="flex:1"></span>
+      <select id="lwho" aria-label="Whose RFQs" hidden><option value="all">Everyone's RFQs</option><option value="mine">Only mine</option></select>
+      <input id="lq" type="search" placeholder="Search number, customer, job, burner…" aria-label="Search RFQs" style="min-width:260px"></div>
+    <div style="overflow-x:auto"><table><thead><tr><th>RFQ #</th><th>Date</th><th>Customer</th><th>Job</th><th>Burner</th><th id="lrepth" hidden>Rep</th><th>Emailed</th></tr></thead><tbody id="lbody"></tbody></table></div>
+  </div>
+</section>
+<dialog id="sendd"><form id="sendf">
+  <h2 style="font-size:20px">Email the RFQ PDF</h2>
+  <p id="sendnote" style="margin:0;font-size:13px;color:var(--mute)">The RFQ is saved, turned into a PDF and emailed from the server.</p>
+  <label>Send to<input type="text" id="sendto" inputmode="email" autocapitalize="none" placeholder="name@company.com, other@company.com"></label>
+  <label class="ck"><input type="checkbox" id="sendcc" checked> <span id="sendccl">Send me a copy</span></label>
+  <div id="senderr" class="msg err" hidden></div>
+  <div class="row"><button type="button" class="btn" id="sendx">Cancel</button><button class="btn pri" type="submit" id="sendgo">Send</button></div>
+</form></dialog>
 <div class="toast" id="toast" role="status"></div>
 <div id="pic" aria-hidden="true"><img alt=""><span></span></div>
 
@@ -366,7 +396,7 @@ const MODEW={onoff:'On/Off',hilo:'Lo-Hi-Lo',mod:'Modulating'};
 const vlabel=k=>({'12dc':'12 VDC','24dc':'24 VDC','120':'120 VAC','240':'208–240 VAC 1Φ','3p240':'208–240 VAC 3Φ','3p480':'480 VAC 3Φ','none':'No power needed'}[k]);
 let rfqB=null,ME=null;
 const repName=()=>ME?(ME.full||ME.name):'',repPhone=()=>ME&&ME.phone||'',repEmail=()=>ME&&ME.email||'';
-const today=()=>new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+const PDFMODE=new URLSearchParams(location.search).get('pdf')==='1';
 const ymd=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return`${String(d.getFullYear()).slice(2)}${p(d.getMonth()+1)}${p(d.getDate())}`};
 let seqMem={};
 // Daily RFQ sequence: shared counter on the server when available, otherwise per-browser.
@@ -379,7 +409,13 @@ const rfqNo=(x,n)=>`${ymd()}-${String(n).padStart(2,'0')}${x.n.replace(/[^A-Za-z
 const inp=(id,label,val='',ph='',wide)=>`<div${wide?' class="w"':''}><label for="${id}">${label}</label><input id="${id}" type="text" value="${esc(val)}" placeholder="${esc(ph)}"></div>`;
 const sel=(id,label,opts,val)=>`<div><label for="${id}">${label}</label><select id="${id}">${opts.map(o=>`<option${o===val?' selected':''}>${esc(o)}</option>`).join('')}</select></div>`;
 const ro=(label,val)=>`<div><span class="k">${label}</span><span class="v">${val}</span></div>`;
-function openRFQ(x,seq){rfqB=x;const r=reqMBH(),fz=fit(x,r);const[a,b]=mb(x);
+const fmtD=iso=>new Date(iso).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+const rawOf=x=>RAW.find(o=>(o.brand+'|'+o.name).toLowerCase()===(x.b+'|'+x.n).toLowerCase());
+let RFQ=null;
+// meta: {no, date?, id?, raw?, fit?, fields?, sends?, by?, from?}
+function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);
+  RFQ={id:meta.id||null,no:meta.no,date:meta.date||new Date().toISOString(),raw:meta.raw||rawOf(x),sends:meta.sends||[],by:meta.by||'',byFull:meta.byFull||'',from:meta.from||'matrix',dirty:false};
+  const fz0=fit(x,r);RFQ.fit=meta.fit!==undefined?meta.fit:(fz0==='edge'?where(x,r):fz0||'');
   const rateTxt=r==null?'':(S.unit==='gph'?`${S.rate} GPH (≈ ${Math.round(r).toLocaleString()} MBH)`:`${Number(S.rate).toLocaleString()} MBH${x.f==='oil'?` (≈ ${(r/G).toFixed(2)} GPH)`:''}`);
   const siteKeys=S.volt.filter(v=>x.v.includes(v));const site=siteKeys.map(vlabel).join(', ');
   const pKeys=['12dc','24dc','120','240','3p240','3p480','none'].filter(k=>x.v.includes(k));
@@ -387,11 +423,11 @@ function openRFQ(x,seq){rfqB=x;const r=reqMBH(),fz=fit(x,r);const[a,b]=mb(x);
   const pDefault=siteKeys.length?pOpts[pKeys.indexOf(siteKeys[0])]:(pOpts.find(o=>o.endsWith('(std)'))||pOpts[0]);
   const mOpts=x.m.map(m=>MODEW[m]);
   const dims=Array.isArray(x.dim)?x.dim.map(n=>+n.toFixed(2)).join(' × ')+' in (H × W × D)':x.dim==='spec'?'See spec sheet':'Not published';
-  const fitTxt=fz?`<span class="sh-fit ${fz}">${fz==='ok'?'Sweet spot':fz==='edge'?(where(x,r)==='max'?'Near MAX':'Near MIN'):'Outside range'}</span>`:'';
+  const fk=RFQ.fit,fitTxt=fk?`<span class="sh-fit ${fk==='max'||fk==='min'?'edge':fk==='ok'?'ok':'out'}">${{ok:'Sweet spot',max:'Near MAX',min:'Near MIN',out:'Outside range'}[fk]||''}</span>`:'';
   const logos=[...document.querySelectorAll('.brand img')].map(i=>`<img src="${i.currentSrc||i.src}" alt="${esc(i.alt)}">`).join('');
   $('sheet').innerHTML=`
   <div class="sh-top">${logos?`<div class="lg">${logos}</div>`:''}<div><h1>Burner Request for Quotation</h1><div style="font-size:12px;color:#66665f">Specification sheet</div></div>
-    <div class="meta"><b>${rfqNo(x,seq)}</b><br>${today()}</div></div>
+    <div class="meta"><b>${esc(RFQ.no)}</b><br>${fmtD(RFQ.date)}</div></div>
   <h3>Customer &amp; job</h3>
   <div class="kv">${inp('q-co','Company')}${inp('q-ct','Contact')}${inp('q-ph','Phone')}${inp('q-em','Email')}${inp('q-job','Project / job name')}${inp('q-qty','Quantity','1')}${inp('q-addr','Site address','','',true)}${inp('q-need','Required by date')}${inp('q-po','Customer ref / PO')}</div>
   <h3>Application</h3>
@@ -424,28 +460,81 @@ function openRFQ(x,seq){rfqB=x;const r=reqMBH(),fz=fit(x,r);const[a,b]=mb(x);
   <h3>Notes</h3>
   <textarea id="q-notes" aria-label="Notes" placeholder="Anything else the quote needs to cover"></textarea>
   <div class="kv" style="margin-top:12px">${inp('q-rep','Prepared by',repName())}${inp('q-repp','Rep phone',repPhone())}${inp('q-repe','Rep email',repEmail(),'','w')}</div>
-  <div class="sh-foot">Specifications from the Burner Selection Matrix (${today()}). Confirm against the current manufacturer spec sheet and the appliance maker's burner specification before quoting.</div>`;
-  $('matrixv').hidden=true;$('rfqv').hidden=false;scrollTo(0,0);$('q-co').focus({preventScroll:true})}
-function closeRFQ(){$('rfqv').hidden=true;$('matrixv').hidden=false;if(rfqB){const t=$('r-'+rfqB.n.replace(/\W/g,''));if(t)t.scrollIntoView({block:'center'})}}
-$('tb').addEventListener('click',e=>{const b=e.target.closest('.rfqb');if(!b)return;const x=D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===b.dataset.k);if(x){b.disabled=true;nextSeq().then(n=>openRFQ(x,n)).finally(()=>b.disabled=false)}});
+  <div class="sh-foot">Specifications from the Burner Selection Matrix (${fmtD(RFQ.date)}). Confirm against the current manufacturer spec sheet and the appliance maker's burner specification before quoting.</div>`;
+  if(meta.fields)for(const[k,v]of Object.entries(meta.fields)){const el=$(k);if(!el||!/^q-/.test(k))continue;
+    if(el.tagName==='SELECT'&&v&&![...el.options].some(o=>o.value===v))el.add(new Option(v,v));el.value=v}
+  $('matrixv').hidden=true;$('listv').hidden=true;$('rfqv').hidden=false;rfqStatus();scrollTo(0,0);if(!PDFMODE)$('q-co').focus({preventScroll:true})}
+$('sheet').addEventListener('input',()=>{if(RFQ){RFQ.dirty=true;rfqStatus()}});
+$('sheet').addEventListener('change',()=>{if(RFQ){RFQ.dirty=true;rfqStatus()}});
+function rfqStatus(){const on=!!ME;['rfqsave','rfqpdf','rfqsend'].forEach(i=>$(i).hidden=!on);if(!on||!RFQ){$('rfqst').textContent='';return}
+  const last=RFQ.sends.slice(-1)[0];
+  $('rfqst').textContent=(RFQ.id?(RFQ.dirty?'Unsaved changes':'Saved'):'Not saved yet')+(last?` · emailed ${fmtD(last.at)} to ${last.to.join(', ')}`:'')+(RFQ.by&&ME&&RFQ.by!==ME.name?` · by ${RFQ.byFull||RFQ.by}`:'');
+  $('rfqsave').disabled=!!RFQ.id&&!RFQ.dirty}
+const rfqFields=()=>{const f={};$('sheet').querySelectorAll('input[id^="q-"],select[id^="q-"],textarea[id^="q-"]').forEach(el=>f[el.id]=el.value);return f};
+const J=async(method,url,body)=>{const r=await fetch(url,{method,credentials:'same-origin',headers:body!==undefined?{'Content-Type':'application/json','X-BM':'1'}:{'X-BM':'1'},body:body!==undefined?JSON.stringify(body):undefined});
+  if(r.status===401){location.replace('login');throw new Error('Signed out')}let j={};try{j=await r.json()}catch(e){}if(!r.ok)throw new Error(j.error||'HTTP '+r.status);return j};
+async function saveRFQ(quiet){if(!ME||!RFQ)return null;if(RFQ.id&&!RFQ.dirty)return RFQ.id;
+  const rec=RFQ.id?await J('PUT','api/rfqs/'+RFQ.id,{fields:rfqFields()}):await J('POST','api/rfqs',{no:RFQ.no,burner:RFQ.raw,fit:RFQ.fit,fields:rfqFields()});
+  RFQ.id=rec.id;RFQ.dirty=false;RFQ.date=rec.date;rfqStatus();if(!quiet)toast('RFQ saved');return RFQ.id}
+async function closeRFQ(){if(RFQ&&RFQ.dirty&&ME){try{await saveRFQ(true);toast('RFQ saved')}catch(e){toast('Could not save: '+e.message);return}}
+  $('rfqv').hidden=true;if(RFQ&&RFQ.from==='list'){RFQ=null;return openList()}RFQ=null;$('matrixv').hidden=false;if(rfqB){const t=$('r-'+rfqB.n.replace(/\W/g,''));if(t)t.scrollIntoView({block:'center'})}}
+$('tb').addEventListener('click',e=>{const b=e.target.closest('.rfqb');if(!b)return;const x=D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===b.dataset.k);if(x){b.disabled=true;nextSeq().then(n=>openRFQ(x,{no:rfqNo(x,n)})).finally(()=>b.disabled=false)}});
 $('rfqback').onclick=closeRFQ;
 addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('rfqv').hidden)closeRFQ()});
 $('rfqprint').onclick=()=>{try{window.print()}catch(e){toast('Printing is blocked here. Open the page on your server to print.')}};
 const rfqText=()=>{const L=[],sh=$('sheet');
-  L.push('BURNER REQUEST FOR QUOTATION  '+sh.querySelector('.meta b').textContent+'  '+today());
+  L.push('BURNER REQUEST FOR QUOTATION  '+RFQ.no+'  '+fmtD(RFQ.date));
   sh.querySelectorAll('h3').forEach(h=>{L.push('','== '+h.textContent.toUpperCase()+' ==');const n=h.nextElementSibling;
     if(n&&n.tagName==='TEXTAREA'){L.push(n.value||'-');return}
     const box=n&&n.classList.contains('sh-burner')?n.querySelector('.kv'):n;
     if(box)box.querySelectorAll(':scope>div').forEach(r=>{const k=(r.querySelector('label,.k')||{}).textContent||'';const f=r.querySelector('input,select');const v=f?f.value:((r.querySelector('.v')||{}).textContent||'');L.push(`${k}: ${v||'-'}`)})});
   const reps=['q-rep','q-repp','q-repe'].map(i=>$(i).value).filter(Boolean).join(' · ');if(reps)L.push('','Prepared by: '+reps);
   L.push('','Confirm against the current manufacturer spec sheet before quoting.');return L.join('\n')};
-$('rfqcopy').onclick=async()=>{try{await navigator.clipboard.writeText(rfqText());toast('RFQ copied')}catch(e){toast('Copy blocked by browser')}};
-$('rfqmail').onclick=()=>{const subj=`${$('sheet').querySelector('.meta b').textContent} – ${rfqB.b} ${rfqB.n}`+($('q-job').value?` – ${$('q-job').value}`:'');
-  location.href='mailto:?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(rfqText())};
+$('rfqcopy').onclick=async()=>{try{if(ME)await saveRFQ(true);await navigator.clipboard.writeText(rfqText());toast('RFQ copied')}catch(e){toast('Copy blocked by browser')}};
+$('rfqsave').onclick=async()=>{try{await saveRFQ()}catch(e){toast('Could not save: '+e.message)}};
+$('rfqpdf').onclick=async e=>{const b=e.currentTarget;b.disabled=true;const t=b.textContent;b.textContent='Building PDF…';
+  try{const id=await saveRFQ(true);const r=await fetch('api/rfqs/'+id+'/pdf',{credentials:'same-origin'});
+    if(!r.ok){let j={};try{j=await r.json()}catch(x){}throw new Error(j.error||'HTTP '+r.status)}
+    const url=URL.createObjectURL(await r.blob());const a=document.createElement('a');a.href=url;a.download=('RFQ-'+RFQ.no+'.pdf').replace(/[^A-Za-z0-9._-]/g,'');document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000)}
+  catch(err){toast(err.message)}finally{b.disabled=false;b.textContent=t}};
+$('rfqsend').onclick=()=>{$('senderr').hidden=true;$('sendto').value=$('sendto').value||(ME&&ME.rfqTo)||'';
+  const me=ME&&ME.email;$('sendcc').disabled=!me;$('sendcc').checked=!!me;$('sendccl').textContent=me?`Send me a copy (${me})`:'Send me a copy (add your email in My profile)';
+  $('sendnote').textContent=ME&&ME.mail?'The RFQ is saved, turned into a PDF and emailed from the server. Replies go to the rep email on the sheet.':'Email is not set up on the server yet. Ask your admin to add the SMTP settings.';
+  $('sendgo').disabled=!(ME&&ME.mail);$('sendd').showModal();$('sendto').focus()};
+$('sendx').onclick=()=>$('sendd').close();
+$('sendf').onsubmit=async e=>{e.preventDefault();const g=$('sendgo');g.disabled=true;g.textContent='Sending…';$('senderr').hidden=true;
+  try{const id=await saveRFQ(true);const r=await J('POST','api/rfqs/'+id+'/send',{to:$('sendto').value,ccMe:$('sendcc').checked});
+    RFQ.sends.push({at:new Date().toISOString(),to:r.to,cc:r.cc});rfqStatus();$('sendd').close();toast('Emailed to '+r.to.join(', '))}
+  catch(err){$('senderr').textContent=err.message;$('senderr').hidden=false}finally{g.disabled=false;g.textContent='Send'}};
+
+/* ---------- Saved RFQs ---------- */
+let LIST=[];
+async function openList(){$('matrixv').hidden=true;$('rfqv').hidden=true;$('listv').hidden=false;scrollTo(0,0);
+  const staff=ME&&ME.role!=='rep';$('lwho').hidden=!staff;$('lrepth').hidden=!staff;
+  $('lbody').innerHTML='<tr><td colspan="7" class="sm">Loading…</td></tr>';
+  try{LIST=await J('GET','api/rfqs');renderList()}catch(e){$('lbody').innerHTML=`<tr><td colspan="7">${esc(e.message)}</td></tr>`}}
+function renderList(){const staff=ME&&ME.role!=='rep',mine=!staff||$('lwho').value==='mine';
+  $('ltitle').textContent=mine?'My RFQs':'All RFQs';
+  const q=$('lq').value.trim().toLowerCase();
+  const rows=LIST.filter(r=>(!mine||r.by===ME.name)&&(!q||[r.no,r.company,r.contact,r.job,r.burner,r.by,r.byFull].join(' ').toLowerCase().includes(q)));
+  $('lbody').innerHTML=rows.map(r=>`<tr data-id="${esc(r.id)}"><td class="no">${esc(r.no)}</td><td style="white-space:nowrap">${fmtD(r.date)}</td><td>${esc(r.company)}${r.contact?`<div class="sm">${esc(r.contact)}</div>`:''}</td><td>${esc(r.job)}</td>
+    <td><span style="color:${r.fuel==='gas'?'var(--gas)':'var(--oil)'};font-weight:600">${esc(r.burner)}</span></td>${staff?`<td${$('lrepth').hidden?' hidden':''}>${esc(r.byFull||r.by)}</td>`:''}
+    <td class="sm">${r.sent?`${fmtD(r.sent.at)}<br>${esc(r.sent.to.join(', '))}`:'—'}</td></tr>`).join('')||`<tr><td colspan="7" class="sm" style="padding:24px 8px">${LIST.length?'No RFQs match.':'No saved RFQs yet. Use “Create RFQ” in the matrix, then Save or Email PDF.'}</td></tr>`}
+$('lwho').onchange=renderList;$('lq').oninput=renderList;
+$('lback').onclick=()=>{$('listv').hidden=true;$('matrixv').hidden=false};
+async function openSaved(id,from){const rec=await J('GET','api/rfqs/'+id);
+  openRFQ(toRec(rec.burner),{id:rec.id,no:rec.no,date:rec.date,raw:rec.burner,fit:rec.fit||'',fields:rec.fields,sends:rec.sends||[],by:rec.by,byFull:rec.byFull,from})}
+$('lbody').onclick=e=>{const tr=e.target.closest('tr[data-id]');if(tr)openSaved(tr.dataset.id,'list').catch(err=>toast(err.message))};
+$('rfqsb').onclick=()=>{if(!$('rfqv').hidden&&RFQ&&RFQ.dirty){saveRFQ(true).then(openList,err=>toast('Could not save: '+err.message))}else openList()};
 
 /* ---------- Load data ---------- */
-function showMe(){if(!ME)return;$('acct').hidden=false;$('whoami').textContent='Signed in as '+(ME.full||ME.name);const a=$('adminl');if(a)a.hidden=ME.role==='rep'}
-fetch('api/me',{credentials:'same-origin'}).then(r=>r.ok?r.json():null).then(j=>{if(j){ME=j;showMe()}}).catch(()=>{});
+function showMe(){if(!ME)return;$('rfqsb').textContent=ME.role==='rep'?'My RFQs':'RFQs';$('acct').hidden=false;$('whoami').textContent='Signed in as '+(ME.full||ME.name);const a=$('adminl');if(a)a.hidden=ME.role==='rep'}
+const ME_P=fetch('api/me',{credentials:'same-origin'}).then(r=>r.ok?r.json():null).then(j=>{if(j){ME=j;showMe();if(RFQ)rfqStatus()}}).catch(()=>{});
+// ?rfq=<id> opens a saved RFQ; &pdf=1 is the server's PDF renderer
+const RFQ_Q=new URLSearchParams(location.search).get('rfq');
+if(RFQ_Q)ME_P.then(()=>openSaved(RFQ_Q,'list')).then(async()=>{if(!PDFMODE)return;
+    await document.fonts.ready;await Promise.all([...document.querySelectorAll('#sheet img')].map(i=>i.complete?(i.naturalWidth||i.remove()):new Promise(r=>{i.addEventListener('load',r);i.addEventListener('error',()=>{i.remove();r()});setTimeout(()=>{if(!i.naturalWidth)i.remove();r()},8000)})));
+    window.RFQ_READY=true}).catch(e=>{window.RFQ_ERROR=e.message||'Could not open RFQ';toast(window.RFQ_ERROR)});
 $('profb').onclick=()=>{$('pf-full').value=ME.full||'';$('pf-phone').value=ME.phone||'';$('pf-email').value=ME.email||'';$('prof').showModal()};
 $('pf-x').onclick=()=>$('prof').close();
 $('proff').onsubmit=async e=>{e.preventDefault();

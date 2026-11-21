@@ -39,6 +39,15 @@ the password variable.
 a **Rep** account (matrix + RFQs only); **Editors** can also change burners; **Admins** also manage people.
 Each person's full name, phone and email fill in *Prepared by* on their RFQs. Admins set these under
 **Users**; anyone can change their own from **My profile** at the top of the main page.
+**Saved RFQs.** RFQs are saved on the server (`/data/rfqs`). Reps see their own under **My RFQs**;
+editors and admins see everyone's (**RFQs**, with an *Only mine* filter) and can reopen, edit, download or resend any of them.
+
+**Email PDF.** The server turns the RFQ into a PDF (headless Chromium, built into the image) and emails it.
+Fill in the SMTP variables on the container: `SMTP_HOST`, `SMTP_PORT` (465 SSL or 587 STARTTLS), `SMTP_USER`,
+`SMTP_PASS`, optional `SMTP_FROM`. `RFQ_TO` is the default "Send to" address (reps can change it per RFQ).
+For Gmail, turn on 2-step verification and create an **App Password**; use that as `SMTP_PASS`.
+Replies go to the rep's email on the sheet; the rep can tick "Send me a copy".
+
 RFQ numbers are `YYMMDD-NNMODEL`, where NN counts RFQs made that day across everyone (kept in `/data/rfq-seq.json`).
 
 Optional: `COOKIE_SECURE=true` if you only open it over https, `TRUST_PROXY=true` behind Nginx Proxy

@@ -6,6 +6,8 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const Schema = require('./html/schema.js');
+const Mail = require('./lib/mail.js');
+const { renderPDF } = require('./lib/pdf.js');
 
 const PORT = +process.env.PORT || 8080;
 const DATA = process.env.DATA_DIR || '/data';
@@ -14,6 +16,7 @@ const COOKIE_SECURE = /^true$/i.test(process.env.COOKIE_SECURE || '');
 const TRUST_PROXY = /^true$/i.test(process.env.TRUST_PROXY || '');
 const SESSION_HOURS = +process.env.SESSION_HOURS || 12;
 const HISTORY_KEEP = 200;
+const RFQ_TO = process.env.RFQ_TO || '';   // default "send to" address(es) for RFQ PDFs
 
 const F = {
   burners: path.join(DATA, 'burners.json'),
@@ -21,11 +24,13 @@ const F = {
   secret: path.join(DATA, '.secret'),
   history: path.join(DATA, 'history'),
   photos: path.join(DATA, 'photos'),
+  rfqs: path.join(DATA, 'rfqs'),
 };
 
 // ---------- storage ----------
 fs.mkdirSync(F.history, { recursive: true });
 fs.mkdirSync(F.photos, { recursive: true });
+fs.mkdirSync(F.rfqs, { recursive: true });
 const readJSON = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return d; } };
 const writeJSON = (f, v, pretty) => {
   const tmp = f + '.tmp';
@@ -62,8 +67,8 @@ const validName = n => /^[a-z0-9._-]{2,32}$/.test(n);
 
 // ---------- sessions (signed cookie) ----------
 const sign = s => crypto.createHmac('sha256', SECRET).update(s).digest('base64url');
-const makeToken = (name, ver) => {
-  const body = Buffer.from(JSON.stringify({ n: name, v: ver, e: Date.now() + SESSION_HOURS * 3600e3 })).toString('base64url');
+const makeToken = (name, ver, ms = SESSION_HOURS * 3600e3) => {
+  const body = Buffer.from(JSON.stringify({ n: name, v: ver, e: Date.now() + ms })).toString('base64url');
   return body + '.' + sign(body);
 };
 const readSession = req => {
@@ -145,6 +150,36 @@ const saveBurners = (list, who, action) => {
   return null;
 };
 
+// ---------- RFQs ----------
+const rfqFile = id => path.join(F.rfqs, id + '.json');
+const getRfq = id => /^[a-f0-9]{12}$/.test(id) ? readJSON(rfqFile(id), null) : null;
+const canSee = (me, r) => r && (me.role !== 'rep' || r.by === me.name);
+const rfqSummary = r => ({ id: r.id, no: r.no, date: r.date, by: r.by, byFull: r.byFull, updated: r.updated,
+  burner: `${r.burner.brand} ${r.burner.name}`, fuel: r.burner.fuel,
+  company: r.fields['q-co'] || '', contact: r.fields['q-ct'] || '', job: r.fields['q-job'] || '',
+  sent: (r.sends || []).slice(-1)[0] || null });
+const cleanFields = f => {
+  const out = {};
+  for (const [k, v] of Object.entries(f && typeof f === 'object' ? f : {}))
+    if (/^q-[a-z0-9-]{1,20}$/.test(k) && Object.keys(out).length < 80) out[k] = String(v ?? '').slice(0, 4000);
+  return out;
+};
+const rfqText = r => {
+  const f = r.fields, b = r.burner, L = [];
+  L.push(`Burner Request for Quotation ${r.no}`, '');
+  if (f['q-co'] || f['q-job']) L.push(`Customer: ${[f['q-co'], f['q-job']].filter(Boolean).join(' – ')}`);
+  L.push(`Burner: ${b.brand} ${b.name}`);
+  L.push(`Prepared by: ${[f['q-rep'], f['q-repp'], f['q-repe']].filter(Boolean).join(' · ') || r.byFull || r.by}`);
+  if (f['q-notes']) L.push('', 'Notes:', f['q-notes']);
+  L.push('', 'The full RFQ specification sheet is attached as a PDF.');
+  return L.join('\n');
+};
+const rfqPdf = (r, me) => renderPDF({
+  url: `http://127.0.0.1:${PORT}/?rfq=${r.id}&pdf=1`,
+  cookie: { name: 'bm_s', value: makeToken(me.name, me.ver || 0, 120e3) },
+});
+const pdfName = r => `RFQ-${r.no}.pdf`.replace(/[^A-Za-z0-9._-]/g, '');
+
 // ---------- API ----------
 async function api(req, res, url) {
   const p = url.pathname, m = req.method;
@@ -164,7 +199,7 @@ async function api(req, res, url) {
   if (p === '/api/logout' && m === 'POST') return send(res, 200, { ok: true }, undefined, { 'Set-Cookie': cookie('', 0) });
 
   const me = readSession(req);
-  if (p === '/api/me') return me ? send(res, 200, { ...pub(me), setup: true }) : send(res, 401, { error: 'Not signed in', setup: users.length > 0 });
+  if (p === '/api/me') return me ? send(res, 200, { ...pub(me), setup: true, mail: Mail.configured(), rfqTo: RFQ_TO }) : send(res, 401, { error: 'Not signed in', setup: users.length > 0 });
   if (!me) return send(res, 401, { error: 'Not signed in' });
 
   // next RFQ sequence number for the day (shared by every rep using this server)
@@ -176,6 +211,57 @@ async function api(req, res, url) {
     const n = cur.date === date ? (cur.n || 0) + 1 : 1;
     writeJSON(f, { date, n });
     return send(res, 200, { date, n });
+  }
+  // ----- RFQs: reps see their own, editors and admins see everyone's -----
+  if (p === '/api/rfqs' && m === 'GET') {
+    const list = fs.readdirSync(F.rfqs).filter(f => f.endsWith('.json')).map(f => readJSON(path.join(F.rfqs, f), null))
+      .filter(r => r && canSee(me, r)).map(rfqSummary).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    return send(res, 200, list);
+  }
+  if (p === '/api/rfqs' && m === 'POST') { // create
+    const b = await readBody(req, 512 * 1024);
+    const burner = b.burner && typeof b.burner === 'object' ? b.burner : null;
+    if (!burner || Schema.check(burner).length) return send(res, 422, { error: 'Missing or invalid burner' });
+    const no = String(b.no || '').slice(0, 40);
+    if (!/^[0-9A-Za-z-]{6,40}$/.test(no)) return send(res, 422, { error: 'Bad RFQ number' });
+    const now = new Date().toISOString();
+    const r = { id: crypto.randomBytes(6).toString('hex'), no, date: now, updated: now, by: me.name, byFull: me.full || '',
+      burner, fit: ['ok', 'min', 'max', 'out'].includes(b.fit) ? b.fit : '', fields: cleanFields(b.fields), sends: [] };
+    writeJSON(rfqFile(r.id), r);
+    return send(res, 200, r);
+  }
+  const rm = /^\/api\/rfqs\/([a-f0-9]{12})(\/pdf|\/send)?$/.exec(p);
+  if (rm) {
+    const r = getRfq(rm[1]);
+    if (!canSee(me, r)) return send(res, 404, { error: 'RFQ not found' });
+    if (!rm[2] && m === 'GET') return send(res, 200, r);
+    if (!rm[2] && m === 'PUT') {
+      const b = await readBody(req, 512 * 1024);
+      r.fields = cleanFields(b.fields); r.updated = new Date().toISOString(); r.editedBy = me.name;
+      writeJSON(rfqFile(r.id), r);
+      return send(res, 200, r);
+    }
+    if (rm[2] === '/pdf' && m === 'GET') {
+      let pdf; try { pdf = await rfqPdf(r, me); } catch (e) { console.error('PDF:', e.message); return send(res, 502, { error: 'Could not build the PDF: ' + e.message }); }
+      return send(res, 200, pdf, 'application/pdf', { 'Content-Disposition': `attachment; filename="${pdfName(r)}"` });
+    }
+    if (rm[2] === '/send' && m === 'POST') {
+      if (!Mail.configured()) return send(res, 503, { error: 'Email is not set up on the server yet (SMTP settings)' });
+      const b = await readBody(req, 8192);
+      const to = Mail.splitList(b.to || RFQ_TO);
+      if (!to.length || !to.every(Mail.isEmail) || to.length > 10) return send(res, 422, { error: 'Enter valid email address(es)' });
+      const cc = b.ccMe && Mail.isEmail(me.email) ? [me.email] : [];
+      let pdf, out;
+      try { pdf = await rfqPdf(r, me); } catch (e) { console.error('PDF:', e.message); return send(res, 502, { error: 'Could not build the PDF: ' + e.message }); }
+      const subj = `RFQ ${r.no} – ${r.burner.brand} ${r.burner.name}` + (r.fields['q-co'] ? ` – ${r.fields['q-co']}` : '') + (r.fields['q-job'] ? ` – ${r.fields['q-job']}` : '');
+      try { out = await Mail.sendMail({ to, cc, replyTo: r.fields['q-repe'] || me.email, subject: subj, text: rfqText(r),
+        attachments: [{ filename: pdfName(r), type: 'application/pdf', content: pdf }] }); }
+      catch (e) { console.error('Mail:', e.message); return send(res, 502, { error: 'Email failed: ' + e.message }); }
+      (r.sends = r.sends || []).push({ at: new Date().toISOString(), by: me.name, to: out.to, cc: out.cc });
+      writeJSON(rfqFile(r.id), r);
+      return send(res, 200, { ok: true, ...out });
+    }
+    return send(res, 405, { error: 'Not allowed' });
   }
   if (p === '/api/profile' && m === 'POST') { // anyone can update their own name / phone / email
     contact(me, await readBody(req, 4096)); saveUsers(); return send(res, 200, pub(me));
