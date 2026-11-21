@@ -63,7 +63,7 @@ if (!users.length) {
     console.warn('No users yet. Set ADMIN_USER and ADMIN_PASSWORD (8+ characters) and restart to create the first admin.');
   }
 }
-const validName = n => /^[a-z0-9._-]{2,32}$/.test(n);
+const validName = n => /^[a-z0-9._-]{2,32}$/.test(n) || (n.length <= 100 && Mail.isEmail(n));
 
 // ---------- sessions (signed cookie) ----------
 const sign = s => crypto.createHmac('sha256', SECRET).update(s).digest('base64url');
@@ -330,10 +330,10 @@ async function api(req, res, url) {
     const b = await readBody(req, 4096);
     const name = String(b.name || '').trim().toLowerCase();
     if (m === 'POST') {
-      if (!validName(name)) return send(res, 422, { error: 'Username: 2–32 letters, numbers, dot, dash or underscore' });
+      if (!validName(name)) return send(res, 422, { error: 'Username: an email address, or 2–32 letters, numbers, dot, dash or underscore' });
       if (users.some(u => u.name === name)) return send(res, 422, { error: 'That username exists' });
       if (String(b.password || '').length < 8) return send(res, 422, { error: 'Password must be at least 8 characters' });
-      const nu = { name, role: normRole(b.role), hash: hashPw(String(b.password)), created: new Date().toISOString() }; contact(nu, b); users.push(nu);
+      const nu = { name, role: normRole(b.role), hash: hashPw(String(b.password)), created: new Date().toISOString() }; contact(nu, b); if (!nu.email && Mail.isEmail(name)) nu.email = name; users.push(nu);
       saveUsers(); return send(res, 200, { ok: true });
     }
     const u = users.find(x => x.name === name);
