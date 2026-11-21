@@ -124,25 +124,6 @@ footer p{margin:0 0 6px;max-width:100ch}
 #pic.ld span::after{content:" (loading…)";font-weight:500;color:var(--mute)}
 #pic.err span::after{content:" (photo unavailable)";font-weight:500;color:var(--mute)}
 a.bn[data-img]{cursor:zoom-in}
-details>summary{cursor:pointer;list-style:none;display:flex;flex-wrap:wrap;align-items:baseline;gap:10px}
-details>summary::-webkit-details-marker{display:none}
-details>summary h2::before{content:"+ ";color:var(--red)}
-details[open]>summary h2::before{content:"– "}
-#addf{margin-top:16px}
-#addf label:not(.chk){display:flex;flex-direction:column;gap:4px;font-weight:700;font-size:14px}
-#addf input[type=text],#addf input[type=url],#addf textarea{font:500 16px Montserrat,Helvetica,Arial,sans-serif;min-height:44px;padding:8px 10px;border-radius:3px;border:1px solid #b9b9b2;background:#fff;color:var(--ink);width:100%}
-#addf .u{font-weight:500;color:var(--mute);font-size:13px}
-.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 16px;margin-bottom:12px}
-.fg3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 16px;background:#f7f7f4;padding:12px;border-radius:4px;margin-bottom:12px}
-.fg3 fieldset{margin:0}
-.rad{gap:4px 18px}
-.aerr{margin-top:14px;background:#fde3e5;border-left:4px solid var(--red);padding:10px 14px;font-size:14px}
-.aerr ul{margin:6px 0 0;padding-left:20px}
-.aout{margin-top:14px;background:#e9f5ec;border-left:4px solid #1d7a3a;padding:10px 14px;font-size:14px}
-.aout ol{margin:4px 0 10px;padding-left:20px}
-.aout pre{background:#fff;border:1px solid var(--rule);padding:10px;overflow-x:auto;white-space:pre-wrap;overflow-wrap:anywhere;font-size:12.5px}
-.aout a{color:var(--red);font-weight:700}
-b.pv{color:#b35c00;font-size:12px}
 @media(max-width:1000px){.rail{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.rail{grid-template-columns:minmax(0,1fr)}.rail .f-power{grid-column:auto}}
 @media(max-width:600px){.util{display:none}.brand .div{display:none}.axis,.lr{grid-template-columns:140px minmax(0,1fr)}.lr .nm small{display:none}.axis span:nth-child(even){display:none}table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--rule)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:7.5em;background:none !important}.stack td::before{content:attr(data-l);float:inline-start;width:7em;margin-inline-start:-7.5em;color:var(--mute);font-size:12.5px}.stack td:empty{display:none}}
@@ -209,52 +190,10 @@ b.pv{color:#b35c00;font-size:12px}
     <tbody id="tb"></tbody>
   </table></div>
 </div></section>
-<section class="band" style="padding-top:0" id="add"><div class="mx">
-  <details id="a-det">
-    <summary><h2 style="display:inline">Add a burner</h2> <span class="note">Every field is required unless marked optional.</span></summary>
-    <form id="addf" novalidate>
-      <div class="fg">
-        <label>Model name<input name="name" id="a-name" type="text" placeholder="e.g. CF900"></label>
-        <label>Brand<input name="brand" id="a-brand" type="text" list="a-brands" placeholder="Beckett"><datalist id="a-brands"></datalist></label>
-        <label>Fuel<select name="fuel" id="a-fuel"><option value="oil">Oil</option><option value="gas">Gas</option></select></label>
-        <label><span>Min firing rate <span class="u a-unit">GPH</span></span><input name="min" id="a-min" type="number" step="any" min="0"></label>
-        <label><span>Max firing rate <span class="u a-unit">GPH</span></span><input name="max" id="a-max" type="number" step="any" min="0"></label>
-        <label>Link to product page or spec sheet<input name="link" id="a-link" type="url" placeholder="https://"></label>
-        <label><span>Photo URL <span class="u">optional, shown on hover</span></span><input name="image" id="a-img" type="url" placeholder="https://"></label>
-      </div>
-      <div class="fg3">
-        <fieldset><legend>Power available</legend><div id="a-power"></div></fieldset>
-        <fieldset><legend>Firing modes</legend><div id="a-modes"></div></fieldset>
-        <fieldset><legend>Applications</legend><div id="a-apps"></div></fieldset>
-      </div>
-      <div class="fg">
-        <label><span>Standard supply <span class="u">optional</span></span><select name="powerStd" id="a-std"><option value="">None / any of the ticked</option></select></label>
-        <label>Power notes (for reference)<input name="powerText" id="a-pt" type="text" placeholder="120 VAC std; 240 VAC 1φ option"></label>
-        <label>Air tube / insertion<input name="airTube" id="a-tube" type="text" placeholder='6" to 15", or See spec sheet'></label>
-      </div>
-      <fieldset><legend>Chassis dimensions</legend>
-        <div class="seg rad"><label class="chk"><input type="radio" name="dimmode" value="published" checked> Published (inches)</label><label class="chk"><input type="radio" name="dimmode" value="spec sheet"> On spec sheet only</label><label class="chk"><input type="radio" name="dimmode" value="not published"> Not published</label></div>
-        <div class="row" id="a-dims" style="max-width:420px;margin-top:8px"><input name="dh" type="number" step="any" min="0" placeholder="Height" aria-label="Height in inches"><input name="dw" type="number" step="any" min="0" placeholder="Width" aria-label="Width in inches"><input name="dd" type="number" step="any" min="0" placeholder="Depth" aria-label="Depth in inches"></div>
-      </fieldset>
-      <div class="fg">
-        <label><span>Biofuel rating <span class="u">optional</span></span><input name="biofuel" type="text" placeholder="e.g. B20"></label>
-        <label id="a-lpwrap" hidden><span>Propane / LP <span class="u">optional</span></span><input name="propane" type="text" placeholder="e.g. Conversion kit"></label>
-      </div>
-      <label style="margin-top:12px">Selling note<textarea name="notes" id="a-notes" rows="2" placeholder="What it's best at, limits, anything a rep should know"></textarea></label>
-      <div class="acts" style="margin-top:14px"><button class="btn pri" type="submit">Check &amp; preview</button><button class="btn" type="button" id="a-reset">Clear form</button><button class="btn" type="button" id="a-clear">Remove previews</button></div>
-      <div class="aerr" id="a-err" hidden role="alert"></div>
-      <div class="aout" id="a-out" hidden>
-        <p><b>Ready.</b> It's on the chart as a preview (only on this device). To add it for everyone:</p>
-        <ol><li>Copy the entry below.</li><li>Open <a id="a-edit" target="_blank" rel="noopener">burners.json on GitHub</a> and click the pencil icon to edit.</li><li>Paste it right after the last <code>}</code>, before the final <code>]</code>.</li><li>Click <b>Commit changes</b>. The build checks it, then Unraid picks it up on the next update.</li></ol>
-        <pre id="a-json"></pre>
-        <button class="btn pri" type="button" id="a-copy">Copy entry</button>
-      </div>
-    </form>
-  </details>
-</div></section>
+
 <footer class="band">
   <p>Compiled 20 Nov 2026. Always confirm against the current spec sheet and the appliance maker's burner spec before quoting.</p>
-  <p>Internal Beckett sales tool. Logos and specifications belong to their owners.</p>
+  <p>Internal Beckett sales tool. Logos and specifications belong to their owners. <a href="admin" style="color:#d8d8d2">Admin</a></p>
 </footer>
 <div class="toast" id="toast" role="status"></div>
 <div id="pic" aria-hidden="true"><img alt=""><span></span></div>
@@ -289,7 +228,7 @@ const PCH={'12dc':['12 VDC','dc'],'24dc':['24 VDC','dc'],'120':['120 VAC','ac1']
 const where=(x,r)=>{const[a,b]=mb(x);const t=(Math.log(r)-Math.log(a))/(Math.log(b)-Math.log(a)||1);return t<.5?'min':'max'};
 const pctOf=(x,r)=>{const[a,b]=mb(x);return Math.round(r/b*100)};
 const fmt=x=>x.f==='oil'?`${x.lo.toFixed(2)}–${x.hi.toFixed(2)} GPH`:`${x.lo.toLocaleString()}–${x.hi.toLocaleString()} MBH`;
-const sub=x=>{const[a,b]=mb(x);return x.f==='oil'?`${Math.round(a)}–${Math.round(b).toLocaleString()} MBH`:''};
+const sub=x=>{const[a,b]=mb(x);return x.f==='oil'?`${Math.round(a).toLocaleString()}–${Math.round(b).toLocaleString()} MBH`:''};
 const pass=x=>{
   if(S.fuel!=='all'&&x.f!==S.fuel)return false;
   if(S.brand!=='all'&&x.b!==S.brand)return false;
@@ -337,45 +276,6 @@ const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');setTime
 $('copy').onclick=async()=>{const r=reqMBH();const head=r!=null?`Required input: ${S.rate} ${S.unit.toUpperCase()} (~${Math.round(r).toLocaleString()} MBH)\n`:'';
   const txt=head+list.map(x=>{const fz=fit(x,r);return`${x.b} ${x.n} | ${x.f==='oil'?'Oil':'Gas'} | ${fmt(x)} | ${x.vt} | ${x.m.map(m=>MODES[m]).join('/')}${fz?' | '+(fz==='ok'?'sweet spot':'edge of range'):''}\n  ${x.u}`}).join('\n');
   try{await navigator.clipboard.writeText(txt||'No matches');toast(`Copied ${list.length} burners`)}catch(e){toast('Copy blocked by browser')}};
-/* ---------- Add a burner ---------- */
-const af=$('addf');
-$('a-power').innerHTML=BurnerSchema.POWER.map(t=>`<label class="chk"><input type="checkbox" name="power" value="${t}"> ${t}</label>`).join('');
-$('a-std').innerHTML+=BurnerSchema.POWER.map(t=>`<option value="${t}">${t}</option>`).join('');
-$('a-modes').innerHTML=BurnerSchema.MODES.map(t=>`<label class="chk"><input type="checkbox" name="modes" value="${t}"> ${t}</label>`).join('');
-$('a-apps').innerHTML=BurnerSchema.APPS.map(t=>`<label class="chk"><input type="checkbox" name="applications" value="${t}"> ${t}</label>`).join('');
-const unitLbl=()=>{const g=af.fuel.value==='gas';document.querySelectorAll('.a-unit').forEach(u=>u.textContent=g?'MBH':'GPH');$('a-lpwrap').hidden=!g};
-af.fuel.onchange=unitLbl;
-const dimMode=()=>{const pub=af.dimmode.value==='published';$('a-dims').hidden=!pub};
-for(const r of af.dimmode)r.onchange=dimMode;
-const readForm=()=>{const f=af.elements,o={};
-  const t=k=>f[k].value.trim();const n=k=>f[k].value===''?undefined:Number(f[k].value);
-  o.name=t('name');o.brand=t('brand');o.fuel=f.fuel.value;o.min=n('min');o.max=n('max');
-  o.power=[...af.querySelectorAll('[name=power]:checked')].map(x=>x.value);o.powerText=t('powerText');if(f.powerStd.value)o.powerStd=f.powerStd.value;
-  o.modes=[...af.querySelectorAll('[name=modes]:checked')].map(x=>x.value);
-  o.dims=f.dimmode.value==='published'?[n('dh'),n('dw'),n('dd')]:f.dimmode.value;
-  o.airTube=t('airTube');o.applications=[...af.querySelectorAll('[name=applications]:checked')].map(x=>x.value);
-  if(t('biofuel'))o.biofuel=t('biofuel');if(o.fuel==='gas'&&t('propane'))o.propane=t('propane');
-  o.notes=t('notes');o.link=t('link');if(t('image'))o.image=t('image');
-  if(Array.isArray(o.dims)&&o.dims.some(v=>v===undefined))o.dims=undefined;
-  for(const k of Object.keys(o))if(o[k]===undefined||o[k]==='')delete o[k];
-  return o};
-const LBL={name:'Model name',brand:'Brand',fuel:'Fuel',min:'Min firing rate',max:'Max firing rate',power:'Power available',powerText:'Power notes',powerStd:'Standard supply',modes:'Firing modes',dims:'Chassis dimensions',airTube:'Air tube / insertion',applications:'Applications',notes:'Selling note',link:'Link',biofuel:'Biofuel rating',propane:'Propane',discontinued:'Discontinued',image:'Photo URL'};
-const nice=m=>{let k=m.match(/^Missing "(\w+)"$/);if(k)return `${LBL[k[1]]||k[1]}: required`;k=m.match(/^(\w+):(.*)$/);if(k&&LBL[k[1]])return LBL[k[1]]+':'+k[2];return m};
-let lastOut='';
-af.onsubmit=e=>{e.preventDefault();const o=readForm();
-  const errs=BurnerSchema.check(o);
-  if(errs.length===0&&RAW.concat(PREV.map(x=>x.raw)).some(r=>r.brand.toLowerCase()===o.brand.toLowerCase()&&r.name.toLowerCase()===o.name.toLowerCase()))errs.push(`${o.brand} ${o.name} is already in the list`);
-  if(errs.length){$('a-out').hidden=true;$('a-err').hidden=false;$('a-err').innerHTML='<b>Fill in or fix these before it can be added:</b><ul>'+errs.map(m=>`<li>${esc(nice(m))}</li>`).join('')+'</ul>';$('a-err').scrollIntoView({block:'nearest'});return}
-  $('a-err').hidden=true;
-  lastOut=',\n  '+JSON.stringify(o);
-  $('a-json').textContent=lastOut;$('a-out').hidden=false;
-  const rec=toRec(o);rec.prev=true;PREV.push(rec);render();toast(`${o.name} added to the chart as a preview`);};
-$('a-copy').onclick=async()=>{try{await navigator.clipboard.writeText(lastOut);toast('Entry copied')}catch(e){toast('Copy blocked: select the text and copy it')}};
-$('a-clear').onclick=()=>{PREV=[];render();toast('Previews cleared')};
-$('a-reset').onclick=()=>{af.reset();unitLbl();dimMode();$('a-err').hidden=true;$('a-out').hidden=true};
-$('a-edit').href=REPO+'/edit/main/html/burners.json';
-unitLbl();dimMode();
-
 /* ---------- Hover photo ---------- */
 const pic=$('pic'),pimg=pic.querySelector('img'),pcap=pic.querySelector('span');
 pimg.onerror=()=>{pic.classList.remove('ld');pic.classList.add('err')};pimg.onload=()=>pic.classList.remove('ld','err');
@@ -391,7 +291,6 @@ addEventListener('scroll',hidePic,{passive:true});
 fetch('burners.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(list=>{
   const bad=BurnerSchema.checkAll(list);if(bad.length)console.warn('burners.json problems:',bad);
   RAW=list;D=list.filter(o=>BurnerSchema.check(o).length===0).map(toRec);
-  $('a-brands').innerHTML=[...new Set(RAW.map(o=>o.brand))].map(b=>`<option value="${esc(b)}">`).join('');
   sync();
 }).catch(err=>{$('lad').innerHTML=`<div class="empty">Could not load burners.json (${esc(err.message)}). Open this page through the web server, not as a file.</div>`;sync()});
 }

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Burner Matrix Admin</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Bitter:wght@700&display=swap" rel="stylesheet">
+<style>
+/* Admin for the Burner Selection Matrix: same Beckett-style palette as the public page */
+:root{color-scheme:light;--bg:#e3e3df;--ink:#2a2a2a;--mute:#5f5f5a;--rule:#d6d6d0;--panel:#fff;--red:#e71d2f;--gas:#2563a8;--btn:#cecec6;--ok:#1d7a3a}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:500 15px/1.5 Montserrat,Helvetica,Arial,sans-serif}
+h1,h2,h3{margin:0;font-weight:700;line-height:1.15}
+h1{font-size:22px}h2{font-size:19px}h3{font-size:15px}
+a{color:inherit}
+.top{background:var(--ink);color:#fff;display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;padding:12px max(3vw,16px)}
+.top .eb{font:700 13px Bitter,Georgia,serif;text-transform:uppercase;color:#ffb3ba}
+.top .sp{flex:1}
+.top a,.top button.link{color:#fff;font:500 14px Montserrat,sans-serif;background:none;border:0;cursor:pointer;padding:6px 0;text-decoration:underline}
+.tabs{display:flex;gap:4px;padding:0 max(3vw,16px);background:var(--red)}
+.tabs button{font:600 14px Montserrat,sans-serif;color:#fff;background:transparent;border:0;padding:12px 16px;cursor:pointer;border-bottom:3px solid transparent}
+.tabs button[aria-selected=true]{border-bottom-color:#fff;background:rgba(0,0,0,.12)}
+main{padding:20px max(3vw,16px) 40px}
+.panel{background:var(--panel);border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.08);padding:18px}
+.btn{font:600 14px Montserrat,sans-serif;min-height:40px;padding:6px 14px;border-radius:3px;border:0;background:var(--btn);color:var(--ink);cursor:pointer}
+.btn.pri{background:var(--red);color:#fff}
+.btn.dan{background:#fff;color:var(--red);border:1px solid var(--red)}
+.btn:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+label.f{display:flex;flex-direction:column;gap:4px;font-weight:700;font-size:13.5px}
+.u{font-weight:500;color:var(--mute);font-size:12.5px}
+input[type=text],input[type=url],input[type=number],input[type=password],select,textarea{font:500 15px Montserrat,sans-serif;min-height:42px;padding:7px 10px;border:1px solid #b9b9b2;border-radius:3px;background:#fff;color:var(--ink);width:100%}
+textarea{min-height:70px;resize:vertical}
+.chk{display:flex;align-items:center;gap:7px;font-size:14px;min-height:30px;cursor:pointer}
+.chk input{width:17px;height:17px;accent-color:var(--red)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px 16px}
+.box{background:#f7f7f4;border-radius:4px;padding:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:4px 16px}
+fieldset{border:0;padding:0;margin:0}legend{font-weight:700;font-size:13.5px;margin-bottom:4px;padding:0}
+.msg{margin-top:12px;padding:10px 14px;border-radius:3px;font-size:14px}
+.msg.err{background:#fde3e5;border-left:4px solid var(--red)}
+.msg.ok{background:#e2f3e7;border-left:4px solid var(--ok)}
+.msg ul{margin:4px 0 0;padding-left:20px}
+/* login */
+.login{max-width:380px;margin:8vh auto}
+.login .panel{display:grid;gap:12px}
+/* burners */
+.ed{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px;align-items:start}
+.list{position:sticky;top:12px;max-height:calc(100vh - 24px);display:flex;flex-direction:column;gap:10px}
+.items{overflow:auto;border-top:1px solid var(--rule);margin:0 -18px -18px;flex:1}
+.items button{display:flex;width:100%;text-align:left;gap:8px;align-items:baseline;padding:9px 18px;border:0;border-bottom:1px solid var(--rule);background:#fff;font:600 14px Montserrat,sans-serif;cursor:pointer;color:var(--ink)}
+.items button small{font-weight:500;color:var(--mute);margin-left:auto;white-space:nowrap}
+.items button.oil b{color:var(--red)}.items button.gas b{color:var(--gas)}
+.items button[aria-current=true]{background:#fde3e5}
+.form{display:grid;gap:14px}
+.form .head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.pic{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.pic img{width:120px;height:120px;object-fit:contain;background:#fff;border:1px solid var(--rule);border-radius:4px}
+.empty{color:var(--mute);padding:30px 0;text-align:center}
+.confirm{background:#fff3e8;border-left:4px solid #d9480f;padding:10px 14px;border-radius:3px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.dirty{color:#b35c00;font-size:13px;font-weight:700}
+/* tables */
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{text-align:left;font-size:13px;color:#fff;background:var(--ink);padding:8px}
+td{border-bottom:1px solid var(--rule);padding:8px;vertical-align:middle}
+.scroll{overflow-x:auto}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:4px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+.toast.on{opacity:1}
+[hidden]{display:none !important}
+@media(max-width:860px){.ed{grid-template-columns:minmax(0,1fr)}.list{position:static;max-height:none}.items{max-height:300px}}
+</style>
+</head>
+<body>
+<div id="login" class="login" hidden>
+  <form class="panel" id="lf">
+    <h1>Burner Matrix admin</h1>
+    <p class="u" style="margin:0" id="lnote">Sign in to edit burners.</p>
+    <label class="f">Username<input type="text" id="lu" autocomplete="username" autocapitalize="none" required></label>
+    <label class="f">Password<input type="password" id="lp" autocomplete="current-password" required></label>
+    <button class="btn pri" type="submit">Sign in</button>
+    <div id="lerr" class="msg err" hidden></div>
+    <a href="./" class="u">← Back to the selection matrix</a>
+  </form>
+</div>
+
+<div id="app" hidden>
+  <header class="top">
+    <div><div class="eb">Admin</div><h1 style="font-size:18px">Burner Selection Matrix</h1></div>
+    <span class="sp"></span>
+    <span id="who" class="u" style="color:#ddd"></span>
+    <a href="./" target="_blank" rel="noopener">View public page</a>
+    <button class="link" id="pwb">Change password</button>
+    <button class="link" id="out">Sign out</button>
+  </header>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-t="burners" aria-selected="true">Burners</button>
+    <button role="tab" data-t="history" aria-selected="false">History &amp; undo</button>
+    <button role="tab" data-t="users" aria-selected="false" id="usertab">Users</button>
+  </nav>
+  <main>
+    <!-- BURNERS -->
+    <section id="t-burners" class="ed">
+      <div class="panel list">
+        <div class="row"><input type="text" id="q" placeholder="Search burners" aria-label="Search burners" style="flex:1"><button class="btn pri" id="new">+ Add</button></div>
+        <div class="u" id="cnt"></div>
+        <div class="items" id="items"></div>
+      </div>
+      <div class="panel">
+        <div id="none" class="empty">Pick a burner on the left to edit it, or click <b>+ Add</b>.</div>
+        <form id="bf" class="form" hidden novalidate>
+          <div class="head"><h2 id="ft"></h2><span class="dirty" id="dirty" hidden>Unsaved changes</span></div>
+          <div class="grid">
+            <label class="f">Model name<input type="text" name="name"></label>
+            <label class="f">Brand<input type="text" name="brand" list="brands"><datalist id="brands"></datalist></label>
+            <label class="f">Fuel<select name="fuel"><option value="oil">Oil</option><option value="gas">Gas</option></select></label>
+            <label class="f"><span>Min firing rate <span class="u un">GPH</span></span><input type="number" name="min" step="any" min="0"></label>
+            <label class="f"><span>Max firing rate <span class="u un">GPH</span></span><input type="number" name="max" step="any" min="0"></label>
+            <label class="f">Link to product page<input type="url" name="link" placeholder="https://"></label>
+          </div>
+          <div class="box">
+            <fieldset><legend>Power available</legend><div id="f-power"></div></fieldset>
+            <fieldset><legend>Firing modes</legend><div id="f-modes"></div></fieldset>
+            <fieldset><legend>Applications</legend><div id="f-apps"></div></fieldset>
+          </div>
+          <div class="grid">
+            <label class="f"><span>Standard supply <span class="u">optional, shows a Std tag</span></span><select name="powerStd"><option value="">None</option></select></label>
+            <label class="f"><span>Power notes <span class="u">reference only</span></span><input type="text" name="powerText"></label>
+            <label class="f">Air tube / insertion<input type="text" name="airTube"></label>
+          </div>
+          <fieldset><legend>Chassis dimensions</legend>
+            <div class="row">
+              <label class="chk"><input type="radio" name="dimmode" value="published"> Published (inches)</label>
+              <label class="chk"><input type="radio" name="dimmode" value="spec sheet"> On spec sheet only</label>
+              <label class="chk"><input type="radio" name="dimmode" value="not published"> Not published</label>
+            </div>
+            <div class="row" id="dims" style="max-width:420px;margin-top:6px;flex-wrap:nowrap"><input type="number" name="dh" step="any" min="0" placeholder="Height" aria-label="Height"><input type="number" name="dw" step="any" min="0" placeholder="Width" aria-label="Width"><input type="number" name="dd" step="any" min="0" placeholder="Depth" aria-label="Depth"></div>
+          </fieldset>
+          <div class="grid">
+            <label class="f"><span>Biofuel rating <span class="u">optional</span></span><input type="text" name="biofuel" placeholder="e.g. B20"></label>
+            <label class="f" id="lpw"><span>Propane / LP <span class="u">optional, gas only</span></span><input type="text" name="propane" placeholder="e.g. Conversion kit"></label>
+          </div>
+          <label class="f">Selling note<textarea name="notes"></textarea></label>
+          <fieldset><legend>Photo</legend>
+            <div class="pic"><img id="pimg" alt=""><div style="display:grid;gap:8px;flex:1;min-width:220px">
+              <input type="file" id="pfile" accept="image/jpeg,image/png,image/webp" aria-label="Upload photo">
+              <label class="f"><span>or photo address <span class="u">https://… or photos/…</span></span><input type="text" name="image"></label>
+            </div></div>
+          </fieldset>
+          <div class="row">
+            <button class="btn pri" type="submit">Save</button>
+            <button class="btn" type="button" id="dup">Duplicate</button>
+            <button class="btn" type="button" id="cancel">Discard changes</button>
+            <span class="sp" style="flex:1"></span>
+            <button class="btn dan" type="button" id="del">Delete</button>
+          </div>
+          <div id="delc" class="confirm" hidden><span>Delete <b id="deln"></b>? You can undo this from History.</span><button class="btn dan" type="button" id="dely">Yes, delete</button><button class="btn" type="button" id="deln2">Keep it</button></div>
+          <div id="fmsg" class="msg" hidden></div>
+        </form>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="t-history" hidden>
+      <div class="panel">
+        <div class="row" style="justify-content:space-between;margin-bottom:12px"><h2>Change history</h2><a class="btn" id="exp" download="burners.json" href="#">Download burners.json</a></div>
+        <p class="u" style="margin:0 0 12px">Every save is recorded. <b>Undo</b> puts the whole list back the way it was just before that change (and that is recorded too, so it can be undone).</p>
+        <div id="hc" hidden class="confirm" style="margin-bottom:12px"><span id="hct"></span><button class="btn dan" id="hy">Yes, undo</button><button class="btn" id="hn">Cancel</button></div>
+        <div class="scroll"><table><thead><tr><th>When</th><th>Who</th><th>Change</th><th></th></tr></thead><tbody id="hist"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- USERS -->
+    <section id="t-users" hidden>
+      <div class="panel" style="display:grid;gap:16px">
+        <h2>Who can sign in</h2>
+        <p class="u" style="margin:0"><b>Editors</b> can change burners. <b>Admins</b> can also add and remove people.</p>
+        <div class="scroll"><table><thead><tr><th>Username</th><th>Role</th><th>New password</th><th></th></tr></thead><tbody id="ulist"></tbody></table></div>
+        <form id="uf" class="grid" style="align-items:end">
+          <label class="f">New username<input type="text" name="name" autocapitalize="none" placeholder="e.g. jsmith"></label>
+          <label class="f">Password<input type="text" name="password" placeholder="8+ characters"></label>
+          <label class="f">Role<select name="role"><option value="editor">Editor</option><option value="admin">Admin</option></select></label>
+          <button class="btn pri" type="submit">Add person</button>
+        </form>
+        <div id="umsg" class="msg" hidden></div>
+      </div>
+    </section>
+
+    <!-- PASSWORD -->
+    <dialog id="pwd" style="border:0;border-radius:6px;padding:20px;max-width:360px;width:92vw">
+      <form id="pf" style="display:grid;gap:12px">
+        <h2>Change your password</h2>
+        <label class="f">Current password<input type="password" name="current" autocomplete="current-password"></label>
+        <label class="f">New password<input type="password" name="next" autocomplete="new-password" placeholder="8+ characters"></label>
+        <div class="row"><button class="btn pri" type="submit">Change</button><button class="btn" type="button" id="pclose">Cancel</button></div>
+        <div id="pmsg" class="msg" hidden></div>
+      </form>
+    </dialog>
+  </main>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="schema.js"></script>
+<script>
+{
+const $=id=>document.getElementById(id);
+const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),2200)};
+const call=async(method,url,body)=>{const r=await fetch(url,{method,headers:body!==undefined?{'Content-Type':'application/json','X-BM':'1'}:{'X-BM':'1'},body:body!==undefined?JSON.stringify(body):undefined,credentials:'same-origin'});
+  let j={};try{j=await r.json()}catch(e){}
+  if(r.status===401&&url!=='/api/login'&&url!=='/api/me'){showLogin('Your session ended. Please sign in again.');throw new Error('signed out')}
+  if(!r.ok)throw Object.assign(new Error(j.error||'Error '+r.status),{errors:j.errors});return j};
+const keyOf=b=>(b.brand+'|'+b.name).toLowerCase();
+let me=null,list=[],cur=null,dirty=false,pendingRestore=null;
+const S=BurnerSchema;
+
+/* ---------- login ---------- */
+function showLogin(note){$('app').hidden=true;$('login').hidden=false;if(note)$('lnote').textContent=note;$('lu').focus()}
+$('lf').onsubmit=async e=>{e.preventDefault();$('lerr').hidden=true;
+  try{me=await call('POST','/api/login',{name:$('lu').value,password:$('lp').value});$('lp').value='';start()}
+  catch(err){$('lerr').textContent=err.message;$('lerr').hidden=false}};
+$('out').onclick=async()=>{await call('POST','/api/logout',{});me=null;showLogin('Signed out.')};
+async function boot(){try{me=await call('GET','/api/me');start()}catch(e){showLogin()}}
+function start(){$('login').hidden=true;$('app').hidden=false;$('who').textContent=`${me.name} (${me.role})`;$('usertab').hidden=me.role!=='admin';tab('burners');loadBurners()}
+
+/* ---------- tabs ---------- */
+function tab(t){if(t!=='burners'&&!leaveOk())return;document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));
+  ['burners','history','users'].forEach(x=>$('t-'+x).hidden=x!==t);if(t==='history')loadHistory();if(t==='users')loadUsers()}
+document.querySelector('.tabs').onclick=e=>{const b=e.target.closest('button');if(b)tab(b.dataset.t)};
+
+/* ---------- burner list ---------- */
+async function loadBurners(){list=await call('GET','/api/burners');$('brands').innerHTML=[...new Set(list.map(b=>b.brand))].map(b=>`<option value="${esc(b)}">`).join('');renderList()}
+function fmt(b){return b.fuel==='oil'?`${b.min}–${b.max} GPH`:`${(+b.min).toLocaleString()}–${(+b.max).toLocaleString()} MBH`}
+function renderList(){const q=$('q').value.trim().toLowerCase();
+  const rows=list.filter(b=>!q||(b.brand+' '+b.name+' '+b.fuel).toLowerCase().includes(q)).sort((a,b)=>a.brand.localeCompare(b.brand)||a.name.localeCompare(b.name,undefined,{numeric:true}));
+  $('cnt').textContent=`${rows.length} of ${list.length} burners`;
+  $('items').innerHTML=rows.map(b=>`<button type="button" class="${b.fuel}" data-k="${esc(keyOf(b))}" aria-current="${cur&&cur.key===keyOf(b)}"><b>${esc(b.name)}</b> <span class="u">${esc(b.brand)}</span><small>${fmt(b)}</small></button>`).join('')||'<div class="empty">No matches</div>'}
+$('q').oninput=renderList;
+$('items').onclick=e=>{const b=e.target.closest('button[data-k]');if(!b||!leaveOk())return;const x=list.find(o=>keyOf(o)===b.dataset.k);if(x)edit(x)};
+$('new').onclick=()=>{if(!leaveOk())return;edit(null)};
+function leaveOk(){return!dirty||confirmLeave()}
+function confirmLeave(){/* inline: second click discards */ if(confirmLeave.armed){confirmLeave.armed=false;dirty=false;$('dirty').hidden=true;return true}
+  confirmLeave.armed=true;setTimeout(()=>confirmLeave.armed=false,4000);toast('Unsaved changes. Click again to discard them, or Save first.');return false}
+addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
+
+/* ---------- editor ---------- */
+const f=$('bf'),E=f.elements;
+$('f-power').innerHTML=S.POWER.map(t=>`<label class="chk"><input type="checkbox" name="power" value="${t}"> ${t}</label>`).join('');
+$('f-modes').innerHTML=S.MODES.map(t=>`<label class="chk"><input type="checkbox" name="modes" value="${t}"> ${t}</label>`).join('');
+$('f-apps').innerHTML=S.APPS.map(t=>`<label class="chk"><input type="checkbox" name="applications" value="${t}"> ${t}</label>`).join('');
+E.powerStd.innerHTML+=S.POWER.map(t=>`<option value="${t}">${t}</option>`).join('');
+const units=()=>{const g=E.fuel.value==='gas';document.querySelectorAll('.un').forEach(u=>u.textContent=g?'MBH':'GPH');$('lpw').hidden=!g};
+const dimUI=()=>{$('dims').style.display=E.dimmode.value==='published'?'flex':'none'};
+const pic=()=>{const v=E.image.value.trim();$('pimg').src=v||'';$('pimg').style.visibility=v?'visible':'hidden'};
+function edit(b,isCopy){cur={key:b&&!isCopy?keyOf(b):null};$('none').hidden=true;f.hidden=false;$('delc').hidden=true;$('fmsg').hidden=true;
+  f.reset();const o=b||{fuel:'oil',power:[],modes:[],applications:[],dims:'not published'};
+  for(const k of['name','brand','fuel','min','max','link','powerText','airTube','biofuel','propane','notes','image'])E[k].value=o[k]??'';
+  if(isCopy)E.name.value=o.name+' (copy)';
+  E.powerStd.value=o.powerStd||'';
+  for(const [n,arr] of[['power',o.power],['modes',o.modes],['applications',o.applications]])f.querySelectorAll(`[name=${n}]`).forEach(c=>c.checked=(arr||[]).includes(c.value));
+  const pub=Array.isArray(o.dims);E.dimmode.value=pub?'published':(o.dims||'not published');
+  E.dh.value=pub?o.dims[0]:'';E.dw.value=pub?o.dims[1]:'';E.dd.value=pub?o.dims[2]:'';
+  $('ft').textContent=b&&!isCopy?`${o.brand} ${o.name}`:'New burner';$('del').hidden=!cur.key;$('dup').hidden=!cur.key;$('cancel').textContent=cur.key?'Discard changes':'Cancel';
+  units();dimUI();pic();dirty=!!isCopy;$('dirty').hidden=!dirty;renderList();E.name.focus()}
+f.addEventListener('input',e=>{dirty=true;$('dirty').hidden=false;if(e.target===E.fuel)units();if(e.target.name==='dimmode')dimUI();if(e.target===E.image)pic()});
+f.addEventListener('change',e=>{if(e.target===E.fuel)units();if(e.target.name==='dimmode')dimUI()});
+function read(){const t=k=>E[k].value.trim(),n=k=>E[k].value===''?undefined:Number(E[k].value),o={};
+  o.name=t('name');o.brand=t('brand');o.fuel=E.fuel.value;o.min=n('min');o.max=n('max');
+  o.power=[...f.querySelectorAll('[name=power]:checked')].map(x=>x.value);if(E.powerStd.value)o.powerStd=E.powerStd.value;o.powerText=t('powerText');
+  o.modes=[...f.querySelectorAll('[name=modes]:checked')].map(x=>x.value);
+  o.dims=E.dimmode.value==='published'?[n('dh'),n('dw'),n('dd')]:E.dimmode.value;if(Array.isArray(o.dims)&&o.dims.some(v=>v===undefined))o.dims=undefined;
+  o.airTube=t('airTube');o.applications=[...f.querySelectorAll('[name=applications]:checked')].map(x=>x.value);
+  if(t('biofuel'))o.biofuel=t('biofuel');if(o.fuel==='gas'&&t('propane'))o.propane=t('propane');
+  o.notes=t('notes');o.link=t('link');if(t('image'))o.image=t('image');
+  for(const k of Object.keys(o))if(o[k]===undefined||o[k]==='')delete o[k];return o}
+const LBL={name:'Model name',brand:'Brand',fuel:'Fuel',min:'Min firing rate',max:'Max firing rate',power:'Power available',powerText:'Power notes',powerStd:'Standard supply',modes:'Firing modes',dims:'Chassis dimensions',airTube:'Air tube',applications:'Applications',notes:'Selling note',link:'Link',biofuel:'Biofuel rating',propane:'Propane',image:'Photo'};
+const nice=m=>{let k=m.match(/^Missing "(\w+)"$/);if(k)return`${LBL[k[1]]||k[1]}: required`;k=m.match(/^(\w+):(.*)$/);return k&&LBL[k[1]]?LBL[k[1]]+':'+k[2]:m};
+const showMsg=(el,kind,html)=>{el.className='msg '+kind;el.innerHTML=html;el.hidden=false};
+f.onsubmit=async e=>{e.preventDefault();const b=read();const errs=S.check(b);
+  if(errs.length)return showMsg($('fmsg'),'err','<b>Fix these first:</b><ul>'+errs.map(m=>`<li>${esc(nice(m))}</li>`).join('')+'</ul>');
+  try{await call('PUT','/api/burners',{original:cur.key,burner:b});dirty=false;$('dirty').hidden=true;toast('Saved. The public page shows it now.');
+    await loadBurners();edit(list.find(x=>keyOf(x)===keyOf(b)))}
+  catch(err){showMsg($('fmsg'),'err',err.errors?'<b>Not saved:</b><ul>'+err.errors.map(m=>`<li>${esc(nice(m))}</li>`).join('')+'</ul>':esc(err.message))}};
+$('cancel').onclick=()=>{dirty=false;$('dirty').hidden=true;const x=cur.key&&list.find(o=>keyOf(o)===cur.key);if(x)edit(x);else{f.hidden=true;$('none').hidden=false;cur=null;renderList()}};
+$('dup').onclick=()=>{const x=list.find(o=>keyOf(o)===cur.key);if(x)edit(x,true)};
+$('del').onclick=()=>{$('deln').textContent=$('ft').textContent;$('delc').hidden=false};
+$('deln2').onclick=()=>$('delc').hidden=true;
+$('dely').onclick=async()=>{try{await call('DELETE','/api/burners',{key:cur.key});dirty=false;toast('Deleted. Undo it from History if needed.');f.hidden=true;$('none').hidden=false;cur=null;loadBurners()}catch(err){showMsg($('fmsg'),'err',esc(err.message))}};
+$('pfile').onchange=async()=>{const file=$('pfile').files[0];if(!file)return;
+  if(file.size>4*1024*1024){showMsg($('fmsg'),'err','That photo is over 4 MB. Use a smaller one.');return}
+  const data=await new Promise(ok=>{const r=new FileReader();r.onload=()=>ok(r.result);r.readAsDataURL(file)});
+  try{const j=await call('POST','/api/photo',{name:(E.brand.value+'-'+E.name.value)||file.name,data});E.image.value=j.path;pic();dirty=true;$('dirty').hidden=false;toast('Photo uploaded. Click Save to keep it.')}
+  catch(err){showMsg($('fmsg'),'err',esc(err.message))}$('pfile').value=''};
+
+/* ---------- history ---------- */
+async function loadHistory(){const h=await call('GET','/api/history');
+  $('hist').innerHTML=h.map(x=>`<tr><td style="white-space:nowrap">${esc(new Date(x.at).toLocaleString())}</td><td>${esc(x.by)}</td><td>${esc(x.action)}</td><td><button class="btn" data-id="${esc(x.id)}" data-a="${esc(x.action)}">Undo</button></td></tr>`).join('')||'<tr><td colspan="4" class="empty">No changes yet</td></tr>'}
+$('hist').onclick=e=>{const b=e.target.closest('button[data-id]');if(!b)return;pendingRestore=b.dataset.id;$('hct').textContent=`Put the list back to just before “${b.dataset.a}”? Later changes will be undone too.`;$('hc').hidden=false};
+$('hn').onclick=()=>{$('hc').hidden=true;pendingRestore=null};
+$('hy').onclick=async()=>{try{await call('POST','/api/restore',{id:pendingRestore});$('hc').hidden=true;toast('Restored.');loadHistory();loadBurners()}catch(err){toast(err.message)}};
+$('exp').onclick=async e=>{e.preventDefault();const data=await call('GET','/api/burners');const url=URL.createObjectURL(new Blob(['[\n'+data.map(o=>'  '+JSON.stringify(o)).join(',\n')+'\n]\n'],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='burners.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)};
+
+/* ---------- users ---------- */
+async function loadUsers(){const u=await call('GET','/api/users');
+  $('ulist').innerHTML=u.map(x=>`<tr data-n="${esc(x.name)}"><td><b>${esc(x.name)}</b>${x.name===me.name?' <span class="u">(you)</span>':''}</td>
+   <td><select class="ur" aria-label="Role for ${esc(x.name)}"><option value="editor"${x.role==='editor'?' selected':''}>Editor</option><option value="admin"${x.role==='admin'?' selected':''}>Admin</option></select></td>
+   <td><div class="row" style="flex-wrap:nowrap"><input type="text" class="up" placeholder="8+ characters" aria-label="New password for ${esc(x.name)}"><button class="btn us">Set</button></div></td>
+   <td>${x.name===me.name?'':'<button class="btn dan ux">Remove</button>'}</td></tr>`).join('')}
+$('ulist').addEventListener('change',async e=>{const s=e.target.closest('.ur');if(!s)return;const n=s.closest('tr').dataset.n;
+  try{await call('PATCH','/api/users',{name:n,role:s.value});toast(`${n} is now ${s.value==='admin'?'an admin':'an editor'}`)}catch(err){showMsg($('umsg'),'err',esc(err.message));loadUsers()}});
+$('ulist').addEventListener('click',async e=>{const tr=e.target.closest('tr');if(!tr)return;const n=tr.dataset.n;
+  if(e.target.closest('.us')){const p=tr.querySelector('.up').value;try{await call('PATCH','/api/users',{name:n,password:p});toast(`Password set for ${n}. They'll need to sign in again.`);tr.querySelector('.up').value=''}catch(err){showMsg($('umsg'),'err',esc(err.message))}}
+  if(e.target.closest('.ux')){const b=e.target.closest('.ux');if(!b.dataset.armed){b.dataset.armed=1;b.textContent='Click to confirm';setTimeout(()=>{delete b.dataset.armed;b.textContent='Remove'},4000);return}
+    try{await call('DELETE','/api/users',{name:n});toast(`${n} removed`);loadUsers()}catch(err){showMsg($('umsg'),'err',esc(err.message))}}});
+$('uf').onsubmit=async e=>{e.preventDefault();const U=e.target.elements;
+  try{await call('POST','/api/users',{name:U.name.value,password:U.password.value,role:U.role.value});toast(`${U.name.value} added`);e.target.reset();$('umsg').hidden=true;loadUsers()}
+  catch(err){showMsg($('umsg'),'err',esc(err.message))}};
+
+/* ---------- password ---------- */
+$('pwb').onclick=()=>{$('pf').reset();$('pmsg').hidden=true;$('pwd').showModal()};
+$('pclose').onclick=()=>$('pwd').close();
+$('pf').onsubmit=async e=>{e.preventDefault();const P=e.target.elements;
+  try{await call('POST','/api/password',{current:P.current.value,next:P.next.value});$('pwd').close();toast('Password changed')}catch(err){showMsg($('pmsg'),'err',esc(err.message))}};
+
+boot();
+}
+</script>
+</body>
+</html>

@@ -8,9 +8,14 @@
   <Privileged>false</Privileged>
   <Support>https://github.com/trev9575/burner-matrix/issues</Support>
   <Project>https://github.com/trev9575/burner-matrix</Project>
-  <Overview>Internal field-sales burner selection matrix for Beckett and Wayne (incl. Comet) oil and gas burners. Filter by fuel, firing rate, power supply, firing mode, application and footprint. Static page, no data stored.</Overview>
+  <Overview>Internal field-sales burner selection matrix for Beckett and Wayne (incl. Comet) oil and gas burners, with a sign-in admin screen at /admin for editing burners. Burner data, uploaded photos, users and change history live in the appdata folder.</Overview>
   <Category>Productivity: Tools:</Category>
-  <WebUI>http://[IP]:[PORT:80]/</WebUI>
+  <WebUI>http://[IP]:[PORT:8080]/</WebUI>
   <Icon>https://raw.githubusercontent.com/trev9575/burner-matrix/main/html/favicon.svg</Icon>
-  <Config Name="Web UI port" Target="80" Default="8088" Mode="tcp" Description="Port for the web page" Type="Port" Display="always" Required="true" Mask="false">8088</Config>
+  <Config Name="Web UI port" Target="8080" Default="8088" Mode="tcp" Description="Port for the page" Type="Port" Display="always" Required="true" Mask="false">8088</Config>
+  <Config Name="Data" Target="/data" Default="/mnt/user/appdata/burner-matrix" Mode="rw" Description="Burner list, uploaded photos, users and change history. Back this folder up." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/burner-matrix</Config>
+  <Config Name="First admin username" Target="ADMIN_USER" Default="" Mode="" Description="Creates the first admin the first time the container starts. Add more people later in /admin." Type="Variable" Display="always" Required="false" Mask="false"></Config>
+  <Config Name="First admin password" Target="ADMIN_PASSWORD" Default="" Mode="" Description="8+ characters. Only used once, to create the first admin. Change it afterwards in /admin." Type="Variable" Display="always" Required="false" Mask="true"></Config>
+  <Config Name="HTTPS-only cookies" Target="COOKIE_SECURE" Default="false" Mode="" Description="Set true if you only open it over https://" Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
+  <Config Name="Behind reverse proxy" Target="TRUST_PROXY" Default="false" Mode="" Description="Set true behind Nginx Proxy Manager, SWAG or a Cloudflare tunnel." Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
 </Container>

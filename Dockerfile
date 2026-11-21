@@ -1,8 +1,14 @@
-FROM nginx:1.27-alpine
+FROM node:22-alpine
 
-# The page, burner data and logos
-COPY html/ /usr/share/nginx/html/
-RUN chmod -R a+rX /usr/share/nginx/html
+WORKDIR /app
+# Page, logos, photos, seed data, admin screen
+COPY html/ ./html/
+COPY server.js ./
 
-EXPOSE 80
-HEALTHCHECK --interval=60s --timeout=5s CMD wget -qO- http://127.0.0.1/ >/dev/null || exit 1
+ENV PORT=8080 DATA_DIR=/data NODE_ENV=production
+# Runs as root so it can always write to the Unraid appdata folder (which Docker creates as root).
+RUN mkdir -p /data
+VOLUME /data
+EXPOSE 8080
+HEALTHCHECK --interval=60s --timeout=5s CMD wget -qO- http://127.0.0.1:8080/ >/dev/null || exit 1
+CMD ["node", "server.js"]

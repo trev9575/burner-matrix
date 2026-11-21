@@ -2,5 +2,6 @@
 .github
 unraid
 *.md
+!html/photos/README.md
 docker-compose.yml
 scripts

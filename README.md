@@ -4,95 +4,104 @@ Internal field-sales tool for choosing Beckett and Wayne (incl. Comet) oil and g
 Filter by fuel, required firing rate (GPH or MBH), power available, firing mode, application
 and footprint; the chart shows every matching burner's firing range against the job.
 
-It is a static page (`html/index.html`) that reads its data from `html/burners.json`, served by nginx. 
+- **Public page:** `http://YOUR-SERVER:8088/`, no sign-in.
+- **Admin:** `http://YOUR-SERVER:8088/admin`, sign-in required. Add, edit, duplicate and delete burners,
+  upload photos, undo any change, and manage who can sign in.
+
+It is a small Node server (no dependencies) in one container. Burner data, uploaded photos,
+users and the change history live in the `/data` folder (your Unraid appdata).
 
 ## 1. Build (automatic)
 
-Every push to `main` runs the GitHub Action, which builds the image and publishes
-`ghcr.io/trev9575/burner-matrix:latest`.
+Every push to `main` checks `html/burners.json`, builds the image and publishes
+`ghcr.io/trev9575/burner-matrix:latest`. If the package is private, run
+`docker login ghcr.io -u trev9575` once on Unraid with a token that has `read:packages`.
 
-The package inherits the repository's visibility. For a **private** repo, Unraid has to log in
-to pull it (step 2, note). For a **public** repo, open GitHub → your profile → **Packages →
-burner-matrix → Package settings** after the first build and set visibility to **Public**.
+## 2. Install / upgrade on Unraid
 
-## 2. Install on Unraid
-
-**Option A – template (recommended)**
-
-1. Copy `unraid/burner-matrix.xml` to your flash drive at
-   `/boot/config/plugins/dockerMan/templates-user/my-burner-matrix.xml`.
-2. Docker → **Add Container**, pick **burner-matrix** from the template list, check the port
-   (default `8088`), click **Apply**.
-
-**Option B – by hand**
+**Template:** copy `unraid/burner-matrix.xml` to
+`/boot/config/plugins/dockerMan/templates-user/my-burner-matrix.xml`, then Docker → Add Container →
+**burner-matrix**. If you already have the container, edit it and make these changes:
 
 | Field | Value |
 |---|---|
 | Repository | `ghcr.io/trev9575/burner-matrix:latest` |
-| Port | container `80` → host `8088` (or any free port) |
+| Port | container **`8080`** → host `8088` (TCP) — the container port changed from 80 |
+| Path | container `/data` → host `/mnt/user/appdata/burner-matrix` |
+| Variable `ADMIN_USER` | your username, e.g. `trevor` |
+| Variable `ADMIN_PASSWORD` | 8+ characters |
 
-Then open `http://YOUR-UNRAID-IP:8088`.
+`ADMIN_USER`/`ADMIN_PASSWORD` are only used the **first** time, to create the first admin. After that,
+sign in at `/admin`, change your password, and add other people under **Users**. You can then blank
+the password variable.
 
-> **Private package:** create a GitHub personal access token (classic) with only `read:packages`,
-> then in the Unraid terminal run
-> `docker login ghcr.io -u trev9575` and paste the token as the password. Unraid remembers it.
+Optional: `COOKIE_SECURE=true` if you only open it over https, `TRUST_PROXY=true` behind Nginx Proxy
+Manager / SWAG / a Cloudflare tunnel, `SESSION_HOURS` (default 12).
 
-## 3. Updating
+## 3. Editing burners
 
-Edit `html/burners.json` or `html/index.html` (on GitHub, or locally and push) → wait for the Action to finish
-(a minute or two) → in Unraid click **Check for Updates** on the Docker tab, then
-**Apply update**.
+Use `/admin`. Saves go live immediately; there is no rebuild. Every save is logged under
+**History & undo** with who made it, and any change can be undone.
 
-## Adding or changing burners
+**Roles:** *Editors* change burners. *Admins* also add/remove people and reset passwords.
+Logins are rate-limited (8 wrong tries per 15 minutes per address).
 
-All burner data is in **`html/burners.json`**, one burner per line. You don't touch the page code.
+### Where the data lives
 
-**Easiest way:** open the tool, scroll to **Add a burner**, and fill in the form. It won't produce an
-entry until every required field is complete and sensible (e.g. GPH for oil, MBH for gas, min below max,
-a real https link). Click **Check & preview** to see it on the chart, then **Copy entry**, open
-`burners.json` on GitHub (the form links straight to the editor), paste it after the last `}` and
-before the final `]`, and **Commit changes**.
+| In `/data` | What |
+|---|---|
+| `burners.json` | The live burner list |
+| `photos/` | Photos uploaded in admin |
+| `history/` | One file per change (last 200 kept), used for undo |
+| `users.json` | Usernames, roles and hashed passwords |
+| `.secret` | Key that signs sign-in cookies (delete it to sign everyone out) |
 
-**Editing an existing burner:** change its line in `burners.json` on GitHub and commit.
+`html/burners.json` in this repo is only the **starting list** copied into `/data` the first time
+the container runs. To keep the repo in step, use **Download burners.json** in admin and commit it.
+To throw away the live list and start again from the repo copy, stop the container, delete
+`/data/burners.json`, and start it.
 
-Every commit runs `scripts/validate.js` first. If an entry is incomplete or a comma is missing, the
-build stops with a message saying which burner and which field, and the running site is left as it was.
-Check it locally with `node scripts/validate.js`.
+**Backups:** the Appdata Backup plugin covers `/mnt/user/appdata/burner-matrix`, or copy the folder.
+
+### Field reference
 
 | Field | What to put |
 |---|---|
 | `name`, `brand` | Model and brand. New brands appear in the brand filter automatically. |
 | `fuel` | `"oil"` or `"gas"` |
-| `min`, `max` | Firing range: **GPH** for oil, **MBH** (1,000 Btu/h input) for gas |
+| `min`, `max` | Firing range: **GPH** for oil, **MBH** for gas |
 | `power` | Any of `"12 VDC"`, `"24 VDC"`, `"120 VAC"`, `"208-240 VAC 1P"`, `"208-240 VAC 3P"`, `"480 VAC 3P"`, `"no power"` |
-| `powerStd` | Optional. Which of the `power` values is standard; shown as a **Std** tag in the table |
+| `powerStd` | Optional. Which `power` value is standard; shown as a **Std** tag |
 | `powerText` | Reference notes on the electrical options (not shown in the table) |
 | `modes` | Any of `"on/off"`, `"low-high-low"`, `"modulating"` |
 | `dims` | `[height, width, depth]` in inches, or `"spec sheet"`, or `"not published"` |
 | `airTube` | Air tube lengths or insertion |
 | `applications` | Any of `"residential"`, `"light commercial"`, `"commercial/industrial"`, `"pressure washers/road equipment"`, `"oil-to-gas conversion"`, `"ovens/process"` |
 | `notes` | Short selling note |
-| `link` | `https://` product page or spec sheet |
-| `image` | Optional. https link to a product photo, shown when you hover over the burner name |
+| `link` | `https://` product page |
+| `image` | Optional. `https://` photo, or `photos/<file>` |
 | `biofuel`, `propane` | Optional. e.g. `"B20"`, `"Conversion kit"` |
 
-The allowed values live in `html/schema.js`, which the form and the build check share.
+The rules live in `html/schema.js`, shared by the admin screen, the server and the build check.
 
-## Run without GitHub
+## Photos
+
+Wayne and Comet photos load from their websites. Beckett's site blocks other sites from showing its
+images, so Beckett photos ship in `html/photos/`. Photos uploaded in admin are stored in `/data/photos`.
+
+## Run without Unraid
 
 ```bash
 docker build -t burner-matrix .
-docker run -d --name burner-matrix --restart unless-stopped -p 8088:80 burner-matrix
+docker run -d --name burner-matrix -p 8088:8080 -v "$PWD/data:/data" \
+  -e ADMIN_USER=trevor -e ADMIN_PASSWORD='change-me-now' burner-matrix
 ```
 
-## Notes
+Or without Docker (Node 20+): `DATA_DIR=./data ADMIN_USER=trevor ADMIN_PASSWORD=... node server.js`
 
-- **Photos** for the hover pop-up: Wayne and Comet photos load from their websites. Beckett's site blocks
-  other sites from showing its images, so Beckett photos are stored in `html/photos/` (`beckett-cf1400.jpg`, etc.).
-  To fetch them all, run `scripts/get-beckett-photos.ps1` (Windows) or `scripts/get-beckett-photos.sh` (Mac/Linux)
-  on your own computer, then upload the files to `html/photos/` on GitHub.
-- **Logos** are in `html/logos/` (`beckett.png`, `wayne.png`). Replace those files to update them.
-- The page has no login. For reps outside the office, put it behind a reverse proxy with auth
-  or a VPN (Tailscale/WireGuard) rather than opening the port.
-- Specifications were compiled from beckettcorp.com, waynecombustion.com and preferred-mfg.com
-  on 20 Nov 2026. Confirm against current spec sheets before quoting.
+## Security notes
+
+- The public page has no sign-in. To reach it from outside the office, put it behind a VPN
+  (Tailscale/WireGuard) or a reverse proxy rather than opening the port.
+- Sign-in cookies are HttpOnly and SameSite=Strict; every change also needs a custom request header.
+- Passwords are stored as scrypt hashes. Changing or resetting a password signs that person out everywhere.

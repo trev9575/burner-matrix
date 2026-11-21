@@ -3,5 +3,12 @@ services:
     image: ghcr.io/trev9575/burner-matrix:latest
     container_name: burner-matrix
     ports:
-      - "8088:80"
+      - "8088:8080"
+    volumes:
+      - /mnt/user/appdata/burner-matrix:/data
+    environment:
+      ADMIN_USER: trevor
+      ADMIN_PASSWORD: change-me-now   # only used the first time, to create the first admin
+      # COOKIE_SECURE: "true"         # if you only open it over https
+      # TRUST_PROXY: "true"           # if behind Nginx Proxy Manager / SWAG / Cloudflare tunnel
     restart: unless-stopped
