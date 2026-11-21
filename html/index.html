@@ -128,6 +128,32 @@ footer p{margin:0 0 6px;max-width:100ch}
 #pic.ld span::after{content:" (loading…)";font-weight:500;color:var(--mute)}
 #pic.err span::after{content:" (photo unavailable)";font-weight:500;color:var(--mute)}
 a.bn[data-img]{cursor:zoom-in}
+.rfqb{margin-top:6px;font:600 12px Montserrat,sans-serif;padding:4px 10px;min-height:30px;border-radius:3px;border:1px solid var(--red);background:#fff;color:var(--red);cursor:pointer;white-space:nowrap}
+.rfqb:hover{background:var(--red);color:#fff}
+#rfqv{padding:16px max(3vw,16px) 40px}
+.rfqbar{display:flex;flex-wrap:wrap;gap:8px;max-width:8.5in;margin:0 auto 14px}
+.sheet{background:#fff;max-width:8.5in;margin:0 auto;padding:.55in .6in;box-shadow:0 2px 10px rgba(0,0,0,.12);font-size:12.5px;line-height:1.4;color:#1d1d1d}
+.sh-top{display:flex;align-items:center;gap:18px;border-bottom:3px solid var(--red);padding-bottom:10px}
+.sh-top img{height:34px;width:auto}
+.sh-top .lg{display:flex;gap:14px;align-items:center;background:var(--ink);padding:6px 12px;border-radius:3px}
+.sh-top h1{font-size:20px;margin:0;color:var(--ink)}
+.sh-top .meta{margin-left:auto;text-align:right;font-size:12px;white-space:nowrap}
+.sh-top .meta b{font-size:13px}
+.sheet h3{font-size:12.5px;margin:16px 0 6px;padding:4px 8px;background:var(--ink);color:#fff;border-radius:2px}
+.kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 22px}
+.kv>div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:8px;align-items:baseline;border-bottom:1px solid #e2e2dc;padding:4px 0;min-height:28px}
+.kv>div.w{grid-column:1/-1}
+.kv label,.kv .k{font-weight:700;font-size:11.5px;color:#55554f}
+.kv input,.kv select,.sheet textarea{font:500 12.5px Montserrat,sans-serif;border:0;border-bottom:1px dashed #b9b9b2;background:#fffdf5;padding:3px 4px;width:100%;color:#1d1d1d;border-radius:0;min-height:0;height:auto}
+.sheet textarea{border:1px dashed #b9b9b2;min-height:60px;resize:vertical}
+.kv .v{font-weight:600}
+.sh-burner{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:16px;align-items:start}
+.sh-burner img{width:150px;height:150px;object-fit:contain;border:1px solid #e2e2dc;border-radius:3px}
+.sh-foot{margin-top:18px;padding-top:8px;border-top:1px solid #d6d6d0;font-size:10.5px;color:#66665f}
+.sh-fit{display:inline-block;font-weight:700;font-size:11px;border-radius:3px;padding:1px 7px;margin-left:6px}
+.sh-fit.ok{background:#e2f3e7;color:#1d6b35}.sh-fit.edge{background:#fff3e8;color:#b35c00}.sh-fit.out{background:#fde3e5;color:#b3141f}
+@media(max-width:700px){.kv{grid-template-columns:minmax(0,1fr)}.kv>div{grid-template-columns:120px minmax(0,1fr)}.sh-burner{grid-template-columns:minmax(0,1fr)}.sheet{padding:18px}}
+@media print{@page{size:letter;margin:.4in}body{background:#fff}#matrixv,.noprint,.toast,#pic,.util,.brand{display:none !important}.sheet ::placeholder{color:transparent}.sheet{font-size:10.5px !important;line-height:1.3}.sheet h3{margin:9px 0 3px;padding:3px 7px;font-size:11px}.kv>div{min-height:0;padding:2px 0;grid-template-columns:135px minmax(0,1fr)}.kv label,.kv .k{font-size:10px}.kv input,.kv select{font-size:11px;padding:1px 2px}.sh-burner{grid-template-columns:minmax(0,1fr) 115px}.sh-burner img{width:115px;height:115px}.sheet textarea{min-height:38px;font-size:11px;resize:none}.sh-top{padding-bottom:6px}.sh-top img{height:28px}.sh-top h1{font-size:17px}.sh-foot{margin-top:8px}#rfqv{display:block !important;padding:0}.sheet{box-shadow:none;max-width:none;padding:0;font-size:11.5px}.kv input,.kv select,.sheet textarea{background:transparent;border-bottom:1px solid #ccc;-webkit-appearance:none;appearance:none}.sheet textarea{border:1px solid #ccc}.sheet h3,.sh-top .lg,.sh-fit{-webkit-print-color-adjust:exact;print-color-adjust:exact}.kv>div{break-inside:avoid}}
 @media(max-width:1000px){.rail{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.rail{grid-template-columns:minmax(0,1fr)}.rail .f-power{grid-column:auto}}
 @media(max-width:600px){.util{display:none}.brand .div{display:none}.axis,.lr{grid-template-columns:140px minmax(0,1fr)}.lr .nm small{display:none}.axis span:nth-child(even){display:none}table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--rule)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:7.5em;background:none !important}.stack td::before{content:attr(data-l);float:inline-start;width:7em;margin-inline-start:-7.5em;color:var(--mute);font-size:12.5px}.stack td:empty{display:none}}
@@ -141,6 +167,7 @@ a.bn[data-img]{cursor:zoom-in}
   <span class="div" aria-hidden="true"></span>
   <img src="logos/wayne.png" alt="Wayne Combustion Systems" onerror="this.outerHTML='<span class=wy>WAYNE</span>'">
 </div>
+<div id="matrixv">
 <header class="band hero">
   <div>
     <p class="eyebrow">Field sales tool<br>Oil &amp; gas burner selection</p>
@@ -211,6 +238,17 @@ a.bn[data-img]{cursor:zoom-in}
   <p>Compiled 20 Nov 2026. Always confirm against the current spec sheet and the appliance maker's burner spec before quoting.</p>
   <p>Internal Beckett sales tool. Logos and specifications belong to their owners. <a href="admin" style="color:#d8d8d2">Admin</a></p>
 </footer>
+</div>
+<section id="rfqv" hidden>
+  <div class="rfqbar noprint">
+    <button class="btn" id="rfqback">← Back to matrix</button>
+    <span style="flex:1"></span>
+    <button class="btn" id="rfqcopy">Copy as text</button>
+    <button class="btn" id="rfqmail">Email</button>
+    <button class="btn pri" id="rfqprint">Print / Save PDF</button>
+  </div>
+  <div class="sheet" id="sheet"></div>
+</section>
 <div class="toast" id="toast" role="status"></div>
 <div id="pic" aria-hidden="true"><img alt=""><span></span></div>
 
@@ -278,7 +316,7 @@ function render(){
   const req=r!=null?`<div class="req" style="left:${pos(Math.min(Math.max(r,15),15000))}%"></div>`:'';
   $('lad').innerHTML=list.length?list.map(x=>{const[a,b]=mb(x);const fz=fit(x,r);return`<div class="lr" data-n="${esc(x.n)}" title="${esc(x.b+' '+x.n)}: ${fmt(x)}"><div class="nm">${esc(x.n)}<small>${x.prev?'Preview':esc(x.b)}</small></div><div class="track">${gl}${req}<div class="bar ${x.f}${x.disc?' off':''}${fz==='edge'?' edgebar':''}" style="left:${pos(a)}%;width:${Math.max(pos(b)-pos(a),.8)}%"></div></div></div>`}).join(''):'<div class="empty">No burner meets every filter. Loosen the footprint or power limits, or check the firing rate unit.</div>';
   $('tb').innerHTML=list.map(x=>{const fz=fit(x,r);const d=Array.isArray(x.dim)?x.dim.map(n=>+n.toFixed(2)).join(' × '):x.dim==='spec'?'See spec sheet':'Not published';
-    return`<tr id="r-${x.n.replace(/\W/g,'')}" class="${fz==='edge'?'edge':''}"><td><b class="nm-${x.f}"><a class="bn" href="${esc(x.u)}"${x.img?` data-img="${esc(x.img)}"`:''} target="_blank" rel="noopener">${esc(x.n)}</a></b><br><span class="note">${esc(x.b)}${x.disc?' · discontinued':''}${x.prev?' · <b class=pv>preview, not saved</b>':''}</span></td><td><span class="fuel ${x.f}">${x.f==='oil'?'Oil':'Gas'}</span>${x.bio?`<br><span class="tag">${esc(x.bio)}</span>`:''}${x.lp?`<br><span class="tag">LP: ${esc(x.lp)}</span>`:''}</td><td class="n">${fmt(x)}${sub(x)?`<br><span class="note">${sub(x)}</span>`:''}${fz==='ok'?`<br><span class="fit ok">Sweet spot</span>`:fz==='edge'?`<br><span class="fit edge">${where(x,r)==='max'?`Near MAX · ${pctOf(x,r)}% of max`:`Near MIN · ${Math.round((r/mb(x)[0]-1)*100)}% above min`}</span>`:''}</td><td><div class="pws">${['12dc','24dc','120','240','3p240','3p480','none'].filter(k=>x.v.includes(k)).map(k=>`<span class="pw ${PCH[k][1]}">${PCH[k][0]}${x.std===k&&x.v.length>1?' <i>Std</i>':''}</span>`).join('')}</div></td><td>${x.m.map(m=>`<span class="tag">${MODES[m]}</span>`).join('')}</td><td class="n">${x.fl!=null||x.fw!=null?`${x.fl!=null?n2(x.fl):'?'} × ${x.fw!=null?n2(x.fw):'?'}`:NS}</td><td class="n">${x.td!=null?(x.td===1&&x.tdx?'':n2(x.td)+':1'):NS}</td><td class="n">${x.op!=null?'up to '+n2(x.op):NS}</td><td>${x.parts?`<span class="rate p-${x.parts}">${CAP(x.parts)}</span>`:'<span class="note" style="white-space:nowrap">Not set</span>'}</td><td>${x.svc?`<span class="rate s-${x.svc}">${CAP(x.svc)}</span>`:'<span class="note" style="white-space:nowrap">Not set</span>'}</td><td class="n">${d}</td><td>${x.a.map(a=>`<span class="tag">${APPS[a]}</span>`).join('')}</td><td>${esc(x.note)}</td></tr>`}).join('');
+    return`<tr id="r-${x.n.replace(/\W/g,'')}" class="${fz==='edge'?'edge':''}"><td><b class="nm-${x.f}"><a class="bn" href="${esc(x.u)}"${x.img?` data-img="${esc(x.img)}"`:''} target="_blank" rel="noopener">${esc(x.n)}</a></b><br><span class="note">${esc(x.b)}${x.disc?' · discontinued':''}${x.prev?' · <b class=pv>preview, not saved</b>':''}</span><br><button type="button" class="rfqb" data-k="${esc((x.b+'|'+x.n).toLowerCase())}">Create RFQ</button></td><td><span class="fuel ${x.f}">${x.f==='oil'?'Oil':'Gas'}</span>${x.bio?`<br><span class="tag">${esc(x.bio)}</span>`:''}${x.lp?`<br><span class="tag">LP: ${esc(x.lp)}</span>`:''}</td><td class="n">${fmt(x)}${sub(x)?`<br><span class="note">${sub(x)}</span>`:''}${fz==='ok'?`<br><span class="fit ok">Sweet spot</span>`:fz==='edge'?`<br><span class="fit edge">${where(x,r)==='max'?`Near MAX · ${pctOf(x,r)}% of max`:`Near MIN · ${Math.round((r/mb(x)[0]-1)*100)}% above min`}</span>`:''}</td><td><div class="pws">${['12dc','24dc','120','240','3p240','3p480','none'].filter(k=>x.v.includes(k)).map(k=>`<span class="pw ${PCH[k][1]}">${PCH[k][0]}${x.std===k&&x.v.length>1?' <i>Std</i>':''}</span>`).join('')}</div></td><td>${x.m.map(m=>`<span class="tag">${MODES[m]}</span>`).join('')}</td><td class="n">${x.fl!=null||x.fw!=null?`${x.fl!=null?n2(x.fl):'?'} × ${x.fw!=null?n2(x.fw):'?'}`:NS}</td><td class="n">${x.td!=null?(x.td===1&&x.tdx?'':n2(x.td)+':1'):NS}</td><td class="n">${x.op!=null?'up to '+n2(x.op):NS}</td><td>${x.parts?`<span class="rate p-${x.parts}">${CAP(x.parts)}</span>`:'<span class="note" style="white-space:nowrap">Not set</span>'}</td><td>${x.svc?`<span class="rate s-${x.svc}">${CAP(x.svc)}</span>`:'<span class="note" style="white-space:nowrap">Not set</span>'}</td><td class="n">${d}</td><td>${x.a.map(a=>`<span class="tag">${APPS[a]}</span>`).join('')}</td><td>${esc(x.note)}</td></tr>`}).join('');
 }
 function sync(){
   seg('f-fuel',[['all','All'],['oil','Oil'],['gas','Gas']],'fuel');
@@ -310,6 +348,79 @@ $('tb').addEventListener('mouseout',e=>{const a=e.target.closest('a.bn');if(a&&!
 $('tb').addEventListener('focusin',e=>{const a=e.target.closest('a.bn[data-img]');if(a)showPic(a)});
 $('tb').addEventListener('focusout',hidePic);
 addEventListener('scroll',hidePic,{passive:true});
+
+/* ---------- RFQ spec sheet ---------- */
+const MODEW={onoff:'On/Off',hilo:'Lo-Hi-Lo',mod:'Modulating'};
+const vlabel=k=>({'12dc':'12 VDC','24dc':'24 VDC','120':'120 VAC','240':'208–240 VAC 1Φ','3p240':'208–240 VAC 3Φ','3p480':'480 VAC 3Φ','none':'No power needed'}[k]);
+let rfqB=null;
+const today=()=>new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+const rfqNo=x=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return`RFQ-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${x.n.replace(/[^A-Za-z0-9]+/g,'').toUpperCase()}`};
+const inp=(id,label,val='',ph='',wide)=>`<div${wide?' class="w"':''}><label for="${id}">${label}</label><input id="${id}" type="text" value="${esc(val)}" placeholder="${esc(ph)}"></div>`;
+const sel=(id,label,opts,val)=>`<div><label for="${id}">${label}</label><select id="${id}">${opts.map(o=>`<option${o===val?' selected':''}>${esc(o)}</option>`).join('')}</select></div>`;
+const ro=(label,val)=>`<div><span class="k">${label}</span><span class="v">${val}</span></div>`;
+function openRFQ(x){rfqB=x;const r=reqMBH(),fz=fit(x,r);const[a,b]=mb(x);
+  const rateTxt=r==null?'':(S.unit==='gph'?`${S.rate} GPH (≈ ${Math.round(r).toLocaleString()} MBH)`:`${Number(S.rate).toLocaleString()} MBH${x.f==='oil'?` (≈ ${(r/G).toFixed(2)} GPH)`:''}`);
+  const siteKeys=S.volt.filter(v=>x.v.includes(v));const site=siteKeys.map(vlabel).join(', ');
+  const pKeys=['12dc','24dc','120','240','3p240','3p480','none'].filter(k=>x.v.includes(k));
+  const pOpts=pKeys.map(k=>vlabel(k)+(x.std===k&&pKeys.length>1?' (std)':''));
+  const pDefault=siteKeys.length?pOpts[pKeys.indexOf(siteKeys[0])]:(pOpts.find(o=>o.endsWith('(std)'))||pOpts[0]);
+  const mOpts=x.m.map(m=>MODEW[m]);
+  const dims=Array.isArray(x.dim)?x.dim.map(n=>+n.toFixed(2)).join(' × ')+' in (H × W × D)':x.dim==='spec'?'See spec sheet':'Not published';
+  const fitTxt=fz?`<span class="sh-fit ${fz}">${fz==='ok'?'Sweet spot':fz==='edge'?(where(x,r)==='max'?'Near MAX':'Near MIN'):'Outside range'}</span>`:'';
+  const logos=[...document.querySelectorAll('.brand img')].map(i=>`<img src="${i.currentSrc||i.src}" alt="${esc(i.alt)}">`).join('');
+  $('sheet').innerHTML=`
+  <div class="sh-top">${logos?`<div class="lg">${logos}</div>`:''}<div><h1>Burner Request for Quotation</h1><div style="font-size:12px;color:#66665f">Specification sheet</div></div>
+    <div class="meta"><b>${rfqNo(x)}</b><br>${today()}</div></div>
+  <h3>Customer &amp; job</h3>
+  <div class="kv">${inp('q-co','Company')}${inp('q-ct','Contact')}${inp('q-ph','Phone')}${inp('q-em','Email')}${inp('q-job','Project / job name')}${inp('q-qty','Quantity','1')}${inp('q-addr','Site address','','',true)}${inp('q-need','Required by date')}${inp('q-po','Customer ref / PO')}</div>
+  <h3>Application</h3>
+  <div class="kv">${inp('q-app','Appliance make / model','','e.g. boiler make & model')}${inp('q-type','Appliance type','','Boiler, furnace, water heater, oven…')}
+    ${inp('q-rate','Required input',rateTxt,x.f==='oil'?'GPH or MBH':'MBH')}${inp('q-fuel','Fuel',x.f==='oil'?'#2 heating oil':'Natural gas',x.f==='oil'?'#1/#2 oil, biodiesel blend…':'Natural gas or LP')}
+    ${inp('q-pwr','Power available on site',site,'Voltage / phase')}${inp('q-ch','Combustion chamber L × W × H',(S.fl||S.fw)?`Flame must fit ${S.fl||'?'} × ${S.fw||'?'} in`:'','inches')}
+    ${inp('q-of','Overfire pressure',S.op?`${S.op} in. WC`:'','in. WC')}${inp('q-alt','Altitude','','ft above sea level')}
+    ${x.f==='gas'?inp('q-gp','Gas supply pressure','','in. WC min / max'):inp('q-ol','Oil supply','','One-pipe / two-pipe, lift')}${inp('q-vent','Venting / draft','','Natural draft, power vent…')}</div>
+  <h3>Selected burner</h3>
+  <div class="sh-burner"><div class="kv" style="grid-template-columns:minmax(0,1fr)">
+    ${ro('Brand / model',`${esc(x.b)} ${esc(x.n)}`)}
+    ${ro('Fuel',(x.f==='oil'?'Oil':'Gas')+(x.lp?` · LP: ${esc(x.lp)}`:''))}
+    ${ro('Firing range',`${fmt(x)}${x.f==='oil'?` (${Math.round(a).toLocaleString()}–${Math.round(b).toLocaleString()} MBH)`:''}${fitTxt}`)}
+    ${ro('Power options',pOpts.map(esc).join(', '))}
+    ${ro('Firing modes',mOpts.join(', '))}
+    ${x.td!=null&&!(x.td===1&&x.tdx)?ro('Turndown',n2(x.td)+':1'):''}
+    ${x.fl!=null||x.fw!=null?ro('Flame size',`${x.fl!=null?n2(x.fl):'?'} × ${x.fw!=null?n2(x.fw):'?'} in (L × W)`):''}
+    ${x.op!=null?ro('Max overfire',`${n2(x.op)} in. WC`):''}
+    ${ro('Chassis dimensions',dims)}
+    ${ro('Air tube / insertion',esc(x.tube))}
+    ${x.bio?ro('Fuel ratings',esc(x.bio)):''}
+    ${ro('Applications',x.a.map(k=>APPS[k]).join(', '))}
+    ${ro('Notes',esc(x.note))}
+    ${ro('Product page',`<a href="${esc(x.u)}">${esc(x.u.replace(/^https?:\/\//,'').replace(/\/$/,''))}</a>`)}
+  </div>${x.img?`<img src="${esc(x.img)}" alt="${esc(x.n)}" onerror="this.remove()">`:''}</div>
+  <h3>Configuration requested</h3>
+  <div class="kv">${sel('q-v','Voltage / phase',pOpts,pDefault)}${sel('q-m','Firing mode',mOpts,mOpts[mOpts.length-1])}
+    ${inp('q-tube','Air tube length / insertion','','inches')}${inp('q-mount','Mounting','','Adjustable flange, welded flange, pedestal')}
+    ${inp('q-ctl','Controls / panel','','Primary control, panel, CSD-1…')}${inp('q-opt','Other options','','Nozzle, head, solenoid…')}</div>
+  <h3>Notes</h3>
+  <textarea id="q-notes" aria-label="Notes" placeholder="Anything else the quote needs to cover"></textarea>
+  <div class="kv" style="margin-top:12px">${inp('q-rep','Prepared by')}${inp('q-repc','Rep phone / email')}</div>
+  <div class="sh-foot">Specifications from the Burner Selection Matrix (${today()}). Confirm against the current manufacturer spec sheet and the appliance maker's burner specification before quoting.</div>`;
+  $('matrixv').hidden=true;$('rfqv').hidden=false;scrollTo(0,0);$('q-co').focus({preventScroll:true})}
+function closeRFQ(){$('rfqv').hidden=true;$('matrixv').hidden=false;if(rfqB){const t=$('r-'+rfqB.n.replace(/\W/g,''));if(t)t.scrollIntoView({block:'center'})}}
+$('tb').addEventListener('click',e=>{const b=e.target.closest('.rfqb');if(!b)return;const x=D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===b.dataset.k);if(x)openRFQ(x)});
+$('rfqback').onclick=closeRFQ;
+addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('rfqv').hidden)closeRFQ()});
+$('rfqprint').onclick=()=>{try{window.print()}catch(e){toast('Printing is blocked here. Open the page on your server to print.')}};
+const rfqText=()=>{const L=[],sh=$('sheet');
+  L.push('BURNER REQUEST FOR QUOTATION  '+sh.querySelector('.meta b').textContent+'  '+today());
+  sh.querySelectorAll('h3').forEach(h=>{L.push('','== '+h.textContent.toUpperCase()+' ==');const n=h.nextElementSibling;
+    if(n&&n.tagName==='TEXTAREA'){L.push(n.value||'-');return}
+    const box=n&&n.classList.contains('sh-burner')?n.querySelector('.kv'):n;
+    if(box)box.querySelectorAll(':scope>div').forEach(r=>{const k=(r.querySelector('label,.k')||{}).textContent||'';const f=r.querySelector('input,select');const v=f?f.value:((r.querySelector('.v')||{}).textContent||'');L.push(`${k}: ${v||'-'}`)})});
+  const reps=['q-rep','q-repc'].map(i=>$(i).value).filter(Boolean).join(' · ');if(reps)L.push('','Prepared by: '+reps);
+  L.push('','Confirm against the current manufacturer spec sheet before quoting.');return L.join('\n')};
+$('rfqcopy').onclick=async()=>{try{await navigator.clipboard.writeText(rfqText());toast('RFQ copied')}catch(e){toast('Copy blocked by browser')}};
+$('rfqmail').onclick=()=>{const subj=`${$('sheet').querySelector('.meta b').textContent} – ${rfqB.b} ${rfqB.n}`+($('q-job').value?` – ${$('q-job').value}`:'');
+  location.href='mailto:?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(rfqText())};
 
 /* ---------- Load data ---------- */
 fetch('burners.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(list=>{
