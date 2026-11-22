@@ -105,6 +105,7 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
     <button role="tab" data-t="burners" aria-selected="true">Burners</button>
     <button role="tab" data-t="history" aria-selected="false">History &amp; undo</button>
     <button role="tab" data-t="users" aria-selected="false" id="usertab">Users</button>
+    <button role="tab" data-t="settings" aria-selected="false" id="settab">Settings</button>
   </nav>
   <main>
     <!-- BURNERS -->
@@ -211,6 +212,21 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
       </div>
     </section>
 
+    <!-- SETTINGS -->
+    <section id="t-settings" hidden>
+      <div class="panel" style="display:grid;gap:14px;max-width:760px">
+        <h2>Settings</h2>
+        <form id="sf" style="display:grid;gap:10px">
+          <label class="f">Send completed RFQs to
+            <input type="text" name="rfqTo" inputmode="email" autocapitalize="none" placeholder="quotes@beckettcorp.com, other@beckettcorp.com"></label>
+          <p class="u" style="margin:0">The address the <b>Email PDF</b> button fills in for every RFQ. Separate several with commas. Reps can still change it on a single RFQ. Leave blank to use the container's <code>RFQ_TO</code> setting<span id="envto"></span>.</p>
+          <div class="row"><button class="btn pri" type="submit">Save</button></div>
+        </form>
+        <div id="smsg" class="msg" hidden></div>
+        <div class="u" id="mailstat" style="border-top:1px solid var(--rule);padding-top:10px"></div>
+      </div>
+    </section>
+
     <!-- PASSWORD -->
     <dialog id="pwd" style="border:0;border-radius:6px;padding:20px;max-width:360px;width:92vw">
       <form id="pf" style="display:grid;gap:12px">
@@ -246,11 +262,11 @@ $('lf').onsubmit=async e=>{e.preventDefault();$('lerr').hidden=true;
   catch(err){$('lerr').textContent=err.message;$('lerr').hidden=false}};
 $('out').onclick=async()=>{await call('POST','/api/logout',{});me=null;showLogin('Signed out.')};
 async function boot(){try{me=await call('GET','/api/me');start()}catch(e){showLogin()}}
-function start(){if(me.role==='rep'){location.replace('/');return}$('login').hidden=true;$('app').hidden=false;$('who').textContent=`${me.name} (${me.role})`;$('usertab').hidden=me.role!=='admin';tab('burners');loadBurners()}
+function start(){if(me.role==='rep'){location.replace('/');return}$('login').hidden=true;$('app').hidden=false;$('who').textContent=`${me.name} (${me.role})`;$('usertab').hidden=me.role!=='admin';$('settab').hidden=me.role!=='admin';tab('burners');loadBurners()}
 
 /* ---------- tabs ---------- */
 function tab(t){if(t!=='burners'&&!leaveOk())return;document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));
-  ['burners','history','users'].forEach(x=>$('t-'+x).hidden=x!==t);if(t==='history')loadHistory();if(t==='users')loadUsers()}
+  ['burners','history','users','settings'].forEach(x=>$('t-'+x).hidden=x!==t);if(t==='history')loadHistory();if(t==='users')loadUsers();if(t==='settings')loadSettings()}
 document.querySelector('.tabs').onclick=e=>{const b=e.target.closest('button');if(b)tab(b.dataset.t)};
 
 /* ---------- burner list ---------- */
@@ -342,6 +358,13 @@ $('loc').onclick=async e=>{const b=e.currentTarget;b.disabled=true;b.textContent
     $('locmsg').hidden=true;if(r.failed.length)showMsg($('locmsg'),'err','Could not download photos for: '+esc(r.failed.join(', '))+'. Upload them by hand in the burner editor.');loadHistory();loadBurners()}
   catch(err){toast(err.message)}finally{b.disabled=false;b.textContent='Store web photos on server'}};
 $('exp').onclick=async e=>{e.preventDefault();const data=await call('GET','/api/burners');const url=URL.createObjectURL(new Blob(['[\n'+data.map(o=>'  '+JSON.stringify(o)).join(',\n')+'\n]\n'],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='burners.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)};
+
+/* ---------- settings ---------- */
+function showSettings(s){$('sf').elements.rfqTo.value=s.rfqTo;$('envto').textContent=s.envRfqTo?` (currently ${s.envRfqTo})`:' (not set)';
+  $('mailstat').innerHTML=s.mail?`Email server: <b>set up</b> – sending through ${esc(s.smtpHost)} as ${esc(s.smtpFrom)}. RFQs go to <b>${esc(s.effective||'(no default – reps must type an address)')}</b>.`:'Email server: <b>not set up yet</b>. Add the SMTP variables to the container (see README) before reps can email RFQs.'}
+async function loadSettings(){$('smsg').hidden=true;try{showSettings(await call('GET','/api/settings'))}catch(err){showMsg($('smsg'),'err',esc(err.message))}}
+$('sf').onsubmit=async e=>{e.preventDefault();$('smsg').hidden=true;
+  try{const s=await call('PUT','/api/settings',{rfqTo:e.target.elements.rfqTo.value});showSettings(s);toast('Settings saved')}catch(err){showMsg($('smsg'),'err',esc(err.message))}};
 
 /* ---------- users ---------- */
 async function loadUsers(){const u=await call('GET','/api/users');

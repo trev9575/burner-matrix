@@ -16,7 +16,10 @@ const COOKIE_SECURE = /^true$/i.test(process.env.COOKIE_SECURE || '');
 const TRUST_PROXY = /^true$/i.test(process.env.TRUST_PROXY || '');
 const SESSION_HOURS = +process.env.SESSION_HOURS || 12;
 const HISTORY_KEEP = 200;
-const RFQ_TO = process.env.RFQ_TO || '';   // default "send to" address(es) for RFQ PDFs
+const RFQ_TO_ENV = process.env.RFQ_TO || '';   // fallback default "send to" address(es) for RFQ PDFs
+// Admin settings (Admin → Settings) override the container variables
+const getSettings = () => readJSON(F.settings, {});
+const rfqTo = () => { const s = getSettings(); return typeof s.rfqTo === 'string' && s.rfqTo.trim() ? s.rfqTo : RFQ_TO_ENV; };
 
 const F = {
   burners: path.join(DATA, 'burners.json'),
@@ -25,6 +28,7 @@ const F = {
   history: path.join(DATA, 'history'),
   photos: path.join(DATA, 'photos'),
   rfqs: path.join(DATA, 'rfqs'),
+  settings: path.join(DATA, 'settings.json'),
 };
 
 // ---------- storage ----------
@@ -252,7 +256,7 @@ async function api(req, res, url) {
   if (p === '/api/logout' && m === 'POST') return send(res, 200, { ok: true }, undefined, { 'Set-Cookie': cookie('', 0) });
 
   const me = readSession(req);
-  const meInfo = u => ({ ...pub(u), setup: true, mail: Mail.configured(), rfqTo: RFQ_TO });
+  const meInfo = u => ({ ...pub(u), setup: true, mail: Mail.configured(), rfqTo: rfqTo() });
   if (p === '/api/me') return me ? send(res, 200, meInfo(me)) : send(res, 401, { error: 'Not signed in', setup: users.length > 0 });
   if (!me) return send(res, 401, { error: 'Not signed in' });
 
@@ -323,7 +327,7 @@ async function api(req, res, url) {
       const miss = Object.keys(REQ).filter(k => !String(r.fields[k] || '').trim());
       if (miss.length) { const n = miss.map(k => REQ[k]); return send(res, 422, { error: `Fill in ${n.length < 2 ? n[0] : n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1]} before emailing.` }); }
       const b = await readBody(req, 8192);
-      const to = Mail.splitList(b.to || RFQ_TO);
+      const to = Mail.splitList(b.to || rfqTo());
       if (!to.length || !to.every(Mail.isEmail) || to.length > 10) return send(res, 422, { error: 'Enter valid email address(es)' });
       const cc = b.ccMe && Mail.isEmail(me.email) ? [me.email] : [];
       let pdf, out;
@@ -408,6 +412,22 @@ async function api(req, res, url) {
     return send(res, 200, { ok: true }, undefined, { 'Set-Cookie': cookie(makeToken(me.name, me.ver), SESSION_HOURS * 3600) });
   }
 
+  // ----- admin-only: settings -----
+  if (p === '/api/settings') {
+    if (me.role !== 'admin') return send(res, 403, { error: 'Admins only' });
+    const info = () => { const c = Mail.config(); return { rfqTo: getSettings().rfqTo || '', envRfqTo: RFQ_TO_ENV, effective: rfqTo(),
+      mail: Mail.configured(), smtpHost: c.host, smtpFrom: c.from }; };
+    if (m === 'GET') return send(res, 200, info());
+    if (m === 'PUT') {
+      const b = await readBody(req, 4096);
+      const list = Mail.splitList(b.rfqTo);
+      if (!list.every(Mail.isEmail)) return send(res, 422, { error: 'Enter valid email addresses, separated by commas' });
+      if (list.length > 10) return send(res, 422, { error: 'Up to 10 addresses' });
+      const s = getSettings(); s.rfqTo = list.join(', '); s.updated = new Date().toISOString(); s.updatedBy = me.name;
+      writeJSON(F.settings, s);
+      return send(res, 200, info());
+    }
+  }
   // ----- admin-only: users -----
   if (p.startsWith('/api/users')) {
     if (me.role !== 'admin') return send(res, 403, { error: 'Admins only' });

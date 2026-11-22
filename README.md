@@ -62,7 +62,7 @@ RFQs made from there note the oil nozzle being replaced.
 
 **Email PDF.** The server turns the RFQ into a PDF (headless Chromium, built into the image) and emails it.
 Fill in the SMTP variables on the container: `SMTP_HOST`, `SMTP_PORT` (465 SSL or 587 STARTTLS), `SMTP_USER`,
-`SMTP_PASS`, optional `SMTP_FROM`. `RFQ_TO` is the default "Send to" address (reps can change it per RFQ).
+`SMTP_PASS`, optional `SMTP_FROM`. The default "Send to" address is set by an admin in **Admin → Settings** (falls back to the `RFQ_TO` variable when blank); reps can change it per RFQ.
 For Gmail, turn on 2-step verification and create an **App Password**; use that as `SMTP_PASS`.
 Replies go to the rep's email on the sheet; the rep can tick "Send me a copy".
 
