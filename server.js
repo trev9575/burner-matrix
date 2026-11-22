@@ -242,6 +242,11 @@ function scheduleBackup() {
 const rfqFile = id => path.join(F.rfqs, id + '.json');
 const getRfq = id => /^[a-f0-9]{12}$/.test(id) ? readJSON(rfqFile(id), null) : null;
 const allRfqs = () => fs.readdirSync(F.rfqs).filter(f => f.endsWith('.json')).map(f => readJSON(path.join(F.rfqs, f), null)).filter(r => r && r.burner && r.fields);
+const custKey = s => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+const effSt = r => r.status || ((r.sends || []).length ? 'sent' : 'draft');
+// what anyone may see about an RFQ that isn't theirs: no customer details, contacts, values or notes
+const limitedRfq = r => ({ id: '', no: r.no, date: r.date, by: r.by, byFull: r.byFull || r.by, burner: `${r.burner.brand} ${r.burner.name}`, fuel: r.burner.fuel,
+  status: effSt(r), sentAt: ((r.sends || []).slice(-1)[0] || {}).at || '', limited: true });
 const canSee = (me, r) => r && (me.role !== 'rep' || r.by === me.name);
 const rfqSummary = r => ({ id: r.id, no: r.no, date: r.date, by: r.by, byFull: r.byFull, updated: r.updated,
   burner: `${r.burner.brand} ${r.burner.name}`, fuel: r.burner.fuel,
@@ -343,18 +348,33 @@ async function api(req, res, url) {
     return send(res, 200, XLSX.build({ sheet: 'RFQs', cols, rows }), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       { 'Content-Disposition': `attachment; filename="${name}"` });
   }
-  if (p === '/api/customers' && m === 'GET') { // address book built from everyone's RFQs (newest details win)
-    const by = new Map();
+  if (p === '/api/customers' && m === 'GET') { // address book + per-customer totals, built from everyone's RFQs (newest details win)
+    const by = new Map(), staff = me.role !== 'rep';
     for (const r of allRfqs().sort((a, b) => String(a.date).localeCompare(String(b.date)))) {
       const co = String(r.fields['q-co'] || '').trim(); if (!co) continue;
-      const k = co.toLowerCase(), c = by.get(k) || { company: co, address: '', contacts: new Map() };
+      const k = custKey(co), c = by.get(k) || { company: co, address: '', contacts: new Map(), rfqs: 0, won: 0, lost: 0, valueWon: 0, last: '', lastBurner: '', mine: 0 };
       c.company = co; if (r.fields['q-addr']) c.address = r.fields['q-addr'];
       const ct = String(r.fields['q-ct'] || '').trim();
       if (ct) { const p0 = c.contacts.get(ct.toLowerCase()) || {}; c.contacts.set(ct.toLowerCase(), { name: ct, phone: r.fields['q-ph'] || p0.phone || '', email: r.fields['q-em'] || p0.email || '' }); }
+      const st = effSt(r); c.rfqs++; if (st === 'won') { c.won++; if (typeof r.value === 'number' && (staff || r.by === me.name)) c.valueWon += r.value; } if (st === 'lost') c.lost++;
+      c.last = r.date; c.lastBurner = `${r.burner.brand} ${r.burner.name}`; if (r.by === me.name) c.mine++;
       by.set(k, c);
     }
-    return send(res, 200, [...by.values()].map(c => ({ company: c.company, address: c.address, contacts: [...c.contacts.values()].reverse() }))
+    return send(res, 200, [...by.values()].map(c => ({ ...c, contacts: [...c.contacts.values()].reverse() }))
       .sort((a, b) => a.company.localeCompare(b.company)));
+  }
+  if (p === '/api/customers/history' && m === 'GET') { // every RFQ for one customer; others' RFQs are summary-only for reps
+    const k = custKey(url.searchParams.get('company'));
+    if (!k) return send(res, 400, { error: 'Missing company' });
+    const rows = allRfqs().filter(r => custKey(r.fields['q-co']) === k).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    if (!rows.length) return send(res, 404, { error: 'No RFQs for that customer' });
+    return send(res, 200, { company: String(rows[0].fields['q-co']).trim(), rfqs: rows.map(r => canSee(me, r) ? { ...rfqSummary(r), open: true } : limitedRfq(r)) });
+  }
+  if (p === '/api/customers/recent' && m === 'GET') { // for the duplicate warning: same customer in the last 90 days
+    const k = custKey(url.searchParams.get('company')), skip = url.searchParams.get('exclude') || '', since = Date.now() - 90 * 864e5;
+    if (!k) return send(res, 200, []);
+    return send(res, 200, allRfqs().filter(r => r.id !== skip && custKey(r.fields['q-co']) === k && Date.parse(r.date) >= since)
+      .sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 5).map(r => ({ ...limitedRfq(r), mine: r.by === me.name })));
   }
   if (p === '/api/rfqs' && m === 'POST') { // create
     const b = await readBody(req, 512 * 1024);

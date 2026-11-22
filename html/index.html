@@ -230,6 +230,18 @@ a.bn[data-img]{cursor:zoom-in}
 .ac-i{display:grid;gap:1px;padding:7px 10px;border-radius:4px;cursor:pointer;border-left:3px solid transparent}
 .ac-i b{font-size:13.5px;font-weight:600;color:var(--ink)}.ac-i span{font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ac-i.on{background:#f3f3ef;border-left-color:var(--red)}.ac-i mark{background:none;color:var(--red);font-weight:700}
+#custv,#histv{padding:20px max(3vw,16px) 40px}#custv .panel,#histv .panel{background:#fff;max-width:1200px;margin:0 auto;padding:20px;border-radius:4px}
+#custv .lbar,#histv .lbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 14px}
+#custv .lbar select,#custv .lbar input{width:auto;min-height:0;font:inherit;padding:7px 10px;border:1px solid #b9b9b2;border-radius:3px;background:#fff}
+.ctable{width:100%;border-collapse:collapse;font-size:14px}.ctable th{text-align:left;background:var(--ink);color:#fff;font-size:13px;padding:8px}.ctable th.n,.ctable td.n{text-align:right}
+.ctable td{padding:8px;border-bottom:1px solid var(--rule);vertical-align:top}#cbody tr,#hbody tr.hopen{cursor:pointer}#cbody tr:hover td,#hbody tr.hopen:hover td{background:#f6f6f3}
+#hbody tr.hlim td{color:#77776f}.sm{font-size:12.5px;color:var(--mute)}
+#histv .tiles{display:flex;flex-wrap:wrap;gap:12px;margin:4px 0 16px}#histv .tile{border:1px solid var(--rule);border-radius:6px;padding:10px 16px;min-width:120px}#histv .tile b{display:block;font-size:24px;line-height:1.1}#histv .tile span{font-size:12.5px;color:var(--mute)}
+.hcontacts{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 14px}.hc{border:1px solid var(--rule);border-radius:6px;padding:8px 12px;display:grid;font-size:13px}.hc b{font-size:14px}.hc a{color:var(--gas)}
+a.colink{color:inherit;text-decoration:underline dotted;text-underline-offset:3px}a.colink:hover{color:var(--red)}
+.dupw{margin:6px 0 10px;padding:10px 12px;border-radius:4px;background:#fff8e6;border:1px solid #f1d28a;border-left:4px solid #e8a23a;font-size:13px;line-height:1.45}
+.dupw.strong{background:#fdecee;border-color:#f3b8bf;border-left-color:#c8102e}.dupw ul{margin:4px 0 6px;padding-left:18px}.dupw a{color:var(--red);font-weight:600}
+@media(max-width:600px){.util .nav{overflow-x:auto;scrollbar-width:none}.util .nav::-webkit-scrollbar{display:none}.util .nav button{white-space:nowrap}}
 #stdlg{border:0;border-radius:6px;padding:22px;max-width:420px;width:92vw}#stdlg::backdrop{background:rgba(0,0,0,.4)}
 #stdlg form{display:grid;gap:12px}#stdlg label{display:grid;gap:4px;font-size:13px;font-weight:600}#stdlg .sm{font-weight:500;color:var(--mute);font-size:12.5px}
 #stdlg input,#stdlg select{font:inherit;padding:8px 10px;border:1px solid #b9b9b2;border-radius:3px;background:#fff;width:100%;min-height:0}#stdlg .row{display:flex;gap:8px;justify-content:flex-end}
@@ -276,7 +288,7 @@ tr.fu td{background:#fffaf2 !important}
 .sh-fit{display:inline-block;font-weight:700;font-size:11px;border-radius:3px;padding:1px 7px;margin-left:6px}
 .sh-fit.ok{background:#e2f3e7;color:#1d6b35}.sh-fit.edge{background:#fff3e8;color:#b35c00}.sh-fit.out{background:#fde3e5;color:#b3141f}
 @media(max-width:700px){.kv{grid-template-columns:minmax(0,1fr)}.kv>div{grid-template-columns:120px minmax(0,1fr)}.sh-burner{grid-template-columns:minmax(0,1fr)}.sheet{padding:18px}}
-@media print{@page{size:letter;margin:.4in}body{background:#fff}#matrixv,#listv,#wonv,.noprint,.toast,#pic,.util,.brand{display:none !important}.sheet ::placeholder{color:transparent}.sheet{font-size:10.5px !important;line-height:1.3}.sheet h3{margin:9px 0 3px;padding:3px 7px;font-size:11px}.kv>div{min-height:0;padding:2px 0;grid-template-columns:108px minmax(0,1fr)}.kv label,.kv .k{font-size:10px}.kv input,.kv select{font-size:11px;padding:1px 2px}.sh-burner{grid-template-columns:minmax(0,1fr) 115px}.sh-burner img{width:115px;height:115px}.sheet textarea{min-height:38px;font-size:11px;resize:none}.sh-top{padding-bottom:6px}.sh-top img{height:28px}.sh-top h1{font-size:17px}.sh-foot{margin-top:8px}#rfqv:not([hidden]){display:block !important;padding:0}.sheet{box-shadow:none;max-width:none;padding:0;font-size:11.5px}.kv input,.kv select,.sheet textarea{background:transparent;border-bottom:1px solid #ccc;-webkit-appearance:none;appearance:none}.sheet textarea{border:1px solid #ccc}.sheet h3,.sh-top .lg,.sh-fit{-webkit-print-color-adjust:exact;print-color-adjust:exact}.kv>div{break-inside:avoid}}
+@media print{@page{size:letter;margin:.4in}body{background:#fff}#matrixv,#listv,#wonv,#custv,#histv,.noprint,.toast,#pic,.util,.brand{display:none !important}.sheet ::placeholder{color:transparent}.sheet{font-size:10.5px !important;line-height:1.3}.sheet h3{margin:9px 0 3px;padding:3px 7px;font-size:11px}.kv>div{min-height:0;padding:2px 0;grid-template-columns:108px minmax(0,1fr)}.kv label,.kv .k{font-size:10px}.kv input,.kv select{font-size:11px;padding:1px 2px}.sh-burner{grid-template-columns:minmax(0,1fr) 115px}.sh-burner img{width:115px;height:115px}.sheet textarea{min-height:38px;font-size:11px;resize:none}.sh-top{padding-bottom:6px}.sh-top img{height:28px}.sh-top h1{font-size:17px}.sh-foot{margin-top:8px}#rfqv:not([hidden]){display:block !important;padding:0}.sheet{box-shadow:none;max-width:none;padding:0;font-size:11.5px}.kv input,.kv select,.sheet textarea{background:transparent;border-bottom:1px solid #ccc;-webkit-appearance:none;appearance:none}.sheet textarea{border:1px solid #ccc}.sheet h3,.sh-top .lg,.sh-fit{-webkit-print-color-adjust:exact;print-color-adjust:exact}.kv>div{break-inside:avoid}}
 @media(max-width:1000px){.rail{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.rail{grid-template-columns:minmax(0,1fr)}.rail .f-power{grid-column:auto}}
 @media(max-width:600px){.util .ext,.um .nm,.um .car{display:none}.util .nav button{padding:0 9px;font-size:13px}.brand .div{display:none}.axis,.lr{grid-template-columns:140px minmax(0,1fr)}.lr .nm small{display:none}.axis span:nth-child(even){display:none}table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--rule)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:7.5em;background:none !important}.stack td::before{content:attr(data-l);float:inline-start;width:7em;margin-inline-start:-7.5em;color:var(--mute);font-size:12.5px}.stack td:empty{display:none}}
@@ -285,7 +297,7 @@ tr.fu td{background:#fffaf2 !important}
 </head>
 <body>
 <nav class="util" aria-label="Main">
-  <div class="nav" id="acct" hidden><button type="button" id="navm" aria-current="page">Burner Matrix</button><button type="button" id="rfqsb">My RFQs</button><button type="button" id="wonb">Won Jobs</button><button type="button" id="navadm" hidden>Admin</button></div>
+  <div class="nav" id="acct" hidden><button type="button" id="navm" aria-current="page">Burner Matrix</button><button type="button" id="rfqsb">My RFQs</button><button type="button" id="wonb">Won Jobs</button><button type="button" id="custb">Customers</button><button type="button" id="navadm" hidden>Admin</button></div>
   <span class="sp"></span>
   <div class="ext"><a href="https://www.beckettcorp.com" target="_blank" rel="noopener">beckettcorp.com</a><a href="https://waynecombustion.com/products" target="_blank" rel="noopener">waynecombustion.com</a></div>
   <details class="um" id="um" hidden><summary aria-label="Account menu"><span class="av" id="av"></span><span class="nm" id="whoami"></span><span class="car" aria-hidden="true"></span></summary>
@@ -407,6 +419,24 @@ tr.fu td{background:#fffaf2 !important}
     <button class="btn pri" id="rprint">Print / Save PDF</button>
   </div>
   <div class="sheet rpt" id="rpt"></div>
+</section>
+<section id="custv" hidden class="wv">
+  <div class="panel">
+    <div class="lbar"><h2 style="margin:0">Customers</h2><span class="sm" id="ccount" style="margin-left:6px"></span><span style="flex:1"></span>
+      <select id="csort" aria-label="Sort customers"><option value="name">A–Z</option><option value="recent">Most recent</option><option value="rfqs">Most RFQs</option></select>
+      <input id="cq" type="search" placeholder="Search company, contact, phone…" aria-label="Search customers" style="min-width:240px"></div>
+    <div style="overflow-x:auto"><table class="ctable"><thead><tr><th>Company</th><th>Contact</th><th class="n">RFQs</th><th class="n">Won</th><th class="n">Win rate</th><th class="n" id="cvalth" hidden>Value won</th><th>Last RFQ</th></tr></thead><tbody id="cbody"></tbody></table></div>
+  </div>
+</section>
+<section id="histv" hidden class="wv">
+  <div class="panel">
+    <div class="lbar"><button class="btn" id="hback">← All customers</button><div id="hhead" style="margin-left:8px"></div></div>
+    <div class="hcontacts" id="hcontacts"></div>
+    <div class="tiles" id="htiles"></div>
+    <div class="sm" id="hburners" style="margin:-6px 0 14px"></div>
+    <div style="overflow-x:auto"><table class="ctable"><thead><tr><th>RFQ #</th><th>Date</th><th>Rep</th><th>Burner</th><th>Job</th><th>Status</th><th class="n">Value</th></tr></thead><tbody id="hbody"></tbody></table></div>
+    <p class="sm" id="hnote" hidden style="margin:10px 0 0"></p>
+  </div>
 </section>
 <section id="listv" hidden>
   <div class="panel">
@@ -649,6 +679,7 @@ function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);$('sheet').cla
   <div class="sh-top">${logos?`<div class="lg">${logos}</div>`:''}<div><h1>Burner Request for Quotation</h1><div style="font-size:12px;color:#66665f">Specification sheet</div></div>
     <div class="meta"><b>${esc(RFQ.no)}</b><br>${fmtD(RFQ.date)}</div></div>
   <h3>Customer &amp; job</h3>
+  <div class="dupw noprint" id="dupw" hidden></div>
   <div class="kv">${inp('q-co','Company','','','w',1)}${inp('q-ct','Contact','','','',1)}${inp('q-ph','Phone','','','',1)}${inp('q-em','Email','','','w')}${inp('q-job','Project / job name','','','w')}${inp('q-addr','Site address','','',true)}${inp('q-qty','Quantity','1')}${inp('q-need','Required by date')}${inp('q-po','Customer ref / PO','','','w')}</div>
   <h3>Application</h3>
   <div class="kv">${inp('q-app','Appliance make / model','','e.g. boiler make & model')}${dd('q-type','Appliance type',DD.type)}
@@ -690,9 +721,9 @@ function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);$('sheet').cla
   locks.forEach(id=>{const el=$(id);if(el&&el.value.trim()){if(el.tagName==='SELECT')el.disabled=true;else el.readOnly=true;el.dataset.lock='1';el.title='Set by your selections on the matrix page. Change the filter there to change this.'}});
   if(!meta.fields&&CONV&&x.f==='gas'&&String(CONV.mbh)===String(S.rate)&&S.unit==='mbh'){
     $('q-notes').value=`Oil-to-gas conversion. Replaces ${nzTxt(CONV)} at ${CONV.p} psi (≈ ${CONV.gph.toFixed(2)} GPH, ${CONV.mbh.toLocaleString()} MBH).`;}
-  if(RFQ.ro)lockSheet();else bookSetup();
+  if(RFQ.ro)lockSheet();else{bookSetup();dupFor='';dupCheck()}
   requestAnimationFrame(fitAll);
-  $('matrixv').hidden=true;$('listv').hidden=true;$('wonv').hidden=true;$('repv').hidden=true;$('rfqv').hidden=false;rfqStatus();scrollTo(0,0);if(!PDFMODE)$('q-co').focus({preventScroll:true})}
+  hideMain();$('rfqv').hidden=false;rfqStatus();scrollTo(0,0);if(!PDFMODE)$('q-co').focus({preventScroll:true})}
 const canDel=r=>!!(r&&ME&&(ME.role==='admin'||(!r.sent&&r.by===ME.name)));
 async function delRFQ(id,btn,sent){if(!btn.dataset.armed){btn.dataset.armed=1;const t=btn.textContent;btn.textContent=sent?'Emailed – click again to delete':'Click again to delete';setTimeout(()=>{delete btn.dataset.armed;btn.textContent=t},4000);return false}
   await J('DELETE','api/rfqs/'+id,{});toast('RFQ deleted');return true}
@@ -766,7 +797,7 @@ async function saveRFQ(quiet){if(!ME||!RFQ)return null;if(RFQ.id&&(!RFQ.dirty||R
   const rec=RFQ.id?await J('PUT','api/rfqs/'+RFQ.id,{fields:rfqFields()}):await J('POST','api/rfqs',{no:RFQ.no,burner:RFQ.raw,fit:RFQ.fit,locks:RFQ.locks||[],fields:rfqFields()});
   RFQ.id=rec.id;RFQ.dirty=false;RFQ.date=rec.date;rfqStatus();if(!quiet)toast('RFQ saved');return RFQ.id}
 async function closeRFQ(){if(RFQ&&RFQ.dirty&&ME){try{await saveRFQ(true);toast('RFQ saved')}catch(e){toast('Could not save: '+e.message);return}}
-  $('rfqv').hidden=true;if(RFQ&&RFQ.from==='list'){RFQ=null;return openList()}if(RFQ&&RFQ.from==='won'){RFQ=null;return openWon()}RFQ=null;$('matrixv').hidden=false;if(rfqB){const t=$('r-'+rfqB.n.replace(/\W/g,''));if(t)t.scrollIntoView({block:'center'})}}
+  $('rfqv').hidden=true;if(RFQ&&RFQ.from==='list'){RFQ=null;return openList()}if(RFQ&&RFQ.from==='won'){RFQ=null;return openWon()}if(RFQ&&RFQ.from==='hist'&&HIST){RFQ=null;return openHistory(HIST.company)}RFQ=null;$('matrixv').hidden=false;if(rfqB){const t=$('r-'+rfqB.n.replace(/\W/g,''));if(t)t.scrollIntoView({block:'center'})}}
 $('tb').addEventListener('click',e=>{const b=e.target.closest('.rfqb');if(!b)return;const x=D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===b.dataset.k);if(x){b.disabled=true;nextSeq().then(n=>openRFQ(x,{no:rfqNo(x,n)})).catch(err=>toast(err.message)).finally(()=>b.disabled=false)}});
 $('rfqback').onclick=closeRFQ;
 addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('rfqv').hidden&&!document.querySelector('dialog[open]')&&!$('um').open)closeRFQ()});
@@ -784,7 +815,7 @@ $('rfqdup').onclick=async e=>{const b=e.currentTarget;if(!RFQ)return;b.disabled=
   try{const f=rfqFields(),raw=RFQ.raw,fk=RFQ.fit,from=RFQ.from,locks=RFQ.locks||[];delete f['q-rep'];delete f['q-repp'];delete f['q-repe'];
     const x=toRec(raw),n=await nextSeq();openRFQ(x,{no:rfqNo(x,n),raw,fit:fk,fields:f,from,locks});toast('New RFQ '+RFQ.no+' – make your changes, then save or email it')}
   catch(err){toast(err.message)}finally{b.disabled=false}};
-$('rfqdel').onclick=async e=>{try{if(await delRFQ(RFQ.id,e.currentTarget,RFQ.sends.length>0)){const from=RFQ.from;RFQ=null;$('rfqv').hidden=true;from==='list'?openList():from==='won'?openWon():($('matrixv').hidden=false)}}catch(err){toast(err.message)}};
+$('rfqdel').onclick=async e=>{try{if(await delRFQ(RFQ.id,e.currentTarget,RFQ.sends.length>0)){const from=RFQ.from;RFQ=null;$('rfqv').hidden=true;from==='list'?openList():from==='won'?openWon():from==='hist'&&HIST?openHistory(HIST.company):($('matrixv').hidden=false)}}catch(err){toast(err.message)}};
 $('rfqsave').onclick=async()=>{try{await saveRFQ()}catch(e){toast('Could not save: '+e.message)}};
 $('rfqpdf').onclick=async e=>{const b=e.currentTarget;b.disabled=true;const t=b.textContent;b.textContent='Building PDF…';
   try{const id=await saveRFQ(true);const r=await fetch('api/rfqs/'+id+'/pdf',{credentials:'same-origin'});
@@ -818,7 +849,7 @@ $('sendf').onsubmit=async e=>{e.preventDefault();const g=$('sendgo');g.disabled=
 
 /* ---------- Saved RFQs ---------- */
 let LIST=[];
-async function openList(){$('matrixv').hidden=true;$('rfqv').hidden=true;$('wonv').hidden=true;$('repv').hidden=true;$('listv').hidden=false;scrollTo(0,0);
+async function openList(){hideMain();$('listv').hidden=false;scrollTo(0,0);
   const staff=ME&&ME.role!=='rep';$('lwho').hidden=!staff;$('lrepth').hidden=!staff;
   $('lbody').innerHTML='<tr><td colspan="9" class="sm">Loading…</td></tr>';
   try{LIST=await J('GET','api/rfqs');renderList()}catch(e){$('lbody').innerHTML=`<tr><td colspan="9">${esc(e.message)}</td></tr>`}}
@@ -854,7 +885,7 @@ function renderList(){const staff=ME&&ME.role!=='rep',mine=!staff||$('lwho').val
     `<span class="stat wr" title="Won ÷ (won + lost)"><b>${dec?Math.round((cnt.won||0)/dec*100)+'%':'—'}</b>win rate</span>`;
   const rows=base.filter(r=>(!LST||(LST==='follow'?r.followUp:stOf(r)===LST))&&(!q||[r.no,r.company,r.contact,r.job,r.burner,r.by,r.byFull].join(' ').toLowerCase().includes(q)));
   $('lbody').innerHTML=rows.map(r=>{const st=stOf(r),can=ME&&(r.by===ME.name||ME.role!=='rep');
-    return`<tr data-id="${esc(r.id)}"${r.followUp?' class="fu"':''}><td class="no">${esc(r.no)}${r.followUp?`<br><span class="fub" title="No activity for ${r.idleDays} days">Follow up · ${r.idleDays} days</span>`:''}</td><td style="white-space:nowrap">${fmtD(r.date)}</td><td>${esc(r.company)}${r.contact?`<div class="sm">${esc(r.contact)}</div>`:''}</td><td>${esc(r.job)}</td>
+    return`<tr data-id="${esc(r.id)}"${r.followUp?' class="fu"':''}><td class="no">${esc(r.no)}${r.followUp?`<br><span class="fub" title="No activity for ${r.idleDays} days">Follow up · ${r.idleDays} days</span>`:''}</td><td style="white-space:nowrap">${fmtD(r.date)}</td><td>${r.company?`<a href="#" class="colink" data-co="${esc(r.company)}">${esc(r.company)}</a>`:''}${r.contact?`<div class="sm">${esc(r.contact)}</div>`:''}</td><td>${esc(r.job)}</td>
     <td><span style="color:${r.fuel==='gas'?'var(--gas)':'var(--oil)'};font-weight:600">${esc(r.burner)}</span></td>${staff?`<td${$('lrepth').hidden?' hidden':''}>${esc(r.byFull||r.by)}</td>`:''}
     <td class="sm">${r.sent?`${fmtD(r.sent.at)}<br>${esc(r.sent.to.join(', '))}`:'—'}</td>
     <td>${can?`<select class="st st-${st}" aria-label="Status of ${esc(r.no)}">${['','quoted','won','lost'].map(v=>`<option value="${v}"${(r.status||'')===v?' selected':''}>${v?STL[v]:(r.sent?'Emailed':'Draft')}</option>`).join('')}</select>`:`<span class="st st-${st}">${STL[st]}</span>`}${r.status==='lost'&&r.lostReason?`<div class="sm" style="margin-top:3px">${esc(r.lostReason)}</div>`:''}</td>
@@ -862,7 +893,7 @@ function renderList(){const staff=ME&&ME.role!=='rep',mine=!staff||$('lwho').val
     <td style="white-space:nowrap">${r.followUp&&can?'<button class="btn lmini lfu" title="Restart the follow-up clock">Followed up</button> ':''}${canDel({by:r.by,sent:r.sent})?'<button class="btn ldel lmini" style="color:#b3141f">Delete</button>':''}</td></tr>`}).join('')||`<tr><td colspan="10" class="sm" style="padding:24px 8px">${LIST.length?'No RFQs match.':'No saved RFQs yet. Use “Create RFQ” in the matrix, then Save or Email PDF.'}</td></tr>`;
   followBadge()}
 async function goHome(){if(!$('rfqv').hidden&&RFQ&&RFQ.dirty&&ME){try{await saveRFQ(true);toast('RFQ saved')}catch(e){toast('Could not save: '+e.message);return}}
-  RFQ=null;$('rfqv').hidden=true;$('listv').hidden=true;$('wonv').hidden=true;$('repv').hidden=true;$('matrixv').hidden=false;scrollTo(0,0)}
+  RFQ=null;hideMain();$('matrixv').hidden=false;scrollTo(0,0)}
 $('home').onclick=goHome;$('home').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();goHome()}};
 $('lwho').onchange=renderList;
 $('lstats').onclick=e=>{const b=e.target.closest('button.stat');if(!b)return;LST=b.dataset.s;renderList()};
@@ -887,7 +918,7 @@ $('lbody').onclick=async e=>{if(e.target.closest('select.st'))return;const tr=e.
 let WLIST=[];
 const qOf=iso=>{const d=new Date(iso);return d.getFullYear()*4+Math.floor(d.getMonth()/3)};
 const qName=q=>`Q${q%4+1} ${Math.floor(q/4)}`;
-async function openWon(){$('matrixv').hidden=true;$('rfqv').hidden=true;$('listv').hidden=true;$('repv').hidden=true;$('wonv').hidden=false;scrollTo(0,0);
+async function openWon(){hideMain();$('wonv').hidden=false;scrollTo(0,0);
   const staff=ME&&ME.role!=='rep';$('wwhol').hidden=!staff;$('wrepth').hidden=!staff;
   $('wbody').innerHTML='<tr><td colspan="6" class="sm">Loading…</td></tr>';
   try{WLIST=await J('GET','api/rfqs');wonReps();renderWon()}catch(e){$('wbody').innerHTML=`<tr><td colspan="6">${esc(e.message)}</td></tr>`}}
@@ -914,7 +945,7 @@ function renderWon(){const staff=ME&&ME.role!=='rep',pick=staff?$('wwho').value:
   drawWon(Q);
   $('wqtbl').innerHTML=Q.slice().reverse().map(o=>`<tr><td style="white-space:nowrap">${qName(o.q)}</td><td>${o.won}</td><td>${o.lost}</td><td>${o.open}</td><td>${o.rate!=null?Math.round(o.rate*100)+'%':'—'}</td></tr>`).join('');
   $('wlh').textContent=`Jobs won (${won.length})`;
-  $('wbody').innerHTML=won.map(r=>`<tr data-id="${esc(r.id)}"><td class="no" style="font-weight:700;white-space:nowrap">${esc(r.no)}</td><td style="white-space:nowrap">${fmtD(r.statusAt||r.date)}</td><td>${esc(r.company)}${r.contact?`<div class="sm">${esc(r.contact)}</div>`:''}</td><td>${esc(r.job)}</td>
+  $('wbody').innerHTML=won.map(r=>`<tr data-id="${esc(r.id)}"><td class="no" style="font-weight:700;white-space:nowrap">${esc(r.no)}</td><td style="white-space:nowrap">${fmtD(r.statusAt||r.date)}</td><td>${r.company?`<a href="#" class="colink" data-co="${esc(r.company)}">${esc(r.company)}</a>`:''}${r.contact?`<div class="sm">${esc(r.contact)}</div>`:''}</td><td>${esc(r.job)}</td>
     <td><span style="color:${r.fuel==='gas'?'var(--gas)':'var(--oil)'};font-weight:600">${esc(r.burner)}</span></td>${$('wrepth').hidden?'':`<td>${esc(r.byFull||r.by)}</td>`}<td style="text-align:right;white-space:nowrap">${money(r.value)||'—'}</td></tr>`).join('')||
     `<tr><td colspan="7" class="sm" style="padding:24px 8px">${who?esc(whoName)+' has no won jobs yet.':'No won jobs yet.'} Mark an RFQ as Won from ${mine&&!staff?'My RFQs':'the RFQs tab'} when the job comes in.</td></tr>`}
 function winSVG(Q,W,H,hl){const L=44,R=8,T=22,B=30,pw=W-L-R,ph=H-T-B,band=pw/Q.length,bw=Math.min(56,band*0.62);
@@ -978,6 +1009,60 @@ $('rq').onchange=renderReport;$('rwho').onchange=renderReport;
 $('rback').onclick=()=>{$('repv').hidden=true;$('wonv').hidden=false;renderWon()};
 $('rprint').onclick=()=>{try{window.print()}catch(e){toast('Printing is blocked here.')}};
 
+/* ---------- Customers & customer history ---------- */
+let CLIST=[],HIST=null;
+const hideMain=()=>['matrixv','rfqv','listv','wonv','repv','custv','histv'].forEach(v=>$(v).hidden=true);
+async function openCustomers(){hideMain();$('custv').hidden=false;scrollTo(0,0);const staff=ME&&ME.role!=='rep';$('cvalth').hidden=!staff;
+  $('cbody').innerHTML='<tr><td colspan="7" class="sm">Loading…</td></tr>';
+  try{CLIST=await J('GET','api/customers');renderCustomers()}catch(e){$('cbody').innerHTML=`<tr><td colspan="7">${esc(e.message)}</td></tr>`}}
+function renderCustomers(){const q=$('cq').value.trim().toLowerCase(),staff=ME&&ME.role!=='rep',sort=$('csort').value;
+  const rows=CLIST.filter(c=>!q||[c.company,c.address,...c.contacts.map(x=>x.name+' '+x.phone+' '+x.email)].join(' ').toLowerCase().includes(q))
+    .sort((a,b)=>sort==='recent'?String(b.last).localeCompare(String(a.last)):sort==='rfqs'?b.rfqs-a.rfqs||a.company.localeCompare(b.company):a.company.localeCompare(b.company));
+  $('ccount').textContent=`${rows.length} of ${CLIST.length} customers`;
+  $('cbody').innerHTML=rows.map(c=>`<tr data-co="${esc(c.company)}"><td><b>${esc(c.company)}</b>${c.address?`<div class="sm">${esc(c.address)}</div>`:''}</td>
+    <td>${c.contacts[0]?`${esc(c.contacts[0].name)}<div class="sm">${esc([c.contacts[0].phone,c.contacts[0].email].filter(Boolean).join(' · '))}</div>`:'—'}${c.contacts.length>1?`<div class="sm">+${c.contacts.length-1} more</div>`:''}</td>
+    <td class="n">${c.rfqs}${c.mine&&c.mine<c.rfqs?`<div class="sm">${c.mine} yours</div>`:''}</td><td class="n">${c.won}</td><td class="n">${c.won+c.lost?Math.round(c.won/(c.won+c.lost)*100)+'%':'—'}</td>
+    ${staff?`<td class="n">${money(c.valueWon)||'—'}</td>`:''}<td style="white-space:nowrap">${fmtD(c.last)}<div class="sm">${esc(c.lastBurner)}</div></td></tr>`).join('')||
+    `<tr><td colspan="7" class="sm" style="padding:24px 8px">${CLIST.length?'No customers match.':'No customers yet. They appear here once an RFQ with a company name is saved.'}</td></tr>`}
+async function openHistory(company){hideMain();$('histv').hidden=false;scrollTo(0,0);$('hhead').innerHTML=`<h2 style="margin:0">${esc(company)}</h2>`;$('hbody').innerHTML='<tr><td colspan="7" class="sm">Loading…</td></tr>';
+  try{const [h,c]=await Promise.all([J('GET','api/customers/history?company='+encodeURIComponent(company)),CLIST.length?CLIST:J('GET','api/customers')]);if(!CLIST.length)CLIST=c;HIST=h;renderHistory()}
+  catch(e){$('hbody').innerHTML=`<tr><td colspan="7">${esc(e.message)}</td></tr>`}}
+function renderHistory(){const h=HIST,c=CLIST.find(x=>x.company.toLowerCase()===h.company.toLowerCase())||{contacts:[],address:''},staff=ME&&ME.role!=='rep';
+  const rs=h.rfqs,won=rs.filter(r=>stOf(r)==='won').length,lost=rs.filter(r=>stOf(r)==='lost').length,open=rs.length-won-lost,
+    val=rs.filter(r=>stOf(r)==='won'&&!r.limited).reduce((a,r)=>a+(r.value||0),0),others=rs.filter(r=>r.limited).length;
+  const bc={};rs.forEach(r=>bc[r.burner]=(bc[r.burner]||0)+1);
+  $('hhead').innerHTML=`<h2 style="margin:0">${esc(h.company)}</h2>${c.address?`<div class="sm" style="margin-top:2px">${esc(c.address)}</div>`:''}`;
+  $('hcontacts').innerHTML=c.contacts.map(x=>`<div class="hc"><b>${esc(x.name)}</b>${x.phone?`<span>${esc(x.phone)}</span>`:''}${x.email?`<a href="mailto:${esc(x.email)}">${esc(x.email)}</a>`:''}</div>`).join('')||'<div class="sm">No contacts recorded.</div>';
+  $('htiles').innerHTML=[[rs.length,'RFQs'],[won,'won'],[lost,'lost'],[open,'still open'],[won+lost?Math.round(won/(won+lost)*100)+'%':'—','win rate'],[money(val)||'$0',staff?'value won':'value won (yours)']]
+    .map(([v,l])=>`<div class="tile"><b>${v}</b><span>${l}</span></div>`).join('');
+  $('hburners').textContent='Burners quoted: '+Object.entries(bc).sort((a,b)=>b[1]-a[1]).map(([k,n])=>`${k}${n>1?' ×'+n:''}`).join(', ');
+  $('hbody').innerHTML=rs.map(r=>{const st=stOf(r);return`<tr${r.open?` data-id="${esc(r.id)}" class="hopen"`:' class="hlim" title="Another rep’s RFQ – details are private to them"'}><td class="no" style="font-weight:700;white-space:nowrap">${esc(r.no)}</td><td style="white-space:nowrap">${fmtD(r.date)}</td><td>${esc(r.byFull||r.by)}</td>
+    <td><span style="color:${r.fuel==='gas'?'var(--gas)':'var(--oil)'};font-weight:600">${esc(r.burner)}</span></td><td>${r.limited?'':esc(r.job||'')}</td>
+    <td><span class="st st-${st}">${STL[st]}</span>${r.lostReason?`<div class="sm" style="margin-top:3px">${esc(r.lostReason)}</div>`:''}</td><td class="n">${r.limited?'':money(r.value)||'—'}</td></tr>`}).join('');
+  $('hnote').hidden=!(others&&!staff);$('hnote').textContent=`${others} RFQ${others>1?'s were':' was'} made by other reps. You can see when and what was quoted, but not their details.`}
+$('custb').onclick=()=>{if(!$('rfqv').hidden&&RFQ&&RFQ.dirty){saveRFQ(true).then(openCustomers,err=>toast('Could not save: '+err.message))}else openCustomers()};
+$('cq').oninput=renderCustomers;$('csort').onchange=renderCustomers;
+$('cbody').onclick=e=>{const tr=e.target.closest('tr[data-co]');if(tr)openHistory(tr.dataset.co)};
+$('hback').onclick=()=>openCustomers();
+$('hbody').onclick=e=>{const tr=e.target.closest('tr[data-id]');if(tr)openSaved(tr.dataset.id,'hist').catch(err=>toast(err.message))};
+// company names elsewhere open the customer's history
+document.addEventListener('click',e=>{const a=e.target.closest('.colink');if(!a)return;e.preventDefault();e.stopPropagation();openHistory(a.dataset.co)},true);
+
+/* ---------- duplicate warning on the RFQ sheet ---------- */
+let dupT=null,dupFor='';
+function dupCheck(){clearTimeout(dupT);dupT=setTimeout(async()=>{const box=$('dupw');if(!box||!RFQ||RFQ.ro)return;const co=$('q-co').value.trim();
+  if(!co){box.hidden=true;dupFor='';return}if(co.toLowerCase()===dupFor&&!box.hidden)return;
+  let list=[];try{list=await J('GET',`api/customers/recent?company=${encodeURIComponent(co)}&exclude=${encodeURIComponent(RFQ.id||'')}`)}catch(e){return}
+  if(!RFQ||RFQ.ro||$('q-co').value.trim()!==co)return;dupFor=co.toLowerCase();
+  if(!list.length){box.hidden=true;return}
+  const burner=`${rfqB.b} ${rfqB.n}`,same=list.filter(r=>r.burner===burner);
+  box.classList.toggle('strong',same.length>0);
+  box.innerHTML=`<b>${same.length?'Heads up: this customer was already quoted this burner recently.':'Heads up: this customer has a recent RFQ.'}</b>`+
+    `<ul>${list.map(r=>`<li>${r.mine?'You':esc(r.byFull)} – ${esc(r.no)}, ${fmtD(r.date)}: <b>${esc(r.burner)}</b> (${STL[stOf(r)]}${r.sentAt?', emailed '+fmtD(r.sentAt):''})</li>`).join('')}</ul>`+
+    `<span class="sm">Check with ${list.some(r=>!r.mine)?'the other rep':'your earlier RFQ'} before sending a second quote. <a href="#" class="colink" data-co="${esc(co)}">See customer history</a></span>`;
+  box.hidden=false},450)}
+$('sheet').addEventListener('input',e=>{if(e.target.id==='q-co')dupCheck()});
+
 $('wwho').onchange=renderWon;
 $('wbody').onclick=e=>{const tr=e.target.closest('tr[data-id]');if(tr)openSaved(tr.dataset.id,'won').catch(err=>toast(err.message))};
 $('wonb').onclick=()=>{if(!$('rfqv').hidden&&RFQ&&RFQ.dirty){saveRFQ(true).then(openWon,err=>toast('Could not save: '+err.message))}else openWon()};
@@ -994,9 +1079,9 @@ if(RFQ_Q)ME_P.then(()=>openSaved(RFQ_Q,'list')).then(async()=>{if(!PDFMODE)retur
     await document.fonts.ready;fitAll();await Promise.all([...document.querySelectorAll('#sheet img')].map(i=>i.complete?(i.naturalWidth||i.remove()):new Promise(r=>{i.addEventListener('load',r);i.addEventListener('error',()=>{i.remove();r()});setTimeout(()=>{if(!i.naturalWidth)i.remove();r()},8000)})));
     window.RFQ_READY=true}).catch(e=>{window.RFQ_ERROR=e.message||'Could not open RFQ';toast(window.RFQ_ERROR)});
 document.addEventListener('click',e=>{const u=$('um');if(u.open&&!u.contains(e.target))u.open=false});
-const setNav=()=>{const from=!$('rfqv').hidden&&RFQ?RFQ.from:'';const v=!$('listv').hidden||from==='list'?'list':!$('wonv').hidden||!$('repv').hidden||from==='won'?'won':'matrix';
-  $('navm').setAttribute('aria-current',v==='matrix'?'page':'false');$('rfqsb').setAttribute('aria-current',v==='list'?'page':'false');$('wonb').setAttribute('aria-current',v==='won'?'page':'false')};
-new MutationObserver(setNav).observe($('wonv'),{attributes:true,attributeFilter:['hidden']});new MutationObserver(setNav).observe($('repv'),{attributes:true,attributeFilter:['hidden']});
+const setNav=()=>{const from=!$('rfqv').hidden&&RFQ?RFQ.from:'';const v=!$('listv').hidden||from==='list'?'list':!$('wonv').hidden||!$('repv').hidden||from==='won'?'won':!$('custv').hidden||!$('histv').hidden||from==='hist'?'cust':'matrix';
+  $('navm').setAttribute('aria-current',v==='matrix'?'page':'false');$('rfqsb').setAttribute('aria-current',v==='list'?'page':'false');$('wonb').setAttribute('aria-current',v==='won'?'page':'false');$('custb').setAttribute('aria-current',v==='cust'?'page':'false')};
+new MutationObserver(setNav).observe($('wonv'),{attributes:true,attributeFilter:['hidden']});new MutationObserver(setNav).observe($('repv'),{attributes:true,attributeFilter:['hidden']});['custv','histv'].forEach(v=>new MutationObserver(setNav).observe($(v),{attributes:true,attributeFilter:['hidden']}));
 new MutationObserver(setNav).observe($('listv'),{attributes:true,attributeFilter:['hidden']});new MutationObserver(setNav).observe($('rfqv'),{attributes:true,attributeFilter:['hidden']});
 $('navm').onclick=()=>goHome();
 $('navadm').onclick=async()=>{if(!$('rfqv').hidden&&RFQ&&RFQ.dirty&&ME){try{await saveRFQ(true)}catch(e){toast('Could not save: '+e.message);return}}location.href='admin'};
