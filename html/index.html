@@ -226,7 +226,7 @@ a.bn[data-img]{cursor:zoom-in}
 .kv>div.w{grid-column:1/-1}
 .kv label,.kv .k{font-weight:700;font-size:11.5px;color:#55554f}
 .kv input,.kv select,.sheet textarea{font:500 12.5px Montserrat,sans-serif;border:0;border-bottom:1px dashed #b9b9b2;background:#fffdf5;padding:3px 4px;width:100%;color:#1d1d1d;border-radius:0;min-height:0;height:auto}
-.sheet textarea{border:1px dashed #b9b9b2;min-height:60px;resize:vertical}
+.sheet textarea{border:1px dashed #b9b9b2;min-height:60px;resize:none}
 .sheet.ro input,.sheet.ro select,.sheet.ro textarea{background:transparent;border-bottom-style:solid;border-color:#e2e2dc;color:#1d1d1d;opacity:1;-webkit-text-fill-color:#1d1d1d;cursor:default}
 .sheet.ro select{-webkit-appearance:none;appearance:none}.sheet.ro textarea{border-style:solid;resize:none}.sheet.ro ::placeholder{color:transparent}
 .kv input[data-lock],.kv select[data-lock]{background:#f0f0ec;border-bottom:1px solid #d6d6d0;cursor:not-allowed;color:#1d1d1d;opacity:1;-webkit-text-fill-color:#1d1d1d}
@@ -621,8 +621,8 @@ function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);$('sheet').cla
   <h3>Configuration requested</h3>
   <div class="kv">${dd('q-v','Voltage',pOpts,siteKeys.length||pOpts.length===1?pDefault:'',1)}${dd('q-m','Firing mode',mOpts,mOpts.length===1?mOpts[0]:'',1)}
     ${dd('q-mount','Mounting',DD.mount,'',1)}${inp('q-tube','Air Tube Length','','inches')}
-    ${inp('q-ins','Insertion Depth','','inches')}${inp('q-ctl','Controls / panel','','Primary control, panel, CSD-1…')}
-    ${inp('q-opt','Other options','','Nozzle, head, solenoid…','w')}</div>
+    ${inp('q-ins','Insertion Depth','','inches')}${inp('q-ctl','Controls / Panel','','Primary control, panel, CSD-1…')}
+    ${inp('q-opt','Other Options','','Nozzle, head, solenoid…','w')}</div>
   <div class="noprint rqnote" id="rqnote"><span class="rqm">*</span> Required before the RFQ can be emailed</div>
   <h3>Notes</h3>
   <textarea id="q-notes" aria-label="Notes" placeholder="Anything else the quote needs to cover"></textarea>
