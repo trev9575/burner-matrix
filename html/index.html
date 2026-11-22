@@ -233,7 +233,7 @@ a.bn[data-img]{cursor:zoom-in}
 @media print{.kv input[data-lock],.kv select[data-lock]{background:transparent}}
 .rqm{color:#c8102e;font-weight:700}.rqnote{font-size:12px;color:var(--mute);margin-top:6px}
 .sheet.ro .rqm,.sheet.ro .rqnote{display:none}@media print{.rqm,.rqnote{display:none !important}}
-.kv .rq.miss select{outline:2px solid #c8102e;outline-offset:1px;background:#fde8ea}
+.kv .rq.miss select,.kv .rq.miss input{outline:2px solid #c8102e;outline-offset:1px;background:#fde8ea}
 .robadge{display:inline-block;background:#ededeb;color:var(--mute);font-size:12px;font-weight:700;border-radius:3px;padding:2px 8px;margin-left:6px}
 .kv .v{font-weight:600}
 .sh-burner{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:16px;align-items:start}
@@ -556,9 +556,9 @@ async function nextSeq(){const date=ymd();
 // Model code for the RFQ number: the first word with a digit in it (LC1500 Nighthawk → LC1500, Comet PCG-050 → PCG050)
 const modelCode=name=>{const w=String(name).split(/\s+/).filter(Boolean);return(w.find(t=>/\d/.test(t))||w[0]||'').replace(/[^A-Za-z0-9]+/g,'').toUpperCase()};
 const rfqNo=(x,n)=>`${ymd()}-${String(n).padStart(2,'0')}${modelCode(x.n)}`;
-const inp=(id,label,val='',ph='',wide)=>`<div${wide?' class="w"':''}><label for="${id}">${label}</label><input id="${id}" type="text" value="${esc(val)}" placeholder="${esc(ph)}"></div>`;
+const inp=(id,label,val='',ph='',wide,req)=>`<div class="${wide?'w':''}${req?' rq':''}"><label for="${id}">${label}${req?'<span class="rqm" aria-hidden="true"> *</span>':''}</label><input id="${id}" type="text" value="${esc(val)}" placeholder="${esc(ph)}"></div>`;
 const LOCKABLE=['q-rate','q-pwr','q-ch','q-of'];
-const REQ={'q-v':'Voltage','q-m':'Firing mode','q-mount':'Mounting'};
+const REQ={'q-co':'Company','q-ct':'Contact','q-ph':'Phone','q-v':'Voltage','q-m':'Firing mode','q-mount':'Mounting'};
 const andList=a=>a.length<2?a.join(''):a.slice(0,-1).join(', ')+' and '+a[a.length-1];
 const sel=(id,label,opts,val)=>`<div><label for="${id}">${label}</label><select id="${id}">${opts.map(o=>`<option${o===val?' selected':''}>${esc(o)}</option>`).join('')}</select></div>`;
 // dropdown that starts blank; "Select…" never prints or goes out in a PDF
@@ -594,7 +594,7 @@ function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);$('sheet').cla
   <div class="sh-top">${logos?`<div class="lg">${logos}</div>`:''}<div><h1>Burner Request for Quotation</h1><div style="font-size:12px;color:#66665f">Specification sheet</div></div>
     <div class="meta"><b>${esc(RFQ.no)}</b><br>${fmtD(RFQ.date)}</div></div>
   <h3>Customer &amp; job</h3>
-  <div class="kv">${inp('q-co','Company','','','w')}${inp('q-ct','Contact')}${inp('q-ph','Phone')}${inp('q-em','Email','','','w')}${inp('q-job','Project / job name','','','w')}${inp('q-addr','Site address','','',true)}${inp('q-qty','Quantity','1')}${inp('q-need','Required by date')}${inp('q-po','Customer ref / PO','','','w')}</div>
+  <div class="kv">${inp('q-co','Company','','','w',1)}${inp('q-ct','Contact','','','',1)}${inp('q-ph','Phone','','','',1)}${inp('q-em','Email','','','w')}${inp('q-job','Project / job name','','','w')}${inp('q-addr','Site address','','',true)}${inp('q-qty','Quantity','1')}${inp('q-need','Required by date')}${inp('q-po','Customer ref / PO','','','w')}</div>
   <h3>Application</h3>
   <div class="kv">${inp('q-app','Appliance make / model','','e.g. boiler make & model')}${dd('q-type','Appliance type',DD.type)}
     ${inp('q-rate','Required input',rateTxt,x.f==='oil'?'GPH or MBH':'MBH')}${dd('q-fuel','Fuel',x.f==='oil'?DD.oil:DD.gas)}
@@ -691,8 +691,8 @@ $('rfqpdf').onclick=async e=>{const b=e.currentTarget;b.disabled=true;const t=b.
     const url=URL.createObjectURL(await r.blob());const a=document.createElement('a');a.href=url;a.download=('RFQ-'+RFQ.no+'.pdf').replace(/[^A-Za-z0-9._-]/g,'');document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000)}
   catch(err){toast(err.message)}finally{b.disabled=false;b.textContent=t}};
 const missingReq=()=>Object.keys(REQ).filter(id=>{const el=$(id);return !el||!el.value.trim()});
-function flagMissing(){const miss=missingReq();document.querySelectorAll('#sheet .kv .rq').forEach(d=>d.classList.toggle('miss',miss.includes(d.querySelector('select').id)));return miss}
-$('sheet').addEventListener('change',e=>{if(e.target.closest('.rq.miss'))flagMissing()});
+function flagMissing(){const miss=missingReq();document.querySelectorAll('#sheet .kv .rq').forEach(d=>d.classList.toggle('miss',miss.includes(d.querySelector('input,select').id)));return miss}
+$('sheet').addEventListener('change',e=>{if(e.target.closest('.rq.miss'))flagMissing()});$('sheet').addEventListener('input',e=>{if(e.target.closest('.rq.miss'))flagMissing()});
 $('rfqsend').onclick=()=>{const miss=flagMissing();
   if(miss.length){const el=$(miss[0]);el.scrollIntoView({block:'center',behavior:'smooth'});if(!el.disabled)el.focus({preventScroll:true});
     toast(RFQ&&RFQ.ro?`This RFQ is missing ${andList(miss.map(k=>REQ[k]))}. Use “Copy to new RFQ” to fill them in and send it.`:`Fill in ${andList(miss.map(k=>REQ[k]))} before emailing.`);return}
