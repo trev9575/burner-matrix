@@ -663,8 +663,8 @@ function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);$('sheet').cla
   if(RFQ.ro)lockSheet();
   requestAnimationFrame(fitAll);
   $('matrixv').hidden=true;$('listv').hidden=true;$('wonv').hidden=true;$('repv').hidden=true;$('rfqv').hidden=false;rfqStatus();scrollTo(0,0);if(!PDFMODE)$('q-co').focus({preventScroll:true})}
-const canDel=r=>!!(r&&ME&&!r.sent&&(r.by===ME.name||ME.role==='admin'));
-async function delRFQ(id,btn){if(!btn.dataset.armed){btn.dataset.armed=1;const t=btn.textContent;btn.textContent='Click again to delete';setTimeout(()=>{delete btn.dataset.armed;btn.textContent=t},4000);return false}
+const canDel=r=>!!(r&&ME&&(ME.role==='admin'||(!r.sent&&r.by===ME.name)));
+async function delRFQ(id,btn,sent){if(!btn.dataset.armed){btn.dataset.armed=1;const t=btn.textContent;btn.textContent=sent?'Emailed – click again to delete':'Click again to delete';setTimeout(()=>{delete btn.dataset.armed;btn.textContent=t},4000);return false}
   await J('DELETE','api/rfqs/'+id,{});toast('RFQ deleted');return true}
 function outputMode(on){$('sheet').querySelectorAll('[placeholder],[data-ph]').forEach(el=>{if(on){if(el.placeholder){el.dataset.ph=el.placeholder;el.removeAttribute('placeholder')}}else if(el.dataset.ph&&!(RFQ&&RFQ.ro)){el.placeholder=el.dataset.ph;delete el.dataset.ph}});
   $('sheet').querySelectorAll('select.dd option[value=""]').forEach(o=>o.textContent=on?'':'Select…')}
@@ -708,7 +708,7 @@ $('rfqdup').onclick=async e=>{const b=e.currentTarget;if(!RFQ)return;b.disabled=
   try{const f=rfqFields(),raw=RFQ.raw,fk=RFQ.fit,from=RFQ.from,locks=RFQ.locks||[];delete f['q-rep'];delete f['q-repp'];delete f['q-repe'];
     const x=toRec(raw),n=await nextSeq();openRFQ(x,{no:rfqNo(x,n),raw,fit:fk,fields:f,from,locks});toast('New RFQ '+RFQ.no+' – make your changes, then save or email it')}
   catch(err){toast(err.message)}finally{b.disabled=false}};
-$('rfqdel').onclick=async e=>{try{if(await delRFQ(RFQ.id,e.currentTarget)){const from=RFQ.from;RFQ=null;$('rfqv').hidden=true;from==='list'?openList():from==='won'?openWon():($('matrixv').hidden=false)}}catch(err){toast(err.message)}};
+$('rfqdel').onclick=async e=>{try{if(await delRFQ(RFQ.id,e.currentTarget,RFQ.sends.length>0)){const from=RFQ.from;RFQ=null;$('rfqv').hidden=true;from==='list'?openList():from==='won'?openWon():($('matrixv').hidden=false)}}catch(err){toast(err.message)}};
 $('rfqsave').onclick=async()=>{try{await saveRFQ()}catch(e){toast('Could not save: '+e.message)}};
 $('rfqpdf').onclick=async e=>{const b=e.currentTarget;b.disabled=true;const t=b.textContent;b.textContent='Building PDF…';
   try{const id=await saveRFQ(true);const r=await fetch('api/rfqs/'+id+'/pdf',{credentials:'same-origin'});
@@ -764,7 +764,7 @@ async function openSaved(id,from){const rec=await J('GET','api/rfqs/'+id);
   openRFQ(toRec(rec.burner),{id:rec.id,no:rec.no,date:rec.date,raw:rec.burner,fit:rec.fit||'',fields:rec.fields,sends:rec.sends||[],by:rec.by,byFull:rec.byFull,from,locks:rec.locks||[],
     ro:PDFMODE||(rec.sends||[]).length>0||!ME||rec.by!==ME.name})} // drafts stay editable for the rep who made them until emailed
 $('lbody').onclick=async e=>{if(e.target.closest('select.st'))return;const tr=e.target.closest('tr[data-id]');const d=e.target.closest('.ldel');
-  if(d&&tr){try{if(await delRFQ(tr.dataset.id,d)){LIST=LIST.filter(r=>r.id!==tr.dataset.id);renderList()}}catch(err){toast(err.message)}return}
+  if(d&&tr){try{if(await delRFQ(tr.dataset.id,d,!!(LIST.find(r=>r.id===tr.dataset.id)||{}).sent)){LIST=LIST.filter(r=>r.id!==tr.dataset.id);renderList()}}catch(err){toast(err.message)}return}
   if(tr)openSaved(tr.dataset.id,'list').catch(err=>toast(err.message))};
 /* ---------- Won Jobs ---------- */
 let WLIST=[];
