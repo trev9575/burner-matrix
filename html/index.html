@@ -267,11 +267,11 @@ a.bn[data-img]{cursor:zoom-in}
 </head>
 <body>
 <nav class="util" aria-label="Main">
-  <div class="nav" id="acct" hidden><button type="button" id="navm" aria-current="page">Burner Matrix</button><button type="button" id="rfqsb">My RFQs</button><button type="button" id="wonb">Won Jobs</button></div>
+  <div class="nav" id="acct" hidden><button type="button" id="navm" aria-current="page">Burner Matrix</button><button type="button" id="rfqsb">My RFQs</button><button type="button" id="wonb">Won Jobs</button><button type="button" id="navadm" hidden>Admin</button></div>
   <span class="sp"></span>
   <div class="ext"><a href="https://www.beckettcorp.com" target="_blank" rel="noopener">beckettcorp.com</a><a href="https://waynecombustion.com/products" target="_blank" rel="noopener">waynecombustion.com</a></div>
   <details class="um" id="um" hidden><summary aria-label="Account menu"><span class="av" id="av"></span><span class="nm" id="whoami"></span><span class="car" aria-hidden="true"></span></summary>
-    <div class="menu"><div class="who" id="whomenu"></div><button type="button" id="profb">My profile</button><button type="button" id="admb" hidden>Admin &amp; burner editor</button><button type="button" class="out" id="outb">Sign out</button></div></details>
+    <div class="menu"><div class="who" id="whomenu"></div><button type="button" id="profb">My profile</button><button type="button" class="out" id="outb">Sign out</button></div></details>
 </nav>
 <div class="brand" role="banner" id="home" title="Back to the burner matrix" tabindex="0">
   <img src="logos/beckett.png" alt="Beckett" onerror="this.outerHTML='<span class=bk>Beckett</span>'">
@@ -865,7 +865,7 @@ $('rfqsb').onclick=()=>{if(!$('rfqv').hidden&&RFQ&&RFQ.dirty){saveRFQ(true).then
 /* ---------- Load data ---------- */
 function showMe(){if(!ME)return;$('rfqsb').textContent=ME.role==='rep'?'My RFQs':'RFQs';$('acct').hidden=false;$('um').hidden=false;
   const nm=ME.full||ME.name,ini=(ME.full?ME.full.split(/\s+/).map(w=>w[0]).join(''):ME.name.replace(/@.*/,'').slice(0,2)).slice(0,2).toUpperCase();
-  $('admb').hidden=ME.role==='rep';$('av').textContent=ini;$('whoami').textContent=nm;$('whomenu').innerHTML=`<b>${esc(nm)}</b><small>${esc(ME.email||ME.name)} · ${{rep:'Rep',editor:'Editor',admin:'Admin'}[ME.role]||ME.role}</small>`;const a=$('adminl');if(a)a.hidden=ME.role==='rep'}
+  $('navadm').hidden=ME.role==='rep';$('av').textContent=ini;$('whoami').textContent=nm;$('whomenu').innerHTML=`<b>${esc(nm)}</b><small>${esc(ME.email||ME.name)} · ${{rep:'Rep',editor:'Editor',admin:'Admin'}[ME.role]||ME.role}</small>`;const a=$('adminl');if(a)a.hidden=ME.role==='rep'}
 const ME_P=fetch('api/me',{credentials:'same-origin'}).then(r=>r.ok?r.json():null).then(j=>{if(j){ME=j;showMe();if(RFQ)rfqStatus()}}).catch(()=>{});
 // ?rfq=<id> opens a saved RFQ; &pdf=1 is the server's PDF renderer
 const RFQ_Q=new URLSearchParams(location.search).get('rfq');
@@ -878,7 +878,7 @@ const setNav=()=>{const from=!$('rfqv').hidden&&RFQ?RFQ.from:'';const v=!$('list
 new MutationObserver(setNav).observe($('wonv'),{attributes:true,attributeFilter:['hidden']});new MutationObserver(setNav).observe($('repv'),{attributes:true,attributeFilter:['hidden']});
 new MutationObserver(setNav).observe($('listv'),{attributes:true,attributeFilter:['hidden']});new MutationObserver(setNav).observe($('rfqv'),{attributes:true,attributeFilter:['hidden']});
 $('navm').onclick=()=>goHome();
-$('admb').onclick=()=>{location.href='admin'};
+$('navadm').onclick=async()=>{if(!$('rfqv').hidden&&RFQ&&RFQ.dirty&&ME){try{await saveRFQ(true)}catch(e){toast('Could not save: '+e.message);return}}location.href='admin'};
 $('profb').onclick=()=>{$('um').open=false;$('pf-full').value=ME.full||'';$('pf-phone').value=ME.phone||'';$('pf-email').value=ME.email||'';
   $('pf-cur').value='';$('pf-new').value='';$('pf-pw').open=false;$('pf-err').hidden=true;$('prof').showModal()};
 $('pf-x').onclick=()=>$('prof').close();
