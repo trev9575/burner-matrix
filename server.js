@@ -8,6 +8,7 @@ const crypto = require('crypto');
 const Schema = require('./html/schema.js');
 const Mail = require('./lib/mail.js');
 const { renderPDF } = require('./lib/pdf.js');
+const XLSX = require('./lib/xlsx.js');
 
 const PORT = +process.env.PORT || 8080;
 const DATA = process.env.DATA_DIR || '/data';
@@ -20,6 +21,8 @@ const RFQ_TO_ENV = process.env.RFQ_TO || '';   // fallback default "send to" add
 // Admin settings (Admin → Settings) override the container variables
 const getSettings = () => readJSON(F.settings, {});
 const rfqTo = () => { const s = getSettings(); return typeof s.rfqTo === 'string' && s.rfqTo.trim() ? s.rfqTo : RFQ_TO_ENV; };
+const followUpDays = () => { const d = getSettings().followUpDays; return Number.isInteger(d) && d >= 0 && d <= 90 ? d : 7; }; // 0 = off
+const LOST_REASONS = ['Price', 'Lead time', 'Went with a competitor', 'Job cancelled / on hold', 'Technical fit', 'No response', 'Other'];
 
 const F = {
   burners: path.join(DATA, 'burners.json'),
@@ -207,14 +210,53 @@ function localizePhotos(who = 'server') {
   return localizing;
 }
 
+// ---------- nightly backup (1:00 a.m. server time) ----------
+const BACKUP_DIR = path.join(DATA, 'backups'), BACKUP_KEEP = 14;
+const listBackups = () => { try { return fs.readdirSync(BACKUP_DIR).filter(n => /^\d{4}-\d{2}-\d{2}_\d{4}$/.test(n)).sort().reverse(); } catch { return []; } };
+function runBackup(why) {
+  const d = new Date(), p2 = n => String(n).padStart(2, '0');
+  const name = `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}_${p2(d.getHours())}${p2(d.getMinutes())}`;
+  const dest = path.join(BACKUP_DIR, name), tmp = dest + '.partial';
+  fs.mkdirSync(BACKUP_DIR, { recursive: true });
+  fs.rmSync(tmp, { recursive: true, force: true });
+  fs.mkdirSync(tmp, { recursive: true });
+  for (const e of fs.readdirSync(DATA)) { // everything except the backups folder itself (and half-written .tmp files)
+    if (e === 'backups' || e.endsWith('.tmp')) continue;
+    fs.cpSync(path.join(DATA, e), path.join(tmp, e), { recursive: true, filter: src => !src.endsWith('.tmp') });
+  }
+  fs.rmSync(dest, { recursive: true, force: true });
+  fs.renameSync(tmp, dest);
+  for (const old of listBackups().slice(BACKUP_KEEP)) fs.rmSync(path.join(BACKUP_DIR, old), { recursive: true, force: true });
+  const s = getSettings(); s.lastBackup = { at: d.toISOString(), name, why }; writeJSON(F.settings, s);
+  console.log(`Backup saved: backups/${name} (${why})`);
+  return s.lastBackup;
+}
+function scheduleBackup() {
+  const now = new Date(), next = new Date(now); next.setHours(1, 0, 0, 0);
+  if (next <= now) next.setDate(next.getDate() + 1);
+  console.log(`Next backup: ${next.toString()}`);
+  setTimeout(() => { try { runBackup('nightly'); } catch (e) { console.error('Nightly backup failed:', e.message); } scheduleBackup(); }, next - now);
+}
+
 // ---------- RFQs ----------
 const rfqFile = id => path.join(F.rfqs, id + '.json');
 const getRfq = id => /^[a-f0-9]{12}$/.test(id) ? readJSON(rfqFile(id), null) : null;
+const allRfqs = () => fs.readdirSync(F.rfqs).filter(f => f.endsWith('.json')).map(f => readJSON(path.join(F.rfqs, f), null)).filter(r => r && r.burner && r.fields);
 const canSee = (me, r) => r && (me.role !== 'rep' || r.by === me.name);
 const rfqSummary = r => ({ id: r.id, no: r.no, date: r.date, by: r.by, byFull: r.byFull, updated: r.updated,
   burner: `${r.burner.brand} ${r.burner.name}`, fuel: r.burner.fuel,
   company: r.fields['q-co'] || '', contact: r.fields['q-ct'] || '', job: r.fields['q-job'] || '',
-  sent: (r.sends || []).slice(-1)[0] || null, status: r.status || '', statusAt: r.statusAt || '' });
+  sent: (r.sends || []).slice(-1)[0] || null, status: r.status || '', statusAt: r.statusAt || '',
+  value: typeof r.value === 'number' ? r.value : null, lostReason: r.status === 'lost' ? r.lostReason || '' : '', lostNote: r.status === 'lost' ? r.lostNote || '' : '',
+  ...followUp(r) });
+// Emailed or Quoted RFQs with no activity for N days need a follow-up. Activity = last email, status change or "followed up".
+function followUp(r) {
+  const st = r.status || ((r.sends || []).length ? 'sent' : 'draft'), days = followUpDays();
+  if (!(st === 'sent' || st === 'quoted')) return { followUp: false, idleDays: 0, followedUpAt: r.followedUpAt || '' };
+  const t = [((r.sends || []).slice(-1)[0] || {}).at, r.statusAt, r.followedUpAt].filter(Boolean).map(Date.parse).filter(isFinite);
+  const idle = t.length ? Math.floor((Date.now() - Math.max(...t)) / 864e5) : 0;
+  return { followUp: days > 0 && idle >= days, idleDays: idle, followedUpAt: r.followedUpAt || '' };
+}
 const cleanFields = f => {
   const out = {};
   for (const [k, v] of Object.entries(f && typeof f === 'object' ? f : {}))
@@ -256,7 +298,7 @@ async function api(req, res, url) {
   if (p === '/api/logout' && m === 'POST') return send(res, 200, { ok: true }, undefined, { 'Set-Cookie': cookie('', 0) });
 
   const me = readSession(req);
-  const meInfo = u => ({ ...pub(u), setup: true, mail: Mail.configured(), rfqTo: rfqTo() });
+  const meInfo = u => ({ ...pub(u), setup: true, mail: Mail.configured(), rfqTo: rfqTo(), followUpDays: followUpDays(), lostReasons: LOST_REASONS });
   if (p === '/api/me') return me ? send(res, 200, meInfo(me)) : send(res, 401, { error: 'Not signed in', setup: users.length > 0 });
   if (!me) return send(res, 401, { error: 'Not signed in' });
 
@@ -276,9 +318,43 @@ async function api(req, res, url) {
   }
   // ----- RFQs: reps see their own, editors and admins see everyone's -----
   if (p === '/api/rfqs' && m === 'GET') {
-    const list = fs.readdirSync(F.rfqs).filter(f => f.endsWith('.json')).map(f => readJSON(path.join(F.rfqs, f), null))
-      .filter(r => r && canSee(me, r)).map(rfqSummary).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    const list = allRfqs().filter(r => canSee(me, r)).map(rfqSummary).sort((a, b) => String(b.date).localeCompare(String(a.date)));
     return send(res, 200, list);
+  }
+  if (p === '/api/rfqs/export.xlsx' && m === 'GET') { // everything the user can see, as a spreadsheet
+    const all = allRfqs().filter(r => canSee(me, r)).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    const F_ = (r, k) => r.fields[k] || '';
+    const STL = { '': 'Draft', sent: 'Emailed', quoted: 'Quoted', won: 'Won', lost: 'Lost' };
+    const cols = [
+      ['RFQ #', 16], ['Date', 11, 'date'], ['Rep', 18], ['Status', 10], ['Status date', 11, 'date'], ['Quote value', 13, 'money'], ['Lost reason', 20], ['Lost note', 30],
+      ['Follow-up due', 13], ['Days idle', 9, 'number'], ['Emailed on', 11, 'date'], ['Emailed to', 28],
+      ['Company', 28], ['Contact', 20], ['Phone', 15], ['Email', 26], ['Project / job', 28], ['Site address', 34], ['Quantity', 9], ['Required by', 13], ['Customer ref / PO', 16],
+      ['Burner brand', 12], ['Burner model', 16], ['Fuel', 6], ['Appliance make / model', 24], ['Appliance type', 20], ['Required input', 20], ['Fuel type', 18], ['Power on site', 18],
+      ['Voltage', 16], ['Firing mode', 12], ['Mounting', 16], ['Air tube length', 14], ['Insertion depth', 14], ['Controls / panel', 20], ['Other options', 20], ['Notes', 40],
+    ].map(([header, width, type]) => ({ header, width, type }));
+    const rows = all.map(r => { const s = rfqSummary(r), last = (r.sends || []).slice(-1)[0];
+      const st = r.status || (last ? 'sent' : '');
+      return [r.no, r.date, r.byFull || r.by, STL[st] || st, r.statusAt || '', s.value, s.lostReason, s.lostNote,
+        s.followUp ? 'Yes' : '', st === 'sent' || st === 'quoted' ? s.idleDays : '', last ? last.at : '', last ? last.to.join(', ') : '',
+        F_(r, 'q-co'), F_(r, 'q-ct'), F_(r, 'q-ph'), F_(r, 'q-em'), F_(r, 'q-job'), F_(r, 'q-addr'), F_(r, 'q-qty'), F_(r, 'q-need'), F_(r, 'q-po'),
+        r.burner.brand, r.burner.name, r.burner.fuel, F_(r, 'q-app'), F_(r, 'q-type'), F_(r, 'q-rate'), F_(r, 'q-fuel'), F_(r, 'q-pwr'),
+        F_(r, 'q-v'), F_(r, 'q-m'), F_(r, 'q-mount'), F_(r, 'q-tube'), F_(r, 'q-ins'), F_(r, 'q-ctl'), F_(r, 'q-opt'), F_(r, 'q-notes')]; });
+    const name = `RFQs-${new Date().toISOString().slice(0, 10)}.xlsx`;
+    return send(res, 200, XLSX.build({ sheet: 'RFQs', cols, rows }), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      { 'Content-Disposition': `attachment; filename="${name}"` });
+  }
+  if (p === '/api/customers' && m === 'GET') { // address book built from everyone's RFQs (newest details win)
+    const by = new Map();
+    for (const r of allRfqs().sort((a, b) => String(a.date).localeCompare(String(b.date)))) {
+      const co = String(r.fields['q-co'] || '').trim(); if (!co) continue;
+      const k = co.toLowerCase(), c = by.get(k) || { company: co, address: '', contacts: new Map() };
+      c.company = co; if (r.fields['q-addr']) c.address = r.fields['q-addr'];
+      const ct = String(r.fields['q-ct'] || '').trim();
+      if (ct) { const p0 = c.contacts.get(ct.toLowerCase()) || {}; c.contacts.set(ct.toLowerCase(), { name: ct, phone: r.fields['q-ph'] || p0.phone || '', email: r.fields['q-em'] || p0.email || '' }); }
+      by.set(k, c);
+    }
+    return send(res, 200, [...by.values()].map(c => ({ company: c.company, address: c.address, contacts: [...c.contacts.values()].reverse() }))
+      .sort((a, b) => a.company.localeCompare(b.company)));
   }
   if (p === '/api/rfqs' && m === 'POST') { // create
     const b = await readBody(req, 512 * 1024);
@@ -293,7 +369,7 @@ async function api(req, res, url) {
     writeJSON(rfqFile(r.id), r);
     return send(res, 200, r);
   }
-  const rm = /^\/api\/rfqs\/([a-f0-9]{12})(\/pdf|\/send|\/status)?$/.exec(p);
+  const rm = /^\/api\/rfqs\/([a-f0-9]{12})(\/pdf|\/send|\/status|\/followup)?$/.exec(p);
   if (rm) {
     const r = getRfq(rm[1]);
     if (!canSee(me, r)) return send(res, 404, { error: 'RFQ not found' });
@@ -310,10 +386,27 @@ async function api(req, res, url) {
     }
     if (rm[2] === '/status' && m === 'POST') { // quoted / won / lost tracking; '' = automatic (draft or emailed)
       if (r.by !== me.name && me.role === 'rep') return send(res, 403, { error: 'Only the rep who made it can change its status' });
-      const { status = '' } = await readBody(req, 1024);
+      const b = await readBody(req, 4096), status = b.status || '';
       if (!['', 'quoted', 'won', 'lost'].includes(status)) return send(res, 422, { error: 'Unknown status' });
+      if (b.value !== undefined && b.value !== null && b.value !== '') {
+        const n = Number(String(b.value).replace(/[$,\s]/g, ''));
+        if (!isFinite(n) || n < 0 || n > 1e9) return send(res, 422, { error: 'Quote value must be a dollar amount' });
+        r.value = Math.round(n * 100) / 100;
+      } else if (b.value === null || b.value === '') delete r.value;
+      if (status === 'lost') {
+        if (b.lostReason !== undefined && b.lostReason !== '' && !LOST_REASONS.includes(b.lostReason)) return send(res, 422, { error: 'Unknown lost reason' });
+        if (b.lostReason !== undefined) r.lostReason = b.lostReason || '';
+        if (b.lostNote !== undefined) r.lostNote = String(b.lostNote || '').trim().slice(0, 500);
+      } else { delete r.lostReason; delete r.lostNote; }
       r.status = status; r.statusAt = new Date().toISOString(); r.statusBy = me.name;
-      (r.statusLog = r.statusLog || []).push({ at: r.statusAt, by: me.name, status });
+      (r.statusLog = r.statusLog || []).push({ at: r.statusAt, by: me.name, status, value: r.value, lostReason: r.lostReason });
+      writeJSON(rfqFile(r.id), r);
+      return send(res, 200, rfqSummary(r));
+    }
+    if (rm[2] === '/followup' && m === 'POST') { // "I followed up": restarts the follow-up clock
+      if (r.by !== me.name && me.role === 'rep') return send(res, 403, { error: 'Only the rep who made it can do this' });
+      r.followedUpAt = new Date().toISOString();
+      (r.followLog = r.followLog || []).push({ at: r.followedUpAt, by: me.name });
       writeJSON(rfqFile(r.id), r);
       return send(res, 200, rfqSummary(r));
     }
@@ -415,18 +508,32 @@ async function api(req, res, url) {
   // ----- admin-only: settings -----
   if (p === '/api/settings') {
     if (me.role !== 'admin') return send(res, 403, { error: 'Admins only' });
-    const info = () => { const c = Mail.config(); return { rfqTo: getSettings().rfqTo || '', envRfqTo: RFQ_TO_ENV, effective: rfqTo(),
-      mail: Mail.configured(), smtpHost: c.host, smtpFrom: c.from }; };
+    const info = () => { const c = Mail.config(), s = getSettings(); return { rfqTo: s.rfqTo || '', envRfqTo: RFQ_TO_ENV, effective: rfqTo(),
+      mail: Mail.configured(), smtpHost: c.host, smtpFrom: c.from, followUpDays: followUpDays(),
+      lastBackup: s.lastBackup || null, backups: listBackups().slice(0, 5), backupKeep: BACKUP_KEEP, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }; };
     if (m === 'GET') return send(res, 200, info());
     if (m === 'PUT') {
-      const b = await readBody(req, 4096);
-      const list = Mail.splitList(b.rfqTo);
-      if (!list.every(Mail.isEmail)) return send(res, 422, { error: 'Enter valid email addresses, separated by commas' });
-      if (list.length > 10) return send(res, 422, { error: 'Up to 10 addresses' });
-      const s = getSettings(); s.rfqTo = list.join(', '); s.updated = new Date().toISOString(); s.updatedBy = me.name;
+      const b = await readBody(req, 4096), s = getSettings();
+      if (b.rfqTo !== undefined) {
+        const list = Mail.splitList(b.rfqTo);
+        if (!list.every(Mail.isEmail)) return send(res, 422, { error: 'Enter valid email addresses, separated by commas' });
+        if (list.length > 10) return send(res, 422, { error: 'Up to 10 addresses' });
+        s.rfqTo = list.join(', ');
+      }
+      if (b.followUpDays !== undefined) {
+        const d = Number(b.followUpDays);
+        if (!Number.isInteger(d) || d < 0 || d > 90) return send(res, 422, { error: 'Follow-up days must be a whole number from 0 (off) to 90' });
+        s.followUpDays = d;
+      }
+      s.updated = new Date().toISOString(); s.updatedBy = me.name;
       writeJSON(F.settings, s);
       return send(res, 200, info());
     }
+  }
+  if (p === '/api/backup' && m === 'POST') {
+    if (me.role !== 'admin') return send(res, 403, { error: 'Admins only' });
+    try { const b = runBackup('manual, ' + me.name); return send(res, 200, b); }
+    catch (e) { console.error('Backup failed:', e.message); return send(res, 500, { error: 'Backup failed: ' + e.message }); }
   }
   // ----- admin-only: users -----
   if (p.startsWith('/api/users')) {
@@ -498,4 +605,8 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log(`Burner matrix on port ${PORT}, data in ${DATA}`);
   setTimeout(() => localizePhotos().catch(e => console.warn('Photo download failed:', e.message)), 3000);
+  scheduleBackup();
+  // missed the last 1:00 a.m. run (server was off)? take one shortly after start
+  const lb = getSettings().lastBackup; if (!lb || Date.now() - Date.parse(lb.at) > 26 * 3600e3)
+    setTimeout(() => { try { runBackup('catch-up after start'); } catch (e) { console.error('Backup failed:', e.message); } }, 60e3);
 });

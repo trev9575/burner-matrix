@@ -1,7 +1,7 @@
 FROM node:22-alpine
 
 # Chromium renders RFQ PDFs on the server (for "Download PDF" and "Email PDF").
-RUN apk add --no-cache chromium font-noto ttf-dejavu
+RUN apk add --no-cache chromium font-noto ttf-dejavu tzdata
 ENV CHROMIUM_PATH=/usr/bin/chromium-browser
 
 WORKDIR /app
@@ -10,7 +10,8 @@ COPY html/ ./html/
 COPY lib/ ./lib/
 COPY server.js ./
 
-ENV PORT=8080 DATA_DIR=/data NODE_ENV=production
+# TZ decides when the nightly 1:00 a.m. backup runs; Unraid passes its own TZ to containers
+ENV PORT=8080 DATA_DIR=/data NODE_ENV=production TZ=America/New_York
 # Runs as root so it can always write to the Unraid appdata folder (which Docker creates as root).
 RUN mkdir -p /data
 VOLUME /data

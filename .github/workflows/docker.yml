@@ -19,7 +19,7 @@ jobs:
       - name: Check burners.json and server
         run: |
           node scripts/validate.js
-          node --check server.js && node --check lib/mail.js && node --check lib/pdf.js
+          node --check server.js && for f in lib/*.js; do node --check $f; done
 
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3

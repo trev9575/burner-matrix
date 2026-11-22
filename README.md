@@ -55,6 +55,26 @@ and filter it when clicked.
 quarter (and, for editors/admins, any rep): headline numbers, win-rate trend, by-rep table, burners quoted and jobs won.
 Use *Print / Save PDF*.
 
+**Customer address book.** Company and Contact suggest names from past RFQs (everyone's). Picking a known company
+fills in its site address and most recent contact; picking a contact fills their phone and email. It never overwrites
+anything typed in by hand.
+
+**Follow-up reminders.** Emailed or Quoted RFQs with no activity (email, status change, or "Followed up" click) for a set
+number of days are flagged "Follow up", counted on the My RFQs tab and filterable. Admins set the days in
+**Admin → Settings** (0 turns reminders off).
+
+**Quote value and lost reason.** Marking an RFQ Quoted or Won asks for an optional dollar value; Lost asks why
+(price, lead time, competitor, cancelled, technical fit, no response, other) plus a note. Values show in RFQs, Won Jobs
+and the quarterly report, which also breaks down lost reasons.
+
+**Export to Excel.** RFQs → *Export to Excel* downloads every RFQ you can see (reps: their own; editors/admins: all)
+as an .xlsx with all fields, status, value and lost reason.
+
+**Nightly backup.** Every night at 1:00 a.m. (container `TZ`, default America/New_York) the server copies everything in
+`/data` except old backups into `/data/backups/YYYY-MM-DD_HHMM`, keeping the last 14. If the server was off at 1:00 it
+takes one a minute after starting. Admin → Settings shows the last backup and has *Back up now*. To restore, stop the
+container and copy the files from a backup folder back into the appdata folder.
+
 **Oil-to-gas helper.** Pick 1–4 nozzles (each can be a different size) and the pump pressure; it works out the real
 firing rate (sum of nozzles × √(psi ÷ 100), × 140 MBH per GPH) and lists every gas burner that covers it,
 conversion burners tagged and first, each with Create RFQ. It can also set the matrix filters.

@@ -220,9 +220,18 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
           <label class="f">Send completed RFQs to
             <input type="text" name="rfqTo" inputmode="email" autocapitalize="none" placeholder="quotes@beckettcorp.com, other@beckettcorp.com"></label>
           <p class="u" style="margin:0">The address the <b>Email PDF</b> button fills in for every RFQ. Separate several with commas. Reps can still change it on a single RFQ. Leave blank to use the container's <code>RFQ_TO</code> setting<span id="envto"></span>.</p>
+          <label class="f" style="margin-top:8px">Follow-up reminder after (days)
+            <input type="number" name="followUpDays" min="0" max="90" step="1" style="max-width:120px"></label>
+          <p class="u" style="margin:0">An RFQ that's <b>Emailed</b> or <b>Quoted</b> gets flagged “Follow up” after this many days with no activity (no email, status change or “Followed up” click). Use <b>0</b> to turn reminders off.</p>
           <div class="row"><button class="btn pri" type="submit">Save</button></div>
         </form>
         <div id="smsg" class="msg" hidden></div>
+        <div style="border-top:1px solid var(--rule);padding-top:12px;display:grid;gap:8px">
+          <h2 style="font-size:17px">Backups</h2>
+          <p class="u" style="margin:0">Every night at <b>1:00 a.m.</b> (<span id="btz"></span>) the server copies burners, RFQs, users, settings and uploaded photos into <code>backups/</code> inside its data folder, and keeps the last <span id="bkeep"></span>.</p>
+          <div id="bstat" class="u"></div>
+          <div class="row"><button class="btn" type="button" id="bnow">Back up now</button></div>
+        </div>
         <div class="u" id="mailstat" style="border-top:1px solid var(--rule);padding-top:10px"></div>
       </div>
     </section>
@@ -360,11 +369,16 @@ $('loc').onclick=async e=>{const b=e.currentTarget;b.disabled=true;b.textContent
 $('exp').onclick=async e=>{e.preventDefault();const data=await call('GET','/api/burners');const url=URL.createObjectURL(new Blob(['[\n'+data.map(o=>'  '+JSON.stringify(o)).join(',\n')+'\n]\n'],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='burners.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)};
 
 /* ---------- settings ---------- */
-function showSettings(s){$('sf').elements.rfqTo.value=s.rfqTo;$('envto').textContent=s.envRfqTo?` (currently ${s.envRfqTo})`:' (not set)';
+function showSettings(s){$('sf').elements.rfqTo.value=s.rfqTo;$('sf').elements.followUpDays.value=s.followUpDays;
+  $('btz').textContent=s.tz||'server time';$('bkeep').textContent=s.backupKeep;
+  $('bstat').innerHTML=s.lastBackup?`Last backup: <b>${esc(new Date(s.lastBackup.at).toLocaleString())}</b> (${esc(s.lastBackup.why)})`+(s.backups.length?`<br>Newest copies: ${s.backups.map(esc).join(', ')}`:''):'No backup yet. The first one runs at 1:00 a.m., or click Back up now.';$('envto').textContent=s.envRfqTo?` (currently ${s.envRfqTo})`:' (not set)';
   $('mailstat').innerHTML=s.mail?`Email server: <b>set up</b> – sending through ${esc(s.smtpHost)} as ${esc(s.smtpFrom)}. RFQs go to <b>${esc(s.effective||'(no default – reps must type an address)')}</b>.`:'Email server: <b>not set up yet</b>. Add the SMTP variables to the container (see README) before reps can email RFQs.'}
 async function loadSettings(){$('smsg').hidden=true;try{showSettings(await call('GET','/api/settings'))}catch(err){showMsg($('smsg'),'err',esc(err.message))}}
 $('sf').onsubmit=async e=>{e.preventDefault();$('smsg').hidden=true;
-  try{const s=await call('PUT','/api/settings',{rfqTo:e.target.elements.rfqTo.value});showSettings(s);toast('Settings saved')}catch(err){showMsg($('smsg'),'err',esc(err.message))}};
+  try{const s=await call('PUT','/api/settings',{rfqTo:e.target.elements.rfqTo.value,followUpDays:Number(e.target.elements.followUpDays.value||0)});showSettings(s);toast('Settings saved')}catch(err){showMsg($('smsg'),'err',esc(err.message))}};
+
+$('bnow').onclick=async e=>{const b=e.currentTarget;b.disabled=true;b.textContent='Backing up…';
+  try{await call('POST','/api/backup',{});await loadSettings();toast('Backup saved')}catch(err){showMsg($('smsg'),'err',esc(err.message))}finally{b.disabled=false;b.textContent='Back up now'}};
 
 /* ---------- users ---------- */
 async function loadUsers(){const u=await call('GET','/api/users');
