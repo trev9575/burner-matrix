@@ -16,6 +16,7 @@ const HTML = path.join(__dirname, 'html');
 const COOKIE_SECURE = /^true$/i.test(process.env.COOKIE_SECURE || '');
 const TRUST_PROXY = /^true$/i.test(process.env.TRUST_PROXY || '');
 const SESSION_HOURS = +process.env.SESSION_HOURS || 12;
+const REMEMBER_DAYS = +process.env.REMEMBER_DAYS || 30; // "Keep me signed in"
 const HISTORY_KEEP = 200;
 const RFQ_TO_ENV = process.env.RFQ_TO || '';   // fallback default "send to" address(es) for RFQ PDFs
 // Admin settings (Admin → Settings) override the container variables
@@ -108,7 +109,7 @@ const failed = ip => { const a = attempts.get(ip); const now = Date.now();
 
 // ---------- helpers ----------
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8',
-  '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.md': 'text/plain; charset=utf-8' };
+  '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.md': 'text/plain; charset=utf-8', '.webmanifest': 'application/manifest+json' };
 const send = (res, code, body, type = 'application/json; charset=utf-8', extra = {}) => {
   res.writeHead(code, { 'Content-Type': type, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', ...extra });
   res.end(typeof body === 'string' || Buffer.isBuffer(body) ? body : JSON.stringify(body));
@@ -117,6 +118,10 @@ const send = (res, code, body, type = 'application/json; charset=utf-8', extra =
 const VERSIONED = ['schema.js', 'favicon.svg'];
 const ver = f => { try { return crypto.createHash('sha1').update(fs.readFileSync(path.join(HTML, f))).digest('hex').slice(0, 10); } catch { return '0'; } };
 const VER = Object.fromEntries(VERSIONED.map(f => [f, ver(f)]));
+// app version = hash of the page files; a new version makes installed apps refresh their offline copy
+const APP_VER = crypto.createHash('sha1').update(['index.html', 'login.html', 'schema.js', 'sw.js', 'manifest.webmanifest']
+  .map(f => { try { return fs.readFileSync(path.join(HTML, f)); } catch { return ''; } }).join('|')).digest('hex').slice(0, 12);
+const SW_JS = (() => { try { return fs.readFileSync(path.join(HTML, 'sw.js'), 'utf8').replace('__VERSION__', APP_VER); } catch { return ''; } })();
 const sendPage = (res, file) => fs.readFile(file, 'utf8', (err, html) => {
   if (err) return send(res, 404, 'Not found', 'text/plain');
   for (const f of VERSIONED) html = html.split(`="${f}"`).join(`="${f}?v=${VER[f]}"`);
@@ -294,11 +299,12 @@ async function api(req, res, url) {
   if (p === '/api/login' && m === 'POST') {
     const ip = clientIp(req);
     if (limited(ip)) return send(res, 429, { error: 'Too many attempts. Try again in 15 minutes.' });
-    const { name = '', password = '' } = await readBody(req, 4096);
+    const { name = '', password = '', remember = false } = await readBody(req, 4096);
     const u = users.find(x => x.name === String(name).trim().toLowerCase());
     if (!u || !checkPw(String(password), u.hash)) { failed(ip); return send(res, 401, { error: 'Wrong username or password' }); }
     attempts.delete(ip);
-    return send(res, 200, { name: u.name, role: u.role }, undefined, { 'Set-Cookie': cookie(makeToken(u.name, u.ver || 0), SESSION_HOURS * 3600) });
+    const life = remember ? REMEMBER_DAYS * 86400 : SESSION_HOURS * 3600; // seconds
+    return send(res, 200, { name: u.name, role: u.role }, undefined, { 'Set-Cookie': cookie(makeToken(u.name, u.ver || 0, life * 1000), life) });
   }
   if (p === '/api/logout' && m === 'POST') return send(res, 200, { ok: true }, undefined, { 'Set-Cookie': cookie('', 0) });
 
@@ -522,7 +528,11 @@ async function api(req, res, url) {
     if (!checkPw(String(current), me.hash)) return send(res, 401, { error: 'Current password is wrong' });
     if (String(next).length < 8) return send(res, 422, { error: 'New password must be at least 8 characters' });
     me.hash = hashPw(String(next)); me.ver = (me.ver || 0) + 1; saveUsers();
-    return send(res, 200, { ok: true }, undefined, { 'Set-Cookie': cookie(makeToken(me.name, me.ver), SESSION_HOURS * 3600) });
+    // keep the same kind of session (a "keep me signed in" session stays long)
+    let life = SESSION_HOURS * 3600;
+    try { const t = /(?:^|;\s*)bm_s=([^;.]+)/.exec(req.headers.cookie || ''); const e = JSON.parse(Buffer.from(t[1], 'base64url').toString()).e;
+      if (e - Date.now() > SESSION_HOURS * 3600e3) life = REMEMBER_DAYS * 86400; } catch {}
+    return send(res, 200, { ok: true }, undefined, { 'Set-Cookie': cookie(makeToken(me.name, me.ver, life * 1000), life) });
   }
 
   // ----- admin-only: settings -----
@@ -596,6 +606,9 @@ const server = http.createServer(async (req, res) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, 'Method not allowed', 'text/plain');
     // public bits: the sign-in page and what it needs
     if (p === '/login' || p === '/login/') return sendPage(res, path.join(HTML, 'login.html'));
+    if (p === '/sw.js') return send(res, 200, SW_JS, 'text/javascript; charset=utf-8');
+    if (p === '/manifest.webmanifest') return sendFile(res, path.join(HTML, 'manifest.webmanifest'), 'no-cache');
+    if (p.startsWith('/icons/')) return sendFile(res, path.join(HTML, 'icons', path.basename(p)), 'public, max-age=86400');
     if (!(p === '/favicon.svg' || p.startsWith('/logos/'))) {
       const me = readSession(req);
       if (!me) {

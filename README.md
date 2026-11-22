@@ -75,6 +75,19 @@ as an .xlsx with all fields, status, value and lost reason.
 takes one a minute after starting. Admin → Settings shows the last backup and has *Back up now*. To restore, stop the
 container and copy the files from a backup folder back into the appdata folder.
 
+**Customers.** The Customers tab lists every company from past RFQs (contact, RFQs, won, win rate, last RFQ).
+Click one for its history: contacts, totals, burners quoted and every RFQ. Reps see other reps' RFQs for that customer as
+summary rows only (who, when, burner, status). Company names in RFQs and Won Jobs link here too.
+
+**Duplicate warning.** When a company on a new RFQ already had an RFQ in the last 90 days, the sheet shows who quoted it,
+when, which burner and its status (red when it's the same burner).
+
+**Install as an app (needs https).** On iPhone/iPad: Safari → Share → *Add to Home Screen*. On Android: Chrome offers
+*Install app* (or use the account menu → *Install app*). The app opens full screen with the Beckett icon. With no signal it
+still shows the matrix, photos and your RFQ list, and new RFQs are saved on the phone, then uploaded and numbered when
+the signal is back. *Keep me signed in* on the sign-in page keeps a session for 30 days (`REMEMBER_DAYS`); it's ticked by
+default inside the installed app. Signing out clears everything the app saved on that device.
+
 **Oil-to-gas helper.** Pick 1–4 nozzles (each can be a different size) and the pump pressure; it works out the real
 firing rate (sum of nozzles × √(psi ÷ 100), × 140 MBH per GPH) and lists every gas burner that covers it,
 conversion burners tagged and first, each with Create RFQ. It can also set the matrix filters.

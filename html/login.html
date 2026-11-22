@@ -3,6 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#1c1c1c">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Burner Matrix">
 <title>Sign in · Burner Selection Matrix</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,6 +30,7 @@ p{margin:0;color:var(--mute);font-size:14px}
 label{display:grid;gap:4px;font-size:13px;font-weight:600}
 input{font:inherit;padding:9px 10px;border:1px solid #b9b9b2;border-radius:3px}
 input:focus{outline:2px solid var(--ink);outline-offset:1px}
+.keep{display:flex !important;align-items:center;gap:8px;font-weight:500 !important;font-size:13.5px !important}.keep input{width:18px;height:18px;padding:0}
 button{font:700 15px Montserrat,Helvetica,Arial,sans-serif;background:var(--red);color:#fff;border:0;border-radius:3px;padding:11px;cursor:pointer}
 button:disabled{opacity:.6}
 .err{background:#fde8ea;color:#8a1020;padding:8px 10px;border-radius:3px;font-size:14px}
@@ -43,6 +51,7 @@ button:disabled{opacity:.6}
     <p>Sign in with the account your admin gave you.</p>
     <label>Username<input id="u" autocomplete="username" autocapitalize="none" required autofocus></label>
     <label>Password<input id="p" type="password" autocomplete="current-password" required></label>
+    <label class="keep"><input type="checkbox" id="k"> Keep me signed in for 30 days</label>
     <button type="submit" id="b">Sign in</button>
     <div id="e" class="err" role="alert" hidden></div>
   </form>
@@ -51,9 +60,11 @@ button:disabled{opacity:.6}
 {
 const $=id=>document.getElementById(id);
 const next=new URLSearchParams(location.search).get('next')==='admin'?'/admin':'/';
+// the installed app keeps people signed in by default; on a browser it's their choice
+$('k').checked=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 fetch('/api/me',{credentials:'same-origin'}).then(r=>{if(r.ok)location.replace(next)}).catch(()=>{});
 $('f').onsubmit=async e=>{e.preventDefault();$('e').hidden=true;$('b').disabled=true;
-  try{const r=await fetch('/api/login',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-BM':'1'},body:JSON.stringify({name:$('u').value,password:$('p').value})});
+  try{const r=await fetch('/api/login',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-BM':'1'},body:JSON.stringify({name:$('u').value,password:$('p').value,remember:$('k').checked})});
     const j=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error(j.error||'Sign-in failed');
     location.replace(j.role==='rep'?'/':next)}

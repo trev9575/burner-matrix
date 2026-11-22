@@ -3,6 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#1c1c1c">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Burner Matrix">
 <title>Burner Selection Matrix</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -241,7 +248,11 @@ a.bn[data-img]{cursor:zoom-in}
 a.colink{color:inherit;text-decoration:underline dotted;text-underline-offset:3px}a.colink:hover{color:var(--red)}
 .dupw{margin:6px 0 10px;padding:10px 12px;border-radius:4px;background:#fff8e6;border:1px solid #f1d28a;border-left:4px solid #e8a23a;font-size:13px;line-height:1.45}
 .dupw.strong{background:#fdecee;border-color:#f3b8bf;border-left-color:#c8102e}.dupw ul{margin:4px 0 6px;padding-left:18px}.dupw a{color:var(--red);font-weight:600}
-@media(max-width:600px){.util .nav{overflow-x:auto;scrollbar-width:none}.util .nav::-webkit-scrollbar{display:none}.util .nav button{white-space:nowrap}}
+@media(max-width:600px){.util{gap:4px}.util .sp{display:none}.util .nav{flex:1 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}.util .nav::-webkit-scrollbar{display:none}.util .nav button{flex:0 0 auto;white-space:nowrap;padding:0 11px}}
+#insd{border:0;border-radius:10px;padding:22px;max-width:420px;width:92vw}#insd::backdrop{background:rgba(0,0,0,.45)}
+.offl{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:70;background:#1c1c1c;color:#fff;font-size:13px;padding:9px 14px;border-radius:20px;box-shadow:0 6px 18px rgba(0,0,0,.25);max-width:92vw;text-align:center}
+.lout{margin:0 0 12px;padding:9px 12px;border-radius:4px;background:#eef4fb;border:1px solid #c9daf0;font-size:13px}.lout a{color:var(--gas);font-weight:600}
+@media(display-mode:standalone){.util{padding-top:env(safe-area-inset-top)}}
 #stdlg{border:0;border-radius:6px;padding:22px;max-width:420px;width:92vw}#stdlg::backdrop{background:rgba(0,0,0,.4)}
 #stdlg form{display:grid;gap:12px}#stdlg label{display:grid;gap:4px;font-size:13px;font-weight:600}#stdlg .sm{font-weight:500;color:var(--mute);font-size:12.5px}
 #stdlg input,#stdlg select{font:inherit;padding:8px 10px;border:1px solid #b9b9b2;border-radius:3px;background:#fff;width:100%;min-height:0}#stdlg .row{display:flex;gap:8px;justify-content:flex-end}
@@ -301,7 +312,7 @@ tr.fu td{background:#fffaf2 !important}
   <span class="sp"></span>
   <div class="ext"><a href="https://www.beckettcorp.com" target="_blank" rel="noopener">beckettcorp.com</a><a href="https://waynecombustion.com/products" target="_blank" rel="noopener">waynecombustion.com</a></div>
   <details class="um" id="um" hidden><summary aria-label="Account menu"><span class="av" id="av"></span><span class="nm" id="whoami"></span><span class="car" aria-hidden="true"></span></summary>
-    <div class="menu"><div class="who" id="whomenu"></div><button type="button" id="profb">My profile</button><button type="button" class="out" id="outb">Sign out</button></div></details>
+    <div class="menu"><div class="who" id="whomenu"></div><button type="button" id="instb" hidden>Install app</button><button type="button" id="profb">My profile</button><button type="button" class="out" id="outb">Sign out</button></div></details>
 </nav>
 <div class="brand" role="banner" id="home" title="Back to the burner matrix" tabindex="0">
   <img src="logos/beckett.png" alt="Beckett" onerror="this.outerHTML='<span class=bk>Beckett</span>'">
@@ -443,6 +454,7 @@ tr.fu td{background:#fffaf2 !important}
     <div class="lbar"><button class="btn" id="lback">← Back to matrix</button><h2 id="ltitle" style="margin:0 8px">My RFQs</h2><span style="flex:1"></span>
       <select id="lwho" aria-label="Whose RFQs" hidden><option value="all">Everyone's RFQs</option><option value="mine">Only mine</option></select>
       <input id="lq" type="search" placeholder="Search number, customer, job, burner…" aria-label="Search RFQs" style="min-width:260px"><button type="button" class="btn" id="lxls">Export to Excel</button></div>
+    <div class="lout" id="lout" hidden></div>
     <div class="stats" id="lstats"></div>
     <div style="overflow-x:auto"><table><thead><tr><th>RFQ #</th><th>Date</th><th>Customer</th><th>Job</th><th>Burner</th><th id="lrepth" hidden>Rep</th><th>Emailed</th><th>Status</th><th>Value</th><th></th></tr></thead><tbody id="lbody"></tbody></table></div>
   </div>
@@ -460,6 +472,17 @@ tr.fu td{background:#fffaf2 !important}
   <ul id="o-list" hidden></ul>
   <div class="row"><button type="button" class="btn" id="o-x">Close</button><button type="button" class="btn pri" id="o-go" disabled>Show in the matrix</button></div>
 </form></dialog>
+<dialog id="insd"><div style="display:grid;gap:12px">
+  <div style="display:flex;gap:12px;align-items:center"><img src="/icons/icon-192.png" alt="" width="56" height="56" style="border-radius:12px"><h2 style="font-size:20px;margin:0">Install Burner Matrix</h2></div>
+  <ol style="margin:0;padding-left:20px;line-height:1.7;font-size:14.5px">
+    <li>In <b>Safari</b>, tap the <b>Share</b> button <span aria-hidden="true" style="display:inline-block;border:1.5px solid currentColor;border-radius:4px;padding:0 5px;font-size:12px">⬆</span> (bottom of the screen on iPhone, top on iPad).</li>
+    <li>Scroll down and tap <b>Add to Home Screen</b>, then <b>Add</b>.</li>
+    <li>Open <b>Burner Matrix</b> from your home screen and sign in once. Tick <b>Keep me signed in</b>.</li>
+  </ol>
+  <p class="sm" style="margin:0">The app opens full screen and still shows the matrix and your RFQs with no signal. RFQs you make offline upload when you’re back online.</p>
+  <div style="display:flex;justify-content:flex-end"><button type="button" class="btn pri" id="insx">Got it</button></div>
+</div></dialog>
+<div class="offl noprint" id="offl" hidden>You’re offline – showing saved data. New RFQs are saved on this device and upload when you’re back online.</div>
 <dialog id="stdlg"><form id="stf">
   <h2 id="sth" style="font-size:20px"></h2>
   <p id="stsub" class="sm" style="margin:0"></p>
@@ -600,7 +623,7 @@ function o2gRender(){const c=o2gCalc();$('o-go').disabled=!c;const ul=$('o-list'
 $('o-n').addEventListener('change',()=>{o2gNozzles();o2gRender()});$('o-psi').addEventListener('input',o2gRender);o2gNozzles();
 const o2gApply=c=>{CONV=c;S={...JSON.parse(JSON.stringify(DEF)),fuel:'gas',rate:String(c.mbh),unit:'mbh'};sync();$('o2g').close()};
 $('o-list').onclick=e=>{const b=e.target.closest('.rfqb');const c=o2gCalc();if(!b||!c)return;const x=D.find(o=>(o.b+'|'+o.n).toLowerCase()===b.dataset.k);if(!x)return;
-  o2gApply(c);b.disabled=true;nextSeq().then(n=>openRFQ(x,{no:rfqNo(x,n)})).catch(err=>toast(err.message)).finally(()=>b.disabled=false)};
+  o2gApply(c);b.disabled=true;newRFQ(x).catch(err=>toast(err.message)).finally(()=>b.disabled=false)};
 $('o2gb').onclick=()=>{o2gRender();$('o2g').showModal();const f=document.querySelector('#o-nz .o-g');if(f)f.focus()};
 $('o-x').onclick=()=>$('o2g').close();
 $('o-go').onclick=()=>{const c=o2gCalc();if(!c)return;o2gApply(c);
@@ -635,6 +658,7 @@ async function nextSeq(){const date=ymd();
   let r=null;try{r=await fetch('api/rfq-seq',{method:'POST',headers:{'Content-Type':'application/json','X-BM':'1'},body:JSON.stringify({date})})}catch(e){}
   if(r&&r.ok){const j=await r.json();if(j.date===date&&j.n>0)return j.n}
   if(r&&r.status===401){location.replace('login');throw new Error('Signed out')}
+  if(!r&&ME)throw Object.assign(new Error('offline'),{offline:true});
   if(ME||(r&&r.status!==404))throw new Error('Could not get an RFQ number from the server. Try again.');
   let o=seqMem;try{o=JSON.parse(localStorage.getItem('bm-rfq-seq')||'{}')}catch(e){}
   const n=o.date===date?(o.n||0)+1:1;seqMem={date,n};try{localStorage.setItem('bm-rfq-seq',JSON.stringify(seqMem))}catch(e){}return n}
@@ -664,7 +688,7 @@ const rawOf=x=>RAW.find(o=>(o.brand+'|'+o.name).toLowerCase()===(x.b+'|'+x.n).to
 let RFQ=null;
 // meta: {no, date?, id?, raw?, fit?, fields?, sends?, by?, from?}
 function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);$('sheet').classList.remove('ro');
-  RFQ={ro:!!meta.ro,id:meta.id||null,no:meta.no,date:meta.date||new Date().toISOString(),raw:meta.raw||rawOf(x),sends:meta.sends||[],by:meta.by||'',byFull:meta.byFull||'',from:meta.from||'matrix',dirty:false};
+  RFQ={offline:!!meta.offline,oid:meta.oid||'',ymd:meta.ymd||'',ro:!!meta.ro,id:meta.id||null,no:meta.offline?'Offline draft':meta.no,date:meta.date||new Date().toISOString(),raw:meta.raw||rawOf(x),sends:meta.sends||[],by:meta.by||'',byFull:meta.byFull||'',from:meta.from||'matrix',dirty:false};
   const fz0=fit(x,r);RFQ.fit=meta.fit!==undefined?meta.fit:(fz0==='edge'?where(x,r):fz0||'');
   const rateTxt=r==null?'':(S.unit==='gph'?`${S.rate} GPH (≈ ${Math.round(r).toLocaleString()} MBH)`:`${Number(S.rate).toLocaleString()} MBH${x.f==='oil'?` (≈ ${(r/G).toFixed(2)} GPH)`:''}`);
   const siteKeys=S.volt.filter(v=>x.v.includes(v));const site=siteKeys.map(vlabel).join(', ');
@@ -786,19 +810,20 @@ function lockSheet(){outputMode(true);RFQ.ro=true;RFQ.dirty=false;const sh=$('sh
   sh.querySelectorAll('input,textarea').forEach(el=>el.readOnly=true);sh.querySelectorAll('select').forEach(el=>el.disabled=true);rfqStatus()}
 $('sheet').addEventListener('input',()=>{if(RFQ&&!RFQ.ro){RFQ.dirty=true;rfqStatus()}});
 $('sheet').addEventListener('change',()=>{if(RFQ&&!RFQ.ro){RFQ.dirty=true;rfqStatus()}});
-function rfqStatus(){const on=!!ME;['rfqpdf','rfqsend'].forEach(i=>$(i).hidden=!on);$('rfqsave').hidden=!on||!!(RFQ&&RFQ.ro);$('rfqdup').hidden=!on||!(RFQ&&RFQ.ro);$('rfqdel').hidden=!canDel(RFQ&&RFQ.id&&{by:RFQ.by||(ME&&ME.name),sent:RFQ.sends.length});if(!on||!RFQ){$('rfqst').textContent='';return}
+function rfqStatus(){const on=!!ME;['rfqpdf','rfqsend'].forEach(i=>$(i).hidden=!on||!!(RFQ&&RFQ.offline));
+  if(RFQ&&RFQ.offline){$('rfqsave').hidden=false;$('rfqsave').disabled=RFQ.saved&&!RFQ.dirty;$('rfqdup').hidden=true;$('rfqdel').hidden=true;$('rfqst').textContent=RFQ.saved?(RFQ.dirty?'Unsaved changes':'Saved on this device – uploads and gets its number when you’re back online'):'Offline draft – not saved yet';return}$('rfqsave').hidden=!on||!!(RFQ&&RFQ.ro);$('rfqdup').hidden=!on||!(RFQ&&RFQ.ro);$('rfqdel').hidden=!canDel(RFQ&&RFQ.id&&{by:RFQ.by||(ME&&ME.name),sent:RFQ.sends.length});if(!on||!RFQ){$('rfqst').textContent='';return}
   const last=RFQ.sends.slice(-1)[0];
   $('rfqst').innerHTML=esc((RFQ.id?(RFQ.dirty?'Unsaved changes':'Saved'):'Not saved yet')+(last?` · emailed ${fmtD(last.at)} to ${last.to.join(', ')}`:'')+(RFQ.by&&ME&&RFQ.by!==ME.name?` · by ${RFQ.byFull||RFQ.by}`:''))+(RFQ.ro?'<span class="robadge">Read-only</span>':'');
   $('rfqsave').disabled=!!RFQ.id&&!RFQ.dirty}
 const rfqFields=()=>{const f={};$('sheet').querySelectorAll('input[id^="q-"],select[id^="q-"],textarea[id^="q-"]').forEach(el=>f[el.id]=el.value);return f};
 const J=async(method,url,body)=>{const r=await fetch(url,{method,credentials:'same-origin',headers:body!==undefined?{'Content-Type':'application/json','X-BM':'1'}:{'X-BM':'1'},body:body!==undefined?JSON.stringify(body):undefined});
   if(r.status===401){location.replace('login');throw new Error('Signed out')}let j={};try{j=await r.json()}catch(e){}if(!r.ok)throw new Error(j.error||'HTTP '+r.status);return j};
-async function saveRFQ(quiet){if(!ME||!RFQ)return null;if(RFQ.id&&(!RFQ.dirty||RFQ.ro))return RFQ.id;
+async function saveRFQ(quiet){if(!ME||!RFQ)return null;if(RFQ.offline){if(RFQ.dirty||!RFQ.saved)saveOffline(quiet);return null}if(RFQ.id&&(!RFQ.dirty||RFQ.ro))return RFQ.id;
   const rec=RFQ.id?await J('PUT','api/rfqs/'+RFQ.id,{fields:rfqFields()}):await J('POST','api/rfqs',{no:RFQ.no,burner:RFQ.raw,fit:RFQ.fit,locks:RFQ.locks||[],fields:rfqFields()});
   RFQ.id=rec.id;RFQ.dirty=false;RFQ.date=rec.date;rfqStatus();if(!quiet)toast('RFQ saved');return RFQ.id}
 async function closeRFQ(){if(RFQ&&RFQ.dirty&&ME){try{await saveRFQ(true);toast('RFQ saved')}catch(e){toast('Could not save: '+e.message);return}}
   $('rfqv').hidden=true;if(RFQ&&RFQ.from==='list'){RFQ=null;return openList()}if(RFQ&&RFQ.from==='won'){RFQ=null;return openWon()}if(RFQ&&RFQ.from==='hist'&&HIST){RFQ=null;return openHistory(HIST.company)}RFQ=null;$('matrixv').hidden=false;if(rfqB){const t=$('r-'+rfqB.n.replace(/\W/g,''));if(t)t.scrollIntoView({block:'center'})}}
-$('tb').addEventListener('click',e=>{const b=e.target.closest('.rfqb');if(!b)return;const x=D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===b.dataset.k);if(x){b.disabled=true;nextSeq().then(n=>openRFQ(x,{no:rfqNo(x,n)})).catch(err=>toast(err.message)).finally(()=>b.disabled=false)}});
+$('tb').addEventListener('click',e=>{const b=e.target.closest('.rfqb');if(!b)return;const x=D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===b.dataset.k);if(x){b.disabled=true;newRFQ(x).catch(err=>toast(err.message)).finally(()=>b.disabled=false)}});
 $('rfqback').onclick=closeRFQ;
 addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('rfqv').hidden&&!document.querySelector('dialog[open]')&&!$('um').open)closeRFQ()});
 $('rfqprint').onclick=()=>{try{window.print()}catch(e){toast('Printing is blocked here. Open the page on your server to print.')}};
@@ -813,7 +838,7 @@ const rfqText=()=>{const L=[],sh=$('sheet');
 $('rfqcopy').onclick=async()=>{try{if(ME)await saveRFQ(true);await navigator.clipboard.writeText(rfqText());toast('RFQ copied')}catch(e){toast('Copy blocked by browser')}};
 $('rfqdup').onclick=async e=>{const b=e.currentTarget;if(!RFQ)return;b.disabled=true;
   try{const f=rfqFields(),raw=RFQ.raw,fk=RFQ.fit,from=RFQ.from,locks=RFQ.locks||[];delete f['q-rep'];delete f['q-repp'];delete f['q-repe'];
-    const x=toRec(raw),n=await nextSeq();openRFQ(x,{no:rfqNo(x,n),raw,fit:fk,fields:f,from,locks});toast('New RFQ '+RFQ.no+' – make your changes, then save or email it')}
+    const x=toRec(raw);await newRFQ(x,{raw,fit:fk,fields:f,from,locks});if(!RFQ.offline)toast('New RFQ '+RFQ.no+' – make your changes, then save or email it')}
   catch(err){toast(err.message)}finally{b.disabled=false}};
 $('rfqdel').onclick=async e=>{try{if(await delRFQ(RFQ.id,e.currentTarget,RFQ.sends.length>0)){const from=RFQ.from;RFQ=null;$('rfqv').hidden=true;from==='list'?openList():from==='won'?openWon():from==='hist'&&HIST?openHistory(HIST.company):($('matrixv').hidden=false)}}catch(err){toast(err.message)}};
 $('rfqsave').onclick=async()=>{try{await saveRFQ()}catch(e){toast('Could not save: '+e.message)}};
@@ -1063,6 +1088,45 @@ function dupCheck(){clearTimeout(dupT);dupT=setTimeout(async()=>{const box=$('du
   box.hidden=false},450)}
 $('sheet').addEventListener('input',e=>{if(e.target.id==='q-co')dupCheck()});
 
+/* ---------- installed app: offline drafts, install button, service worker ---------- */
+const OUTBOX='bm-outbox';
+const getOutbox=()=>{try{return JSON.parse(localStorage.getItem(OUTBOX)||'[]')}catch(e){return[]}};
+const setOutbox=a=>{try{localStorage.setItem(OUTBOX,JSON.stringify(a))}catch(e){toast('This device could not save the RFQ (storage full or blocked).')}};
+// start a new RFQ: numbered by the server, or an offline draft when there's no connection
+async function newRFQ(x,meta={}){try{const n=await nextSeq();openRFQ(x,{...meta,no:rfqNo(x,n)})}
+  catch(err){if(!err.offline)throw err;openRFQ(x,{...meta,offline:true,oid:'o'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),ymd:ymd()});toast('No connection – this RFQ will be saved on this device and numbered when you’re back online.')}}
+function saveOffline(quiet){const ob=getOutbox().filter(o=>o.oid!==RFQ.oid);
+  ob.push({oid:RFQ.oid,ymd:RFQ.ymd,date:RFQ.date,model:modelCode(rfqB.n),raw:RFQ.raw,fit:RFQ.fit,locks:RFQ.locks||[],fields:rfqFields(),by:ME&&ME.name});
+  setOutbox(ob);RFQ.dirty=false;RFQ.saved=true;rfqStatus();if(!quiet)toast('Saved on this device');offlineNote()}
+let syncing=false;
+async function syncOutbox(){if(syncing||!ME||!navigator.onLine)return;const ob=getOutbox().filter(o=>!o.by||o.by===ME.name);if(!ob.length)return;syncing=true;let done=0;
+  try{for(const o of ob){let n;
+      try{const r=await fetch('api/rfq-seq',{method:'POST',headers:{'Content-Type':'application/json','X-BM':'1'},body:JSON.stringify({date:o.ymd})});if(!r.ok)break;n=(await r.json()).n}catch(e){break}
+      const no=`${o.ymd}-${String(n).padStart(2,'0')}${o.model}`;let rec;
+      try{rec=await J('POST','api/rfqs',{no,burner:o.raw,fit:o.fit,locks:o.locks,fields:o.fields})}catch(e){toast('Could not upload an offline RFQ: '+e.message);break}
+      setOutbox(getOutbox().filter(x=>x.oid!==o.oid));done++;
+      if(RFQ&&RFQ.offline&&RFQ.oid===o.oid){RFQ.offline=false;RFQ.id=rec.id;RFQ.no=rec.no;RFQ.date=rec.date;const m=$('sheet').querySelector('.meta b');if(m)m.textContent=rec.no;
+        if(RFQ.dirty){RFQ.dirty=false;await saveRFQ(true).catch(()=>{})}rfqStatus()}}}
+  finally{syncing=false}
+  if(done){toast(`${done} RFQ${done>1?'s':''} saved on this device ${done>1?'were':'was'} uploaded`);offlineNote();if(!$('listv').hidden)openList();else refreshFollow()}}
+function offlineNote(){const el=$('lout');if(!el)return;const ob=ME?getOutbox().filter(o=>!o.by||o.by===ME.name):[];el.hidden=!ob.length;
+  el.innerHTML=ob.length?`<b>${ob.length} RFQ${ob.length>1?'s':''} saved on this device</b> ${navigator.onLine?'– uploading…':'– will upload when you’re back online'}: `+ob.map(o=>`<a href="#" data-oid="${esc(o.oid)}">${esc(o.fields['q-co']||'(no company)')} – ${esc(o.raw.brand+' '+o.raw.name)}</a>`).join(', '):''}
+$('lout').onclick=e=>{const a=e.target.closest('a[data-oid]');if(!a)return;e.preventDefault();const o=getOutbox().find(x=>x.oid===a.dataset.oid);if(!o)return;
+  openRFQ(toRec(o.raw),{offline:true,oid:o.oid,ymd:o.ymd,date:o.date,raw:o.raw,fit:o.fit,locks:o.locks,fields:o.fields,from:'list'});RFQ.saved=true;rfqStatus()};
+function netState(){$('offl').hidden=navigator.onLine;if(navigator.onLine)syncOutbox();offlineNote()}
+addEventListener('online',netState);addEventListener('offline',netState);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncOutbox()});
+// install: Android/desktop Chrome gives a prompt; iPhone/iPad need Share → Add to Home Screen
+const STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+let installEvt=null;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;if(!STANDALONE)$('instb').hidden=false});
+addEventListener('appinstalled',()=>{$('instb').hidden=true;toast('Installed – open Burner Matrix from your home screen')});
+if(IOS&&!STANDALONE)$('instb').hidden=false;
+$('instb').onclick=async()=>{$('um').open=false;if(installEvt){installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;return}$('insd').showModal()};
+$('insx').onclick=()=>$('insd').close();
+if('serviceWorker' in navigator&&!PDFMODE&&isSecureContext)navigator.serviceWorker.register('/sw.js').catch(()=>{});
+
 $('wwho').onchange=renderWon;
 $('wbody').onclick=e=>{const tr=e.target.closest('tr[data-id]');if(tr)openSaved(tr.dataset.id,'won').catch(err=>toast(err.message))};
 $('wonb').onclick=()=>{if(!$('rfqv').hidden&&RFQ&&RFQ.dirty){saveRFQ(true).then(openWon,err=>toast('Could not save: '+err.message))}else openWon()};
@@ -1072,7 +1136,7 @@ $('rfqsb').onclick=()=>{if(!$('rfqv').hidden&&RFQ&&RFQ.dirty){saveRFQ(true).then
 function showMe(){if(!ME)return;$('rfqsb').textContent=ME.role==='rep'?'My RFQs':'RFQs';$('acct').hidden=false;$('um').hidden=false;
   const nm=ME.full||ME.name,ini=(ME.full?ME.full.split(/\s+/).map(w=>w[0]).join(''):ME.name.replace(/@.*/,'').slice(0,2)).slice(0,2).toUpperCase();
   $('navadm').hidden=ME.role==='rep';$('av').textContent=ini;$('whoami').textContent=nm;$('whomenu').innerHTML=`<b>${esc(nm)}</b><small>${esc(ME.email||ME.name)} · ${{rep:'Rep',editor:'Editor',admin:'Admin'}[ME.role]||ME.role}</small>`;const a=$('adminl');if(a)a.hidden=ME.role==='rep'}
-const ME_P=fetch('api/me',{credentials:'same-origin'}).then(r=>r.ok?r.json():null).then(j=>{if(j){ME=j;showMe();if(RFQ)rfqStatus();if(!PDFMODE)refreshFollow()}}).catch(()=>{});
+const ME_P=fetch('api/me',{credentials:'same-origin'}).then(r=>r.ok?r.json():null).then(j=>{if(j){ME=j;showMe();if(RFQ)rfqStatus();if(!PDFMODE){refreshFollow();netState()}}}).catch(()=>{});
 // ?rfq=<id> opens a saved RFQ; &pdf=1 is the server's PDF renderer
 const RFQ_Q=new URLSearchParams(location.search).get('rfq');
 if(RFQ_Q)ME_P.then(()=>openSaved(RFQ_Q,'list')).then(async()=>{if(!PDFMODE)return;
@@ -1099,7 +1163,11 @@ $('proff').onsubmit=async e=>{e.preventDefault();$('pf-err').hidden=true;
     if(RFQ&&!RFQ.ro&&!$('rfqv').hidden){$('q-rep').value=repName();$('q-repp').value=repPhone();$('q-repe').value=repEmail();RFQ.dirty=true;rfqStatus()}
     toast(pw?'Profile and password saved':'Profile saved')}
   catch(err){$('pf-err').textContent=err.message;$('pf-err').hidden=false}};
-$('outb').onclick=async()=>{try{await fetch('api/logout',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-BM':'1'},body:'{}'})}catch(e){}location.replace('login')};
+$('outb').onclick=async e=>{const b=e.currentTarget,ob=getOutbox().filter(o=>!o.by||o.by===(ME&&ME.name));
+  if(ob.length&&!b.dataset.armed){b.dataset.armed=1;b.textContent=`Sign out anyway (${ob.length} RFQ${ob.length>1?'s':''} not uploaded)`;toast(`${ob.length} RFQ${ob.length>1?'s':''} saved on this device haven’t uploaded yet. Signing out deletes ${ob.length>1?'them':'it'}.`);setTimeout(()=>{delete b.dataset.armed;b.textContent='Sign out'},6000);return}
+  try{await fetch('api/logout',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-BM':'1'},body:'{}'})}catch(err){}
+  try{localStorage.removeItem(OUTBOX);if(navigator.serviceWorker&&navigator.serviceWorker.controller)navigator.serviceWorker.controller.postMessage('logout');if(window.caches)for(const k of await caches.keys())await caches.delete(k)}catch(err){}
+  location.replace('login')};
 fetch('burners.json',{cache:'no-cache'}).then(r=>{if(r.status===401){location.replace('login');throw new Error('Signed out')}if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(list=>{
   const bad=BurnerSchema.checkAll(list);if(bad.length)console.warn('burners.json problems:',bad);
   RAW=list;D=list.filter(o=>BurnerSchema.check(o).length===0).map(toRec);
