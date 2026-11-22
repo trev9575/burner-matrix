@@ -83,6 +83,10 @@ container and copy the files from a backup folder back into the appdata folder.
 **Customers.** The Customers tab lists every company from past RFQs (contact, RFQs, won, win rate, last RFQ).
 Click one for its history: contacts, totals, burners quoted and every RFQ. Reps see other reps' RFQs for that customer as
 summary rows only (who, when, burner, status). Company names in RFQs and Jobs link here too.
+*+ Add customer* saves a company (address, any number of contacts, notes) before it has any RFQs; it shows up in the
+list and in the RFQ address book right away. *Edit details* on a customer's page changes its saved address, contacts
+and notes (allowed for whoever added it, any rep who has quoted it, editors and admins). Saved details are stored in
+`customers.json` in the data folder and are included in the nightly backup.
 
 **Duplicate warning.** When a company on a new RFQ already had an RFQ in the last 90 days, the sheet shows who quoted it,
 when, which burner and its status (red when it's the same burner).

@@ -33,6 +33,7 @@ const F = {
   photos: path.join(DATA, 'photos'),
   rfqs: path.join(DATA, 'rfqs'),
   settings: path.join(DATA, 'settings.json'),
+  customers: path.join(DATA, 'customers.json'),
 };
 
 // ---------- storage ----------
@@ -247,6 +248,20 @@ function scheduleBackup() {
 const rfqFile = id => path.join(F.rfqs, id + '.json');
 const getRfq = id => /^[a-f0-9]{12}$/.test(id) ? readJSON(rfqFile(id), null) : null;
 const allRfqs = () => fs.readdirSync(F.rfqs).filter(f => f.endsWith('.json')).map(f => readJSON(path.join(F.rfqs, f), null)).filter(r => r && r.burner && r.fields);
+// saved customers (Customers → Add customer); RFQs add to these automatically
+const getCustomers = () => { const l = readJSON(F.customers, []); return Array.isArray(l) ? l.filter(c => c && typeof c.company === 'string' && Array.isArray(c.contacts)) : []; };
+const saveCustomers = l => writeJSON(F.customers, l, true);
+const cleanCustomer = b => {
+  const str = (x, n) => String(x == null ? '' : x).replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, n);
+  const company = str(b.company, 120).replace(/\s+/g, ' ');
+  if (!company) return { error: 'Enter a company name.' };
+  const contacts = (Array.isArray(b.contacts) ? b.contacts : []).slice(0, 20).map(x => ({ name: str(x && x.name, 80), phone: str(x && x.phone, 40), email: str(x && x.email, 120) }))
+    .filter(x => x.name || x.phone || x.email);
+  if (contacts.some(x => !x.name)) return { error: 'Each contact needs a name.' };
+  if (contacts.some(x => x.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x.email))) return { error: 'Check the contact email addresses.' };
+  const seen = new Set(); for (const x of contacts) { const n = x.name.toLowerCase(); if (seen.has(n)) return { error: `${x.name} is listed twice.` }; seen.add(n); }
+  return { company, address: String(b.address == null ? '' : b.address).replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, ' ').trim().slice(0, 300), contacts, notes: str(b.notes, 1000) };
+};
 const custKey = s => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
 const effSt = r => r.status || ((r.sends || []).length ? 'sent' : 'draft');
 // what anyone may see about an RFQ that isn't theirs: no customer details, contacts, values or notes
@@ -354,27 +369,67 @@ async function api(req, res, url) {
     return send(res, 200, XLSX.build({ sheet: 'RFQs', cols, rows }), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       { 'Content-Disposition': `attachment; filename="${name}"` });
   }
-  if (p === '/api/customers' && m === 'GET') { // address book + per-customer totals, built from everyone's RFQs (newest details win)
-    const by = new Map(), staff = me.role !== 'rep';
+  if (p === '/api/customers' && m === 'GET') { // address book + per-customer totals: saved customers + everyone's RFQs (newest details win)
+    const by = new Map(), staff = me.role !== 'rep', saved = getCustomers();
     for (const r of allRfqs().sort((a, b) => String(a.date).localeCompare(String(b.date)))) {
       const co = String(r.fields['q-co'] || '').trim(); if (!co) continue;
       const k = custKey(co), c = by.get(k) || { company: co, address: '', contacts: new Map(), rfqs: 0, won: 0, lost: 0, valueWon: 0, last: '', lastBurner: '', mine: 0 };
       c.company = co; if (r.fields['q-addr']) c.address = r.fields['q-addr'];
       const ct = String(r.fields['q-ct'] || '').trim();
-      if (ct) { const p0 = c.contacts.get(ct.toLowerCase()) || {}; c.contacts.set(ct.toLowerCase(), { name: ct, phone: r.fields['q-ph'] || p0.phone || '', email: r.fields['q-em'] || p0.email || '' }); }
+      if (ct) { const p0 = c.contacts.get(ct.toLowerCase()) || {}; c.contacts.delete(ct.toLowerCase()); c.contacts.set(ct.toLowerCase(), { name: ct, phone: r.fields['q-ph'] || p0.phone || '', email: r.fields['q-em'] || p0.email || '' }); }
       const st = effSt(r); c.rfqs++; if (st === 'won') { c.won++; if (typeof r.value === 'number' && (staff || r.by === me.name)) c.valueWon += r.value; } if (st === 'lost') c.lost++;
       c.last = r.date; c.lastBurner = `${r.burner.brand} ${r.burner.name}`; if (r.by === me.name) c.mine++;
       by.set(k, c);
     }
-    return send(res, 200, [...by.values()].map(c => ({ ...c, contacts: [...c.contacts.values()].reverse() }))
-      .sort((a, b) => a.company.localeCompare(b.company)));
+    const out = [...by.entries()].map(([k, c]) => ({ key: k, ...c, contacts: [...c.contacts.values()].reverse() }));
+    for (const sc of saved) { // saved details: their address and contacts come first; RFQ contacts not already listed follow
+      const k = custKey(sc.company); let c = out.find(x => x.key === k);
+      if (!c) out.push(c = { key: k, company: sc.company, address: '', contacts: [], rfqs: 0, won: 0, lost: 0, valueWon: 0, last: '', lastBurner: '', mine: 0 });
+      if (sc.address) c.address = sc.address;
+      const names = new Set(sc.contacts.map(x => x.name.toLowerCase()));
+      c.contacts = [...sc.contacts.map(x => { const r = c.contacts.find(y => y.name.toLowerCase() === x.name.toLowerCase()) || {}; return { name: x.name, phone: x.phone || r.phone || '', email: x.email || r.email || '' }; }),
+        ...c.contacts.filter(x => !names.has(x.name.toLowerCase()))];
+      Object.assign(c, { saved: true, notes: sc.notes || '', addedBy: sc.byFull || sc.by, added: sc.added, canEdit: staff || sc.by === me.name || c.mine > 0 });
+    }
+    for (const c of out) { if (!c.saved) c.canEdit = true; delete c.key; }
+    return send(res, 200, out.sort((a, b) => a.company.localeCompare(b.company)));
+  }
+  if (p === '/api/customers' && (m === 'POST' || m === 'PUT')) { // add a customer, or save/edit the details of one
+    const b = (await readBody(req, 64 * 1024)) || {}, list = getCustomers();
+    const v = cleanCustomer(b); if (v.error) return send(res, 422, v);
+    const staff = me.role !== 'rep', k = custKey(v.company), now = new Date().toISOString();
+    const rfqNames = new Set(allRfqs().map(r => custKey(r.fields['q-co'])).filter(Boolean));
+    if (m === 'POST') {
+      const ex = list.find(c => custKey(c.company) === k) || (rfqNames.has(k) && { company: String(allRfqs().find(r => custKey(r.fields['q-co']) === k).fields['q-co']).trim() });
+      if (ex) return send(res, 409, { error: `${ex.company} is already in the customer list. Open it to change its details.`, company: ex.company });
+      list.push({ ...v, by: me.name, byFull: me.full || me.name, added: now, updated: now });
+      saveCustomers(list); return send(res, 201, { ok: true, company: v.company });
+    }
+    const ok_ = custKey(b.original || v.company), i = list.findIndex(c => custKey(c.company) === ok_);
+    if (i < 0 && !rfqNames.has(ok_)) return send(res, 404, { error: 'No such customer' });
+    const quoted = k2 => allRfqs().some(r => r.by === me.name && custKey(r.fields['q-co']) === k2);
+    if (i >= 0 && !staff && list[i].by !== me.name && !quoted(ok_)) return send(res, 403, { error: 'Only the person who added this customer, a rep who has quoted it, an editor or an admin can change it.' });
+    if (k !== ok_) { // renaming is only for customers with no RFQs yet (RFQs keep the name they were made with)
+      if (rfqNames.has(ok_)) return send(res, 409, { error: 'This customer already has RFQs, so its name can’t be changed here.' });
+      if (list.some((c, j) => j !== i && custKey(c.company) === k) || rfqNames.has(k)) return send(res, 409, { error: `${v.company} is already in the customer list.` });
+    }
+    if (i >= 0) list[i] = { ...list[i], ...v, updated: now, updatedBy: me.name };
+    else list.push({ ...v, by: me.name, byFull: me.full || me.name, added: now, updated: now });
+    saveCustomers(list); return send(res, 200, { ok: true, company: v.company });
+  }
+  if (p === '/api/customers' && m === 'DELETE') { // removes the saved details only; RFQs (and the customer, if it has any) stay
+    const b = (await readBody(req, 4096)) || {}, list = getCustomers(), k = custKey(b.company), i = list.findIndex(c => custKey(c.company) === k);
+    if (i < 0) return send(res, 404, { error: 'No saved details for that customer' });
+    if (me.role === 'rep' && list[i].by !== me.name && !allRfqs().some(r => r.by === me.name && custKey(r.fields['q-co']) === k)) return send(res, 403, { error: 'Only the person who added this customer, a rep who has quoted it, an editor or an admin can remove it.' });
+    list.splice(i, 1); saveCustomers(list); return send(res, 200, { ok: true });
   }
   if (p === '/api/customers/history' && m === 'GET') { // every RFQ for one customer; others' RFQs are summary-only for reps
     const k = custKey(url.searchParams.get('company'));
     if (!k) return send(res, 400, { error: 'Missing company' });
     const rows = allRfqs().filter(r => custKey(r.fields['q-co']) === k).sort((a, b) => String(b.date).localeCompare(String(a.date)));
-    if (!rows.length) return send(res, 404, { error: 'No RFQs for that customer' });
-    return send(res, 200, { company: String(rows[0].fields['q-co']).trim(), rfqs: rows.map(r => canSee(me, r) ? { ...rfqSummary(r), open: true } : limitedRfq(r)) });
+    const sc = getCustomers().find(c => custKey(c.company) === k);
+    if (!rows.length && !sc) return send(res, 404, { error: 'No such customer' });
+    return send(res, 200, { company: rows.length ? String(rows[0].fields['q-co']).trim() : sc.company, rfqs: rows.map(r => canSee(me, r) ? { ...rfqSummary(r), open: true } : limitedRfq(r)) });
   }
   if (p === '/api/customers/recent' && m === 'GET') { // for the duplicate warning: same customer in the last 90 days
     const k = custKey(url.searchParams.get('company')), skip = url.searchParams.get('exclude') || '', since = Date.now() - 90 * 864e5;

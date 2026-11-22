@@ -244,6 +244,13 @@ a.bn[data-img]{cursor:zoom-in}
 .ctable td{padding:8px;border-bottom:1px solid var(--rule);vertical-align:top}#cbody tr,#hbody tr.hopen{cursor:pointer}#cbody tr:hover td,#hbody tr.hopen:hover td{background:#f6f6f3}
 #hbody tr.hlim td{color:#77776f}.sm{font-size:12.5px;color:var(--mute)}
 #histv .tiles{display:flex;flex-wrap:wrap;gap:12px;margin:4px 0 16px}#histv .tile{border:1px solid var(--rule);border-radius:6px;padding:10px 16px;min-width:120px}#histv .tile b{display:block;font-size:24px;line-height:1.1}#histv .tile span{font-size:12.5px;color:var(--mute)}
+#custd{border:0;border-radius:6px;padding:22px;max-width:560px;width:94vw}#custd::backdrop{background:rgba(0,0,0,.4)}
+#custd form{display:grid;gap:12px}#custd label,.cu-lab{display:grid;gap:4px;font-size:13px;font-weight:600}#custd .sm{font-weight:500;color:var(--mute);font-size:12.5px}
+#custd input,#custd textarea{font:inherit;padding:8px 10px;border:1px solid #b9b9b2;border-radius:3px;background:#fff;width:100%;min-height:0;box-sizing:border-box}#custd textarea{resize:none}
+#custd .lnk{font:600 13px Montserrat,sans-serif;background:none;border:0;padding:0;color:var(--red);cursor:pointer;text-decoration:underline}#custd .row{display:flex;gap:8px;align-items:center}.cu-ct{display:grid;grid-template-columns:1.2fr 1fr 1.4fr 30px;gap:6px;margin:4px 0 6px}
+.cu-ct button{border:0;background:none;font-size:20px;line-height:1;color:var(--mute);cursor:pointer;border-radius:3px}.cu-ct button:hover{background:#eee;color:var(--ink)}
+@media(max-width:560px){.cu-ct{grid-template-columns:1fr 30px;padding-bottom:10px;border-bottom:1px solid var(--rule)}.cu-ct input:not(:first-child){grid-column:1}.cu-ct button{grid-column:2;grid-row:1}}
+.btn.danger{color:#b3261e;border-color:#d9a19c}.hnotes{white-space:pre-wrap;font-size:13.5px;background:#f6f6f3;border-left:3px solid var(--rule);padding:8px 12px;margin:0 0 14px}
 .hcontacts{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 14px}.hc{border:1px solid var(--rule);border-radius:6px;padding:8px 12px;display:grid;font-size:13px}.hc b{font-size:14px}.hc a{color:var(--gas)}
 a.colink{color:inherit;text-decoration:underline dotted;text-underline-offset:3px}a.colink:hover{color:var(--red)}
 .dupw{margin:6px 0 10px;padding:10px 12px;border-radius:4px;background:#fff8e6;border:1px solid #f1d28a;border-left:4px solid #e8a23a;font-size:13px;line-height:1.45}
@@ -452,13 +459,16 @@ tr.fu td{background:#fffaf2 !important}
   <div class="panel">
     <div class="lbar"><h2 style="margin:0">Customers</h2><span class="sm" id="ccount" style="margin-left:6px"></span><span style="flex:1"></span>
       <select id="csort" aria-label="Sort customers"><option value="name">A–Z</option><option value="recent">Most recent</option><option value="rfqs">Most RFQs</option></select>
-      <input id="cq" type="search" placeholder="Search company, contact, phone…" aria-label="Search customers" style="min-width:240px"></div>
+      <input id="cq" type="search" placeholder="Search company, contact, phone…" aria-label="Search customers" style="min-width:240px">
+      <button type="button" class="btn pri" id="cadd">+ Add customer</button></div>
     <div style="overflow-x:auto"><table class="ctable"><thead><tr><th>Company</th><th>Contact</th><th class="n">RFQs</th><th class="n">Won</th><th class="n">Win rate</th><th class="n" id="cvalth" hidden>Value won</th><th>Last RFQ</th></tr></thead><tbody id="cbody"></tbody></table></div>
   </div>
 </section>
 <section id="histv" hidden class="wv">
   <div class="panel">
-    <div class="lbar"><button class="btn" id="hback">← All customers</button><div id="hhead" style="margin-left:8px"></div></div>
+    <div class="lbar"><button class="btn" id="hback">← All customers</button><div id="hhead" style="margin-left:8px"></div><span style="flex:1"></span>
+      <button type="button" class="btn" id="hedit" hidden>Edit details</button></div>
+    <p class="hnotes" id="hnotes" hidden></p>
     <div class="hcontacts" id="hcontacts"></div>
     <div class="tiles" id="htiles"></div>
     <div class="sm" id="hburners" style="margin:-6px 0 14px"></div>
@@ -519,6 +529,18 @@ tr.fu td{background:#fffaf2 !important}
   <label class="ck"><input type="checkbox" id="sendcc" checked> <span id="sendccl">Send me a copy</span></label>
   <div id="senderr" class="msg err" hidden></div>
   <div class="row"><button type="button" class="btn" id="sendx">Cancel</button><button class="btn pri" type="submit" id="sendgo">Send</button></div>
+</form></dialog>
+<dialog id="custd"><form id="custf" novalidate>
+  <h2 id="custh" style="font-size:20px">Add customer</h2>
+  <label><span>Company</span><input id="cu-co" maxlength="120" autocomplete="off" required></label>
+  <div id="cu-conote" class="sm" hidden>This customer already has RFQs, so its name stays as it was quoted.</div>
+  <label><span>Address <span class="sm">optional</span></span><input id="cu-addr" maxlength="300" autocomplete="off" placeholder="Street, city, state"></label>
+  <div><div class="cu-lab"><span>Contacts <span class="sm">optional</span></span></div>
+    <div id="cu-cts"></div>
+    <button type="button" class="lnk" id="cu-more">+ Add another contact</button></div>
+  <label><span>Notes <span class="sm">optional</span></span><textarea id="cu-notes" maxlength="1000" rows="3" placeholder="e.g. Prefers email, gate code, who signs off on quotes"></textarea></label>
+  <div id="cuerr" class="msg err" hidden></div>
+  <div class="row"><button type="button" class="btn danger" id="cudel" hidden>Remove</button><span style="flex:1"></span><button type="button" class="btn" id="cux">Cancel</button><button class="btn pri" type="submit" id="cugo">Save</button></div>
 </form></dialog>
 <div class="toast" id="toast" role="status"></div>
 <div id="pic" aria-hidden="true"><img alt=""><span></span></div>
@@ -1095,8 +1117,8 @@ function renderCustomers(){const q=$('cq').value.trim().toLowerCase(),staff=ME&&
   $('cbody').innerHTML=rows.map(c=>`<tr data-co="${esc(c.company)}"><td><b>${esc(c.company)}</b>${c.address?`<div class="sm">${esc(c.address)}</div>`:''}</td>
     <td>${c.contacts[0]?`${esc(c.contacts[0].name)}<div class="sm">${esc([c.contacts[0].phone,c.contacts[0].email].filter(Boolean).join(' · '))}</div>`:'—'}${c.contacts.length>1?`<div class="sm">+${c.contacts.length-1} more</div>`:''}</td>
     <td class="n">${c.rfqs}${c.mine&&c.mine<c.rfqs?`<div class="sm">${c.mine} yours</div>`:''}</td><td class="n">${c.won}</td><td class="n">${c.won+c.lost?Math.round(c.won/(c.won+c.lost)*100)+'%':'—'}</td>
-    ${staff?`<td class="n">${money(c.valueWon)||'—'}</td>`:''}<td style="white-space:nowrap">${fmtD(c.last)}<div class="sm">${esc(c.lastBurner)}</div></td></tr>`).join('')||
-    `<tr><td colspan="7" class="sm" style="padding:24px 8px">${CLIST.length?'No customers match.':'No customers yet. They appear here once an RFQ with a company name is saved.'}</td></tr>`}
+    ${staff?`<td class="n">${money(c.valueWon)||'—'}</td>`:''}<td style="white-space:nowrap">${c.last?`${fmtD(c.last)}<div class="sm">${esc(c.lastBurner)}</div>`:`—<div class="sm">${c.added?'Added '+fmtD(c.added):''}</div>`}</td></tr>`).join('')||
+    `<tr><td colspan="7" class="sm" style="padding:24px 8px">${CLIST.length?'No customers match.':'No customers yet. Add one with <b>+ Add customer</b>, or they appear here once an RFQ with a company name is saved.'}</td></tr>`}
 async function openHistory(company){hideMain();$('histv').hidden=false;scrollTo(0,0);$('hhead').innerHTML=`<h2 style="margin:0">${esc(company)}</h2>`;$('hbody').innerHTML='<tr><td colspan="7" class="sm">Loading…</td></tr>';
   try{const [h,c]=await Promise.all([J('GET','api/customers/history?company='+encodeURIComponent(company)),CLIST.length?CLIST:J('GET','api/customers')]);if(!CLIST.length)CLIST=c;HIST=h;renderHistory()}
   catch(e){$('hbody').innerHTML=`<tr><td colspan="7">${esc(e.message)}</td></tr>`}}
@@ -1112,9 +1134,41 @@ function renderHistory(){const h=HIST,c=CLIST.find(x=>x.company.toLowerCase()===
   $('hbody').innerHTML=rs.map(r=>{const st=stOf(r);return`<tr${r.open?` data-id="${esc(r.id)}" class="hopen"`:' class="hlim" title="Another rep’s RFQ – details are private to them"'}><td class="no" style="font-weight:700;white-space:nowrap">${esc(r.no)}</td><td style="white-space:nowrap">${fmtD(r.date)}</td><td>${esc(r.byFull||r.by)}</td>
     <td><span style="color:${r.fuel==='gas'?'var(--gas)':'var(--oil)'};font-weight:600">${esc(r.burner)}</span></td><td>${r.limited?'':esc(r.job||'')}</td>
     <td><span class="st st-${st}">${STL[st]}</span>${r.lostReason?`<div class="sm" style="margin-top:3px">${esc(r.lostReason)}</div>`:''}</td><td class="n">${r.limited?'':money(r.value)||'—'}</td></tr>`}).join('');
+  $('hnotes').hidden=!c.notes;$('hnotes').textContent=c.notes||'';$('hedit').hidden=!c.canEdit;
+  if(!rs.length){$('hburners').textContent='';$('hbody').innerHTML=`<tr><td colspan="7" class="sm" style="padding:20px 8px">No RFQs for this customer yet.${c.addedBy?` Added by ${esc(c.addedBy)} on ${fmtD(c.added)}.`:''}</td></tr>`}
   $('hnote').hidden=!(others&&!staff);$('hnote').textContent=`${others} RFQ${others>1?'s were':' was'} made by other reps. You can see when and what was quoted, but not their details.`}
 $('custb').onclick=()=>{if(!$('rfqv').hidden&&RFQ&&RFQ.dirty){saveRFQ(true).then(openCustomers,err=>toast('Could not save: '+err.message))}else openCustomers()};
 $('cq').oninput=renderCustomers;$('csort').onchange=renderCustomers;
+// add / edit a customer
+let CUED=null;
+const cuRow=(x={})=>{const d=document.createElement('div');d.className='cu-ct';
+  d.innerHTML=`<input placeholder="Name" maxlength="80" autocomplete="off" aria-label="Contact name"><input placeholder="Phone" maxlength="40" inputmode="tel" autocomplete="off" aria-label="Phone"><input placeholder="Email" maxlength="120" inputmode="email" autocapitalize="none" autocomplete="off" aria-label="Email"><button type="button" title="Remove contact" aria-label="Remove contact">×</button>`;
+  const [n,ph,em]=d.querySelectorAll('input');n.value=x.name||'';ph.value=x.phone||'';em.value=x.email||'';
+  d.querySelector('button').onclick=()=>{if($('cu-cts').children.length>1)d.remove();else d.querySelectorAll('input').forEach(i=>i.value='')};$('cu-cts').append(d);return d};
+function openCustDlg(c){CUED=c||null;$('custh').textContent=c?`Edit ${c.company}`:'Add customer';$('cuerr').hidden=true;
+  $('cu-co').value=c?c.company:($('cq').value.trim()&&!CLIST.some(x=>x.company.toLowerCase().includes($('cq').value.trim().toLowerCase()))?$('cq').value.trim():'');
+  const locked=!!(c&&c.rfqs);$('cu-co').readOnly=locked;$('cu-conote').hidden=!locked;
+  $('cu-addr').value=c?c.address||'':'';$('cu-notes').value=c?c.notes||'':'';
+  $('cu-cts').innerHTML='';(c&&c.contacts.length?c.contacts:[{}]).forEach(x=>cuRow(x));
+  $('cudel').hidden=!(c&&c.saved&&c.canEdit);$('cudel').textContent=c&&c.rfqs?'Clear saved details':'Remove customer';
+  $('custd').showModal();(locked?$('cu-addr'):$('cu-co')).focus()}
+$('cadd').onclick=()=>openCustDlg();
+$('hedit').onclick=()=>{const c=CLIST.find(x=>x.company.toLowerCase()===HIST.company.toLowerCase());if(c)openCustDlg(c)};
+$('cu-more').onclick=()=>cuRow().querySelector('input').focus();
+$('cux').onclick=()=>$('custd').close();
+const afterCust=async co=>{CUSTP=null;CLIST=await J('GET','api/customers');CUST=CLIST;if(!$('histv').hidden&&co)openHistory(co);else if(!$('histv').hidden)openCustomers();else renderCustomers()};
+$('custf').onsubmit=async e=>{e.preventDefault();$('cuerr').hidden=true;
+  const body={company:$('cu-co').value.trim(),address:$('cu-addr').value.trim(),notes:$('cu-notes').value.trim(),
+    contacts:[...$('cu-cts').children].map(d=>{const [n,ph,em]=d.querySelectorAll('input');return{name:n.value.trim(),phone:ph.value.trim(),email:em.value.trim()}}).filter(x=>x.name||x.phone||x.email)};
+  if(!body.company){$('cuerr').textContent='Enter a company name.';$('cuerr').hidden=false;$('cu-co').focus();return}
+  if(CUED)body.original=CUED.company;$('cugo').disabled=true;
+  try{const r=await J(CUED?'PUT':'POST','api/customers',body);$('custd').close();toast(CUED?'Customer updated':`${r.company} added`);await afterCust(CUED?r.company:'')}
+  catch(err){$('cuerr').textContent=err.message;$('cuerr').hidden=false}finally{$('cugo').disabled=false}};
+$('cudel').onclick=async()=>{if(!CUED)return;const clear=CUED.rfqs>0;
+  if(!$('cudel').dataset.sure){$('cudel').dataset.sure=1;$('cudel').textContent=clear?'Click again to clear':'Click again to remove';setTimeout(()=>{delete $('cudel').dataset.sure;if(CUED)$('cudel').textContent=clear?'Clear saved details':'Remove customer'},3000);return}
+  delete $('cudel').dataset.sure;
+  try{await J('DELETE','api/customers',{company:CUED.company});$('custd').close();toast(clear?'Saved details cleared':'Customer removed');await afterCust(clear?CUED.company:'')}
+  catch(err){$('cuerr').textContent=err.message;$('cuerr').hidden=false}};
 $('cbody').onclick=e=>{const tr=e.target.closest('tr[data-co]');if(tr)openHistory(tr.dataset.co)};
 $('hback').onclick=()=>openCustomers();
 $('hbody').onclick=e=>{const tr=e.target.closest('tr[data-id]');if(tr)openSaved(tr.dataset.id,'hist').catch(err=>toast(err.message))};
