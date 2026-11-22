@@ -253,6 +253,15 @@ a.colink{color:inherit;text-decoration:underline dotted;text-underline-offset:3p
 .offl{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:70;background:#1c1c1c;color:#fff;font-size:13px;padding:9px 14px;border-radius:20px;box-shadow:0 6px 18px rgba(0,0,0,.25);max-width:92vw;text-align:center}
 .lout{margin:0 0 12px;padding:9px 12px;border-radius:4px;background:#eef4fb;border:1px solid #c9daf0;font-size:13px}.lout a{color:var(--gas);font-weight:600}
 @media(display-mode:standalone){.util{padding-top:env(safe-area-inset-top)}}
+.lostbox{border:1px solid var(--rule);border-radius:6px;padding:14px 16px;margin:14px 0 6px}
+.lostbox .lbar select{width:auto;min-height:0;font:inherit;padding:6px 10px;border:1px solid #b9b9b2;border-radius:3px;background:#fff}
+.lgrid{display:grid;grid-template-columns:240px minmax(0,1fr);gap:24px;align-items:center}
+.lchart{position:relative;display:flex;justify-content:center}.lchart .sl{cursor:default;outline:none;transition:opacity .12s}
+.ltable{width:100%;border-collapse:collapse;font-size:14px}.ltable th{text-align:left;font-size:12.5px;color:var(--mute);font-weight:700;padding:6px 8px;border-bottom:1px solid var(--rule);background:none}
+.ltable td{padding:7px 8px;border-bottom:1px solid #eeeee9;vertical-align:top}.ltable .n{text-align:right;font-variant-numeric:tabular-nums}.ltable tr.tot td{font-weight:700;border-bottom:0}
+#llist tr{cursor:pointer}#llist tr:hover td{background:#f6f6f3}
+.sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:8px;vertical-align:-1px}
+@media(max-width:700px){.lgrid{grid-template-columns:minmax(0,1fr)}}
 #stdlg{border:0;border-radius:6px;padding:22px;max-width:420px;width:92vw}#stdlg::backdrop{background:rgba(0,0,0,.4)}
 #stdlg form{display:grid;gap:12px}#stdlg label{display:grid;gap:4px;font-size:13px;font-weight:600}#stdlg .sm{font-weight:500;color:var(--mute);font-size:12.5px}
 #stdlg input,#stdlg select{font:inherit;padding:8px 10px;border:1px solid #b9b9b2;border-radius:3px;background:#fff;width:100%;min-height:0}#stdlg .row{display:flex;gap:8px;justify-content:flex-end}
@@ -308,7 +317,7 @@ tr.fu td{background:#fffaf2 !important}
 </head>
 <body>
 <nav class="util" aria-label="Main">
-  <div class="nav" id="acct" hidden><button type="button" id="navm" aria-current="page">Burner Matrix</button><button type="button" id="rfqsb">My RFQs</button><button type="button" id="wonb">Won Jobs</button><button type="button" id="custb">Customers</button><button type="button" id="navadm" hidden>Admin</button></div>
+  <div class="nav" id="acct" hidden><button type="button" id="navm" aria-current="page">Burner Matrix</button><button type="button" id="rfqsb">My RFQs</button><button type="button" id="wonb">Jobs</button><button type="button" id="custb">Customers</button><button type="button" id="navadm" hidden>Admin</button></div>
   <span class="sp"></span>
   <div class="ext"><a href="https://www.beckettcorp.com" target="_blank" rel="noopener">beckettcorp.com</a><a href="https://waynecombustion.com/products" target="_blank" rel="noopener">waynecombustion.com</a></div>
   <details class="um" id="um" hidden><summary aria-label="Account menu"><span class="av" id="av"></span><span class="nm" id="whoami"></span><span class="car" aria-hidden="true"></span></summary>
@@ -408,7 +417,7 @@ tr.fu td{background:#fffaf2 !important}
 </section>
 <section id="wonv" hidden class="wv">
   <div class="panel">
-    <div class="lbar"><h2 id="wtitle" style="margin:0">Won Jobs</h2><span style="flex:1"></span><button type="button" class="btn pri" id="repb">Quarterly report</button>
+    <div class="lbar"><h2 id="wtitle" style="margin:0">Jobs</h2><span style="flex:1"></span><button type="button" class="btn pri" id="repb">Quarterly report</button>
       <label id="wwhol" hidden style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px">Rep <select id="wwho" aria-label="Show jobs for"></select></label></div>
     <div class="tiles" id="wtiles"></div>
     <div class="chart">
@@ -418,13 +427,21 @@ tr.fu td{background:#fffaf2 !important}
     </div>
     <details><summary>Show the numbers as a table</summary>
       <table><thead><tr><th>Quarter</th><th>Won</th><th>Lost</th><th>Still open</th><th>Win rate</th></tr></thead><tbody id="wqtbl"></tbody></table></details>
+    <div class="lostbox">
+      <div class="lbar" style="margin:0 0 6px"><h3 style="margin:0;font-size:16px">Why jobs were lost</h3><span class="sm" id="lsub" style="margin-left:6px"></span><span style="flex:1"></span>
+        <select id="lperiod" aria-label="Period"><option value="all">All time</option><option value="q">This quarter</option><option value="lq">Last quarter</option><option value="4q">Last 4 quarters</option></select></div>
+      <div class="lgrid"><div id="lchart" class="lchart"><div id="lpie"></div><div class="wtip" id="ltip" hidden></div></div>
+        <table class="ltable"><thead><tr><th>Reason</th><th class="n">Jobs</th><th class="n">Share</th><th class="n" id="lvalth" hidden>Quoted value</th></tr></thead><tbody id="ltbl"></tbody></table></div>
+      <h4 id="llh" hidden style="margin:14px 0 6px;font-size:14px">Lost jobs</h4>
+      <div style="overflow-x:auto"><table class="ltable" id="lltable" hidden><thead><tr><th>RFQ #</th><th>Lost on</th><th>Customer</th><th>Burner</th><th id="llrepth">Rep</th><th>Reason</th></tr></thead><tbody id="llist"></tbody></table></div>
+    </div>
     <h3 id="wlh" style="margin:18px 0 8px;font-size:17px">Jobs won</h3>
     <div style="overflow-x:auto"><table><thead><tr><th>RFQ #</th><th>Won on</th><th>Customer</th><th>Job</th><th>Burner</th><th id="wrepth" hidden>Rep</th><th style="text-align:right">Value</th></tr></thead><tbody id="wbody"></tbody></table></div>
   </div>
 </section>
 <section id="repv" hidden class="wv">
   <div class="rbar noprint">
-    <button class="btn" id="rback">← Back to Won Jobs</button><span style="flex:1"></span>
+    <button class="btn" id="rback">← Back to Jobs</button><span style="flex:1"></span>
     <label>Quarter <select id="rq"></select></label>
     <label id="rwhol" hidden>Rep <select id="rwho"></select></label>
     <button class="btn pri" id="rprint">Print / Save PDF</button>
@@ -963,11 +980,11 @@ function renderWon(){const staff=ME&&ME.role!=='rep',pick=staff?$('wwho').value:
   Q.forEach(o=>{const d=o.won+o.lost;o.rate=d?o.won/d:null});
   const tw=base.filter(r=>r.status==='won').length,tl=base.filter(r=>r.status==='lost').length,cur=Q[Q.length-1];
   const whoName=who?((WLIST.find(r=>r.by===who)||{}).byFull||who):'';
-  $('wtitle').textContent=mine?(staff?'My Won Jobs':'Won Jobs'):who?`Won Jobs – ${whoName}`:'Won Jobs (everyone)';
+  $('wtitle').textContent=mine?(staff?'My Jobs':'Jobs'):who?`Jobs – ${whoName}`:'Jobs (everyone)';
   $('wrepth').hidden=!staff||!!who||mine;
   const vw=base.filter(r=>r.status==='won').reduce((a,r)=>a+(r.value||0),0);
   $('wtiles').innerHTML=`<div class="tile"><b>${tw}</b><span>jobs won</span></div><div class="tile"><b>${money(vw)||'$0'}</b><span>value won</span></div><div class="tile"><b>${tw+tl?Math.round(tw/(tw+tl)*100)+'%':'—'}</b><span>win rate, all time</span></div><div class="tile"><b>${cur.rate!=null?Math.round(cur.rate*100)+'%':'—'}</b><span>win rate, ${qName(cur.q)}</span></div>`;
-  drawWon(Q);
+  drawWon(Q);renderLost(base);
   $('wqtbl').innerHTML=Q.slice().reverse().map(o=>`<tr><td style="white-space:nowrap">${qName(o.q)}</td><td>${o.won}</td><td>${o.lost}</td><td>${o.open}</td><td>${o.rate!=null?Math.round(o.rate*100)+'%':'—'}</td></tr>`).join('');
   $('wlh').textContent=`Jobs won (${won.length})`;
   $('wbody').innerHTML=won.map(r=>`<tr data-id="${esc(r.id)}"><td class="no" style="font-weight:700;white-space:nowrap">${esc(r.no)}</td><td style="white-space:nowrap">${fmtD(r.statusAt||r.date)}</td><td>${r.company?`<a href="#" class="colink" data-co="${esc(r.company)}">${esc(r.company)}</a>`:''}${r.contact?`<div class="sm">${esc(r.contact)}</div>`:''}</td><td>${esc(r.job)}</td>
@@ -990,6 +1007,37 @@ function drawWon(Q){const box=$('wsvg'),W=Math.max(320,box.clientWidth||700);
   const tipEl=$('wtip'),show=(el,ev)=>{const o=Q[+el.dataset.i];tipEl.innerHTML=`<b>${qName(o.q)}</b><br>${o.rate!=null?`Win rate <b>${Math.round(o.rate*100)}%</b><br>`:'No won or lost jobs yet<br>'}Won ${o.won} · Lost ${o.lost} · Still open ${o.open}`;tipEl.hidden=false;
     const cb=box.parentElement.getBoundingClientRect(),r=el.getBoundingClientRect();let lx=r.left-cb.left+r.width/2-tipEl.offsetWidth/2;lx=Math.max(4,Math.min(lx,cb.width-tipEl.offsetWidth-4));tipEl.style.left=lx+'px';tipEl.style.top=(r.top-cb.top+8)+'px'};
   box.querySelectorAll('.col').forEach(el=>{el.addEventListener('pointerenter',e=>show(el,e));el.addEventListener('focus',e=>show(el,e));el.addEventListener('pointerleave',()=>tipEl.hidden=true);el.addEventListener('blur',()=>tipEl.hidden=true)})}
+/* ---------- Jobs tab: why jobs were lost (pie + table + list) ---------- */
+// Each reason keeps one color everywhere. Order chosen so every pair of neighbouring slices
+// (including last→first) stays distinguishable with colour-blindness (validated, ΔE ≥ 15).
+const LOSTC=[['Price','#2a78d6'],['Lead time','#eb6834'],['Went with a competitor','#6250d6'],['Job cancelled / on hold','#1baf7a'],
+  ['Technical fit','#008300'],['No response','#e87ba4'],['Other','#eda100'],['Not given','#9a9a92']];
+function renderLost(base){const per=$('lperiod').value,now=qOf(new Date().toISOString());
+  const inP=r=>per==='all'?true:per==='q'?qOf(r.date)===now:per==='lq'?qOf(r.date)===now-1:qOf(r.date)>now-4;
+  const lost=base.filter(r=>r.status==='lost'&&inP(r)).sort((a,b)=>String(b.statusAt||b.date).localeCompare(String(a.statusAt||a.date)));
+  const rows=LOSTC.map(([k,c])=>{const m=lost.filter(r=>(r.lostReason||'Not given')===k);return{k,c,n:m.length,val:m.reduce((a,r)=>a+(r.value||0),0)}}).filter(r=>r.n);
+  const total=lost.length;$('lsub').textContent=total?`${total} lost job${total>1?'s':''} · by the quarter the RFQ was made`:'';
+  if(!total){$('lpie').innerHTML='';$('ltbl').innerHTML=`<tr><td colspan="4" class="sm" style="padding:16px 8px">No lost jobs ${per==='all'?'yet':'in this period'}. When an RFQ is marked Lost, the reason shows up here.</td></tr>`;$('llist').innerHTML='';$('llh').hidden=true;$('lltable').hidden=true;return}
+  // pie: slices start at 12 o'clock, clockwise, in the fixed reason order; 2px white gaps; % on slices big enough to hold it
+  const R=100,cx=110,cy=110;let a0=-Math.PI/2,svg='';
+  rows.forEach((r,i)=>{const frac=r.n/total,a1=a0+frac*2*Math.PI,mid=(a0+a1)/2,pc=Math.round(frac*100);
+    const path=frac>=0.9999?`<circle cx="${cx}" cy="${cy}" r="${R}"/>`:`<path d="M${cx},${cy} L${cx+R*Math.cos(a0)},${cy+R*Math.sin(a0)} A${R},${R} 0 ${a1-a0>Math.PI?1:0} 1 ${cx+R*Math.cos(a1)},${cy+R*Math.sin(a1)} Z"/>`;
+    const lbl=frac>=0.07?`<text x="${cx+R*0.62*Math.cos(mid)}" y="${cy+R*0.62*Math.sin(mid)+4.5}" text-anchor="middle" font-size="13" font-weight="700" fill="#fff" style="paint-order:stroke" stroke="rgba(0,0,0,.25)" stroke-width="2">${pc}%</text>`:'';
+    svg+=`<g class="sl" tabindex="0" data-i="${i}" role="img" aria-label="${esc(r.k)}: ${r.n} job${r.n>1?'s':''}, ${pc}%" fill="${r.c}" stroke="#fff" stroke-width="2" stroke-linejoin="round">${path}${lbl}</g>`;a0=a1});
+  $('lpie').innerHTML=`<svg viewBox="0 0 220 220" width="220" height="220" aria-label="Why jobs were lost">${svg}</svg>`;
+  const tip=$('ltip');$('lpie').querySelectorAll('.sl').forEach(g=>{const r=rows[+g.dataset.i],show=()=>{tip.innerHTML=`<b>${esc(r.k)}</b><br>${r.n} job${r.n>1?'s':''} · ${Math.round(r.n/total*100)}% of lost${r.val?`<br>Quoted value ${money(r.val)}`:''}`;tip.hidden=false;
+      const bb=g.getBoundingClientRect(),cb=$('lchart').getBoundingClientRect();tip.style.left=Math.max(4,bb.left-cb.left+bb.width/2-tip.offsetWidth/2)+'px';tip.style.top=(bb.top-cb.top+bb.height/2-tip.offsetHeight-10)+'px';
+      $('lpie').querySelectorAll('.sl').forEach(o=>o.style.opacity=o===g?1:.45)},hide=()=>{tip.hidden=true;$('lpie').querySelectorAll('.sl').forEach(o=>o.style.opacity=1)};
+    g.addEventListener('pointerenter',show);g.addEventListener('focus',show);g.addEventListener('pointerleave',hide);g.addEventListener('blur',hide)});
+  const anyVal=rows.some(r=>r.val);$('lvalth').hidden=!anyVal;
+  $('ltbl').innerHTML=rows.slice().sort((a,b)=>b.n-a.n).map(r=>`<tr><td><span class="sw" style="background:${r.c}"></span>${esc(r.k)}</td><td class="n">${r.n}</td><td class="n">${Math.round(r.n/total*100)}%</td>${anyVal?`<td class="n">${money(r.val)||'—'}</td>`:''}</tr>`).join('')+
+    `<tr class="tot"><td>Total lost</td><td class="n">${total}</td><td class="n">100%</td>${anyVal?`<td class="n">${money(rows.reduce((a,r)=>a+r.val,0))||'—'}</td>`:''}</tr>`;
+  const staff=ME&&ME.role!=='rep';$('llh').hidden=false;$('llh').textContent=`Lost jobs (${total})`;
+  $('llist').innerHTML=lost.map(r=>`<tr data-id="${esc(r.id)}"><td class="no" style="font-weight:700;white-space:nowrap">${esc(r.no)}</td><td style="white-space:nowrap">${fmtD(r.statusAt||r.date)}</td><td>${r.company?`<a href="#" class="colink" data-co="${esc(r.company)}">${esc(r.company)}</a>`:''}</td><td>${esc(r.burner)}</td>${staff?`<td>${esc(r.byFull||r.by)}</td>`:''}
+    <td><span class="sw" style="background:${(LOSTC.find(x=>x[0]===(r.lostReason||'Not given'))||[,'#9a9a92'])[1]}"></span>${esc(r.lostReason||'Not given')}${r.lostNote?`<div class="sm">${esc(r.lostNote)}</div>`:''}</td></tr>`).join('');
+  $('llrepth').hidden=!staff;$('lltable').hidden=false}
+$('lperiod').onchange=()=>renderWon();
+$('llist').onclick=e=>{if(e.target.closest('.colink'))return;const tr=e.target.closest('tr[data-id]');if(tr)openSaved(tr.dataset.id,'won').catch(err=>toast(err.message))};
 let wrz;addEventListener('resize',()=>{clearTimeout(wrz);wrz=setTimeout(()=>{if(!$('wonv').hidden&&WLIST)renderWon()},150)});
 /* ---------- Quarterly sales report (printable) ---------- */
 function openReport(){const staff=ME&&ME.role!=='rep';

@@ -51,7 +51,12 @@ editors and admins see everyone's (**RFQs**, with an *Only mine* filter). Draft 
 Quoted, Won or Lost from the list. Counts per status and the win rate (won ÷ won + lost) sit above the list
 and filter it when clicked.
 
-**Quarterly report.** Won Jobs → *Quarterly report* opens a printable one-page sales performance report for any
+**Jobs.** The Jobs tab shows jobs won, the quarterly win rate, and *Why jobs were lost*: a pie chart and
+table of lost reasons (count, share, quoted value) with a period picker (all time, this quarter, last quarter,
+last 4 quarters), followed by the list of lost jobs and their notes. Reps see their own; editors and admins can
+pick a rep or everyone, and the lost-reason numbers follow that choice.
+
+**Quarterly report.** Jobs → *Quarterly report* opens a printable one-page sales performance report for any
 quarter (and, for editors/admins, any rep): headline numbers, win-rate trend, by-rep table, burners quoted and jobs won.
 Use *Print / Save PDF*.
 
@@ -64,7 +69,7 @@ number of days are flagged "Follow up", counted on the My RFQs tab and filterabl
 **Admin → Settings** (0 turns reminders off).
 
 **Quote value and lost reason.** Marking an RFQ Quoted or Won asks for an optional dollar value; Lost asks why
-(price, lead time, competitor, cancelled, technical fit, no response, other) plus a note. Values show in RFQs, Won Jobs
+(price, lead time, competitor, cancelled, technical fit, no response, other) plus a note. Values show in RFQs, Jobs
 and the quarterly report, which also breaks down lost reasons.
 
 **Export to Excel.** RFQs → *Export to Excel* downloads every RFQ you can see (reps: their own; editors/admins: all)
@@ -77,7 +82,7 @@ container and copy the files from a backup folder back into the appdata folder.
 
 **Customers.** The Customers tab lists every company from past RFQs (contact, RFQs, won, win rate, last RFQ).
 Click one for its history: contacts, totals, burners quoted and every RFQ. Reps see other reps' RFQs for that customer as
-summary rows only (who, when, burner, status). Company names in RFQs and Won Jobs link here too.
+summary rows only (who, when, burner, status). Company names in RFQs and Jobs link here too.
 
 **Duplicate warning.** When a company on a new RFQ already had an RFQ in the last 90 days, the sheet shows who quoted it,
 when, which burner and its status (red when it's the same burner).
