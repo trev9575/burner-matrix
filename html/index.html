@@ -231,6 +231,9 @@ a.bn[data-img]{cursor:zoom-in}
 .sheet.ro select{-webkit-appearance:none;appearance:none}.sheet.ro textarea{border-style:solid;resize:none}.sheet.ro ::placeholder{color:transparent}
 .kv input[data-lock],.kv select[data-lock]{background:#f0f0ec;border-bottom:1px solid #d6d6d0;cursor:not-allowed;color:#1d1d1d;opacity:1;-webkit-text-fill-color:#1d1d1d}
 @media print{.kv input[data-lock],.kv select[data-lock]{background:transparent}}
+.rqm{color:#c8102e;font-weight:700}.rqnote{font-size:12px;color:var(--mute);margin-top:6px}
+.sheet.ro .rqm,.sheet.ro .rqnote{display:none}@media print{.rqm,.rqnote{display:none !important}}
+.kv .rq.miss select{outline:2px solid #c8102e;outline-offset:1px;background:#fde8ea}
 .robadge{display:inline-block;background:#ededeb;color:var(--mute);font-size:12px;font-weight:700;border-radius:3px;padding:2px 8px;margin-left:6px}
 .kv .v{font-weight:600}
 .sh-burner{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:16px;align-items:start}
@@ -519,7 +522,7 @@ $('o-go').onclick=()=>{const c=o2gCalc();if(!c)return;o2gApply(c);
   (document.querySelector('.ladder')||$('lad')).scrollIntoView({behavior:'smooth',block:'start'});toast(`Showing gas burners for ${c.mbh.toLocaleString()} MBH`)};
 
 $('lad').onclick=e=>{const row=e.target.closest('.lr');if(!row)return;const t=$('r-'+row.dataset.n.replace(/\W/g,''));if(!t)return;document.querySelectorAll('tr.hl').forEach(x=>x.classList.remove('hl'));t.classList.add('hl');t.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'center'})};
-const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1800)};
+const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),Math.max(1800,String(m).length*60))};
 $('copy').onclick=async()=>{const r=reqMBH();const head=r!=null?`Required input: ${S.rate} ${S.unit.toUpperCase()} (~${Math.round(r).toLocaleString()} MBH)\n`:'';
   const txt=head+list.map(x=>{const fz=fit(x,r);return`${x.b} ${x.n} | ${x.f==='oil'?'Oil':'Gas'} | ${fmt(x)} | ${x.vt} | ${x.m.map(m=>MODES[m]).join('/')}${x.parts?' | Parts: '+CAP(x.parts):''}${x.svc?' | Service: '+CAP(x.svc):''}${fz?' | '+(fz==='ok'?'sweet spot':'edge of range'):''}\n  ${x.u}`}).join('\n');
   try{await navigator.clipboard.writeText(txt||'No matches');toast(`Copied ${list.length} burners`)}catch(e){toast('Copy blocked by browser')}};
@@ -555,9 +558,11 @@ const modelCode=name=>{const w=String(name).split(/\s+/).filter(Boolean);return(
 const rfqNo=(x,n)=>`${ymd()}-${String(n).padStart(2,'0')}${modelCode(x.n)}`;
 const inp=(id,label,val='',ph='',wide)=>`<div${wide?' class="w"':''}><label for="${id}">${label}</label><input id="${id}" type="text" value="${esc(val)}" placeholder="${esc(ph)}"></div>`;
 const LOCKABLE=['q-rate','q-pwr','q-ch','q-of'];
+const REQ={'q-v':'Voltage','q-m':'Firing mode','q-mount':'Mounting'};
+const andList=a=>a.length<2?a.join(''):a.slice(0,-1).join(', ')+' and '+a[a.length-1];
 const sel=(id,label,opts,val)=>`<div><label for="${id}">${label}</label><select id="${id}">${opts.map(o=>`<option${o===val?' selected':''}>${esc(o)}</option>`).join('')}</select></div>`;
 // dropdown that starts blank; "Select…" never prints or goes out in a PDF
-const dd=(id,label,opts,val='')=>`<div><label for="${id}">${label}</label><select id="${id}" class="dd"><option value="">Select…</option>${opts.map(o=>`<option${o===val?' selected':''}>${esc(o)}</option>`).join('')}</select></div>`;
+const dd=(id,label,opts,val='',req)=>`<div${req?' class="rq"':''}><label for="${id}">${label}${req?'<span class="rqm" aria-hidden="true"> *</span>':''}</label><select id="${id}" class="dd"><option value="">Select…</option>${opts.map(o=>`<option${o===val?' selected':''}>${esc(o)}</option>`).join('')}</select></div>`;
 const OTHER='Other (see notes)';
 const DD={
   type:['Hot water boiler','Steam boiler','Warm air furnace','Water heater','Oven / process heat','Pressure washer / mobile equipment',OTHER],
@@ -614,9 +619,11 @@ function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);$('sheet').cla
     ${ro('Product page',`<a href="${esc(x.u)}">${esc(x.u.replace(/^https?:\/\//,'').replace(/\/$/,''))}</a>`)}
   </div>${x.img?`<img src="${esc(x.img)}" alt="${esc(x.n)}" onerror="this.remove()">`:''}</div>
   <h3>Configuration requested</h3>
-  <div class="kv">${dd('q-v','Voltage / phase',pOpts,siteKeys.length||pOpts.length===1?pDefault:'')}${dd('q-m','Firing mode',mOpts,mOpts.length===1?mOpts[0]:'')}
-    ${inp('q-tube','Air tube length / insertion','','inches')}${dd('q-mount','Mounting',DD.mount)}
-    ${inp('q-ctl','Controls / panel','','Primary control, panel, CSD-1…')}${inp('q-opt','Other options','','Nozzle, head, solenoid…')}</div>
+  <div class="kv">${dd('q-v','Voltage',pOpts,siteKeys.length||pOpts.length===1?pDefault:'',1)}${dd('q-m','Firing mode',mOpts,mOpts.length===1?mOpts[0]:'',1)}
+    ${dd('q-mount','Mounting',DD.mount,'',1)}${inp('q-tube','Air Tube Length','','inches')}
+    ${inp('q-ins','Insertion Depth','','inches')}${inp('q-ctl','Controls / panel','','Primary control, panel, CSD-1…')}
+    ${inp('q-opt','Other options','','Nozzle, head, solenoid…','w')}</div>
+  <div class="noprint rqnote" id="rqnote"><span class="rqm">*</span> Required before the RFQ can be emailed</div>
   <h3>Notes</h3>
   <textarea id="q-notes" aria-label="Notes" placeholder="Anything else the quote needs to cover"></textarea>
   <div class="kv" style="margin-top:12px">${inp('q-rep','Prepared by',repName())}${inp('q-repp','Rep phone',repPhone())}${inp('q-repe','Rep email',repEmail(),'','w')}</div>
@@ -661,7 +668,7 @@ const rfqText=()=>{const L=[],sh=$('sheet');
   sh.querySelectorAll('h3').forEach(h=>{L.push('','== '+h.textContent.toUpperCase()+' ==');const n=h.nextElementSibling;
     if(n&&n.tagName==='TEXTAREA'){L.push(n.value||'-');return}
     const box=n&&n.classList.contains('sh-burner')?n.querySelector('.kv'):n;
-    if(box)box.querySelectorAll(':scope>div').forEach(r=>{const k=(r.querySelector('label,.k')||{}).textContent||'';const f=r.querySelector('input,select');const v=f?f.value:((r.querySelector('.v')||{}).textContent||'');L.push(`${k}: ${v||'-'}`)})});
+    if(box)box.querySelectorAll(':scope>div').forEach(r=>{const k=((r.querySelector('label,.k')||{}).textContent||'').replace(/\s*\*$/,'');const f=r.querySelector('input,select');const v=f?f.value:((r.querySelector('.v')||{}).textContent||'');L.push(`${k}: ${v||'-'}`)})});
   const reps=['q-rep','q-repp','q-repe'].map(i=>$(i).value).filter(Boolean).join(' · ');if(reps)L.push('','Prepared by: '+reps);
   L.push('','Confirm against the current manufacturer spec sheet before quoting.');return L.join('\n')};
 $('rfqcopy').onclick=async()=>{try{if(ME)await saveRFQ(true);await navigator.clipboard.writeText(rfqText());toast('RFQ copied')}catch(e){toast('Copy blocked by browser')}};
@@ -676,7 +683,13 @@ $('rfqpdf').onclick=async e=>{const b=e.currentTarget;b.disabled=true;const t=b.
     if(!r.ok){let j={};try{j=await r.json()}catch(x){}throw new Error(j.error||'HTTP '+r.status)}
     const url=URL.createObjectURL(await r.blob());const a=document.createElement('a');a.href=url;a.download=('RFQ-'+RFQ.no+'.pdf').replace(/[^A-Za-z0-9._-]/g,'');document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000)}
   catch(err){toast(err.message)}finally{b.disabled=false;b.textContent=t}};
-$('rfqsend').onclick=()=>{$('senderr').hidden=true;$('sendto').value=(ME&&ME.rfqTo)||'';
+const missingReq=()=>Object.keys(REQ).filter(id=>{const el=$(id);return !el||!el.value.trim()});
+function flagMissing(){const miss=missingReq();document.querySelectorAll('#sheet .kv .rq').forEach(d=>d.classList.toggle('miss',miss.includes(d.querySelector('select').id)));return miss}
+$('sheet').addEventListener('change',e=>{if(e.target.closest('.rq.miss'))flagMissing()});
+$('rfqsend').onclick=()=>{const miss=flagMissing();
+  if(miss.length){const el=$(miss[0]);el.scrollIntoView({block:'center',behavior:'smooth'});if(!el.disabled)el.focus({preventScroll:true});
+    toast(RFQ&&RFQ.ro?`This RFQ is missing ${andList(miss.map(k=>REQ[k]))}. Use “Copy to new RFQ” to fill them in and send it.`:`Fill in ${andList(miss.map(k=>REQ[k]))} before emailing.`);return}
+  $('senderr').hidden=true;$('sendto').value=(ME&&ME.rfqTo)||'';
   const me=ME&&ME.email;$('sendcc').disabled=!me;$('sendcc').checked=!!me;$('sendccl').textContent=me?`Send me a copy (${me})`:'Send me a copy (add your email in My profile)';
   $('sendnote').textContent=ME&&ME.mail?'The RFQ is saved, turned into a PDF and emailed from the server. Replies go to the rep email on the sheet.':'Email is not set up on the server yet. Ask your admin to add the SMTP settings.';
   $('sendgo').disabled=!(ME&&ME.mail);$('sendd').showModal();$('sendto').focus()};

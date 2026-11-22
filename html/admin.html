@@ -153,7 +153,7 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
             <div class="grid">
               <label class="f"><span>Flame length <span class="u">in</span></span><input type="number" name="flameLength" step="any" min="0"></label>
               <label class="f"><span>Flame width / diameter <span class="u">in</span></span><input type="number" name="flameWidth" step="any" min="0"></label>
-              <label class="f"><span>Turndown ratio <span class="u">e.g. 8 = 8:1; blank for on/off</span></span><input type="number" name="turndown" step="any" min="1"></label>
+              <label class="f"><span>Turndown ratio <span class="u">e.g. 8:1 or 8; blank for on/off</span></span><input type="text" name="turndown" inputmode="decimal" placeholder="e.g. 8:1" autocomplete="off"></label>
               <label class="f"><span>Max overfire pressure <span class="u">in. WC</span></span><input type="number" name="overfire" step="any" min="0"></label>
             </div>
           </fieldset>
@@ -289,6 +289,7 @@ const pic=()=>{const v=E.image.value.trim();$('pimg').src=v||'';$('pimg').style.
 function edit(b,isCopy){cur={key:b&&!isCopy?keyOf(b):null};$('none').hidden=true;f.hidden=false;$('delc').hidden=true;$('fmsg').hidden=true;
   f.reset();const o=b||{fuel:'oil',power:[],modes:[],applications:[],dims:'not published'};
   for(const k of['name','fuel','min','max','link','powerText','airTube','propane','notes','image','flameLength','flameWidth','turndown','overfire','parts','service'])E[k].value=o[k]??'';
+  if(typeof o.turndown==='number')E.turndown.value=o.turndown+':1';
   if(isCopy)E.name.value=o.name+' (copy)';
   fuelOpts(o.biofuel);brandOpts(o.brand);E.brandSel.value=o.brand||(list[0]?list[0].brand:NEWB);E.brandNew.value='';brandUI();
   E.powerStd.value=o.powerStd||'';
@@ -306,7 +307,8 @@ function read(){const t=k=>E[k].value.trim(),n=k=>E[k].value===''?undefined:Numb
   o.dims=E.dimmode.value==='published'?[n('dh'),n('dw'),n('dd')]:E.dimmode.value;if(Array.isArray(o.dims)&&o.dims.some(v=>v===undefined))o.dims=undefined;
   o.airTube=t('airTube');o.applications=[...f.querySelectorAll('[name=applications]:checked')].map(x=>x.value);
   const fr=[...f.querySelectorAll('[name=fuelOpt]:checked')].map(x=>x.value);if(fr.length)o.biofuel=fr.join(', ');if(o.fuel==='gas'&&t('propane'))o.propane=t('propane');
-  for(const k of['flameLength','flameWidth','turndown','overfire'])if(E[k].value!=='')o[k]=Number(E[k].value);
+  for(const k of['flameLength','flameWidth','overfire'])if(E[k].value!=='')o[k]=Number(E[k].value);
+  const td=t('turndown');if(td){const m=/^(\d+(?:\.\d+)?)\s*(?::\s*1)?$/.exec(td);o.turndown=m?Number(m[1]):td}
   if(E.parts.value)o.parts=E.parts.value;if(E.service.value)o.service=E.service.value;
   o.notes=t('notes');o.link=t('link');if(t('image'))o.image=t('image');
   for(const k of Object.keys(o))if(o[k]===undefined||o[k]==='')delete o[k];return o}

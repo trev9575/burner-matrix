@@ -318,6 +318,9 @@ async function api(req, res, url) {
     }
     if (rm[2] === '/send' && m === 'POST') {
       if (!Mail.configured()) return send(res, 503, { error: 'Email is not set up on the server yet (SMTP settings)' });
+      const REQ = { 'q-v': 'Voltage', 'q-m': 'Firing mode', 'q-mount': 'Mounting' };
+      const miss = Object.keys(REQ).filter(k => !String(r.fields[k] || '').trim());
+      if (miss.length) { const n = miss.map(k => REQ[k]); return send(res, 422, { error: `Fill in ${n.length < 2 ? n[0] : n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1]} before emailing.` }); }
       const b = await readBody(req, 8192);
       const to = Mail.splitList(b.to || RFQ_TO);
       if (!to.length || !to.every(Mail.isEmail) || to.length > 10) return send(res, 422, { error: 'Enter valid email address(es)' });
