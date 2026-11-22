@@ -1161,7 +1161,7 @@ $('custf').onsubmit=async e=>{e.preventDefault();$('cuerr').hidden=true;
   const body={company:$('cu-co').value.trim(),address:$('cu-addr').value.trim(),notes:$('cu-notes').value.trim(),
     contacts:[...$('cu-cts').children].map(d=>{const [n,ph,em]=d.querySelectorAll('input');return{name:n.value.trim(),phone:ph.value.trim(),email:em.value.trim()}}).filter(x=>x.name||x.phone||x.email)};
   if(!body.company){$('cuerr').textContent='Enter a company name.';$('cuerr').hidden=false;$('cu-co').focus();return}
-  if(CUED)body.original=CUED.company;$('cugo').disabled=true;
+  if(CUED){body.original=CUED.company;const keep=new Set(body.contacts.map(x=>x.name.toLowerCase()));body.removed=CUED.contacts.map(x=>x.name).filter(n=>!keep.has(n.toLowerCase()))}$('cugo').disabled=true;
   try{const r=await J(CUED?'PUT':'POST','api/customers',body);$('custd').close();toast(CUED?'Customer updated':`${r.company} added`);await afterCust(CUED?r.company:'')}
   catch(err){$('cuerr').textContent=err.message;$('cuerr').hidden=false}finally{$('cugo').disabled=false}};
 $('cudel').onclick=async()=>{if(!CUED)return;const clear=CUED.rfqs>0;

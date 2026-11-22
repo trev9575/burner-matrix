@@ -376,7 +376,7 @@ async function api(req, res, url) {
       const k = custKey(co), c = by.get(k) || { company: co, address: '', contacts: new Map(), rfqs: 0, won: 0, lost: 0, valueWon: 0, last: '', lastBurner: '', mine: 0 };
       c.company = co; if (r.fields['q-addr']) c.address = r.fields['q-addr'];
       const ct = String(r.fields['q-ct'] || '').trim();
-      if (ct) { const p0 = c.contacts.get(ct.toLowerCase()) || {}; c.contacts.delete(ct.toLowerCase()); c.contacts.set(ct.toLowerCase(), { name: ct, phone: r.fields['q-ph'] || p0.phone || '', email: r.fields['q-em'] || p0.email || '' }); }
+      if (ct) { const p0 = c.contacts.get(ct.toLowerCase()) || {}; c.contacts.delete(ct.toLowerCase()); c.contacts.set(ct.toLowerCase(), { name: ct, phone: r.fields['q-ph'] || p0.phone || '', email: r.fields['q-em'] || p0.email || '', at: r.date }); }
       const st = effSt(r); c.rfqs++; if (st === 'won') { c.won++; if (typeof r.value === 'number' && (staff || r.by === me.name)) c.valueWon += r.value; } if (st === 'lost') c.lost++;
       c.last = r.date; c.lastBurner = `${r.burner.brand} ${r.burner.name}`; if (r.by === me.name) c.mine++;
       by.set(k, c);
@@ -386,12 +386,13 @@ async function api(req, res, url) {
       const k = custKey(sc.company); let c = out.find(x => x.key === k);
       if (!c) out.push(c = { key: k, company: sc.company, address: '', contacts: [], rfqs: 0, won: 0, lost: 0, valueWon: 0, last: '', lastBurner: '', mine: 0 });
       if (sc.address) c.address = sc.address;
-      const names = new Set(sc.contacts.map(x => x.name.toLowerCase()));
+      const names = new Set(sc.contacts.map(x => x.name.toLowerCase())), hid = sc.hidden && typeof sc.hidden === 'object' ? sc.hidden : {};
       c.contacts = [...sc.contacts.map(x => { const r = c.contacts.find(y => y.name.toLowerCase() === x.name.toLowerCase()) || {}; return { name: x.name, phone: x.phone || r.phone || '', email: x.email || r.email || '' }; }),
-        ...c.contacts.filter(x => !names.has(x.name.toLowerCase()))];
+        // RFQ contacts someone removed stay hidden unless an RFQ made after the removal uses them again
+        ...c.contacts.filter(x => !names.has(x.name.toLowerCase()) && !(hid[x.name.toLowerCase()] && String(x.at) <= hid[x.name.toLowerCase()]))];
       Object.assign(c, { saved: true, notes: sc.notes || '', addedBy: sc.byFull || sc.by, added: sc.added, canEdit: staff || sc.by === me.name || c.mine > 0 });
     }
-    for (const c of out) { if (!c.saved) c.canEdit = true; delete c.key; }
+    for (const c of out) { if (!c.saved) c.canEdit = true; delete c.key; c.contacts = c.contacts.map(({ at, ...x }) => x); }
     return send(res, 200, out.sort((a, b) => a.company.localeCompare(b.company)));
   }
   if (p === '/api/customers' && (m === 'POST' || m === 'PUT')) { // add a customer, or save/edit the details of one
@@ -413,6 +414,10 @@ async function api(req, res, url) {
       if (rfqNames.has(ok_)) return send(res, 409, { error: 'This customer already has RFQs, so its name can’t be changed here.' });
       if (list.some((c, j) => j !== i && custKey(c.company) === k) || rfqNames.has(k)) return send(res, 409, { error: `${v.company} is already in the customer list.` });
     }
+    const hidden = { ...((i >= 0 && list[i].hidden) || {}) };
+    for (const n of (Array.isArray(b.removed) ? b.removed : []).slice(0, 50)) { const k2 = String(n || '').trim().toLowerCase().slice(0, 80); if (k2) hidden[k2] = now; }
+    for (const x of v.contacts) delete hidden[x.name.toLowerCase()]; // typed back in = shown again
+    v.hidden = hidden;
     if (i >= 0) list[i] = { ...list[i], ...v, updated: now, updatedBy: me.name };
     else list.push({ ...v, by: me.name, byFull: me.full || me.name, added: now, updated: now });
     saveCustomers(list); return send(res, 200, { ok: true, company: v.company });
