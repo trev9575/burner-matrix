@@ -225,6 +225,11 @@ a.bn[data-img]{cursor:zoom-in}
 @media(max-width:700px){.rpt .kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.rpt .two{grid-template-columns:minmax(0,1fr)}}
 @media print{#repv{display:block !important;padding:0}#repv[hidden]{display:none !important}.rpt{box-shadow:none;max-width:none;padding:0}
   .rpt h3,.rpt th,.rpt .kpi,.sh-top .lg{-webkit-print-color-adjust:exact;print-color-adjust:exact}.rpt tr,.rpt .kpi,.rpt .chartbox{break-inside:avoid}.rpt thead{display:table-header-group}}
+.ac{position:absolute;z-index:60;background:#fff;border:1px solid #d6d6d0;border-radius:6px;box-shadow:0 12px 32px rgba(0,0,0,.16);padding:4px;max-height:330px;overflow:auto;font-family:Montserrat,Helvetica,Arial,sans-serif}
+.ac-h{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);padding:7px 10px 5px;border-bottom:1px solid #eeeee9;margin-bottom:3px}
+.ac-i{display:grid;gap:1px;padding:7px 10px;border-radius:4px;cursor:pointer;border-left:3px solid transparent}
+.ac-i b{font-size:13.5px;font-weight:600;color:var(--ink)}.ac-i span{font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ac-i.on{background:#f3f3ef;border-left-color:var(--red)}.ac-i mark{background:none;color:var(--red);font-weight:700}
 #stdlg{border:0;border-radius:6px;padding:22px;max-width:420px;width:92vw}#stdlg::backdrop{background:rgba(0,0,0,.4)}
 #stdlg form{display:grid;gap:12px}#stdlg label{display:grid;gap:4px;font-size:13px;font-weight:600}#stdlg .sm{font-weight:500;color:var(--mute);font-size:12.5px}
 #stdlg input,#stdlg select{font:inherit;padding:8px 10px;border:1px solid #b9b9b2;border-radius:3px;background:#fff;width:100%;min-height:0}#stdlg .row{display:flex;gap:8px;justify-content:flex-end}
@@ -434,7 +439,6 @@ tr.fu td{background:#fffaf2 !important}
   <div id="sterr" class="msg err" hidden></div>
   <div class="row"><button type="button" class="btn" id="stx">Cancel</button><button class="btn pri" type="submit">Save</button></div>
 </form></dialog>
-<datalist id="dl-co"></datalist><datalist id="dl-ct"></datalist>
 <dialog id="sendd"><form id="sendf">
   <h2 style="font-size:20px">Email the RFQ PDF</h2>
   <p id="sendnote" style="margin:0;font-size:13px;color:var(--mute)">The RFQ is saved, turned into a PDF and emailed from the server.</p>
@@ -703,20 +707,50 @@ $('sheet').addEventListener('input',e=>fitText(e.target));
 addEventListener('beforeprint',fitAll);addEventListener('afterprint',fitAll);
 // ---------- customer address book: suggestions from past RFQs ----------
 let CUST=[],CUSTP=null;
-const loadCust=()=>CUSTP||(CUSTP=J('GET','api/customers').then(c=>{CUST=c;$('dl-co').innerHTML=c.map(x=>`<option value="${esc(x.company)}">`).join('');return c}).catch(()=>[]).finally(()=>setTimeout(()=>CUSTP=null,30e3)));
+const loadCust=()=>CUSTP||(CUSTP=J('GET','api/customers').then(c=>{CUST=c;return c}).catch(()=>CUST).finally(()=>setTimeout(()=>CUSTP=null,30e3)));
 const findCo=v=>CUST.find(c=>c.company.toLowerCase()===String(v).trim().toLowerCase());
 // fill a box only if it's empty or was filled by the address book (never over what the rep typed)
 function bookFill(id,val){const el=$(id);if(!el||el.readOnly||!val)return;if(el.value&&!el.dataset.auto)return;el.value=val;el.dataset.auto='1';fitText(el)}
-function bookCo(pickContact){const c=findCo($('q-co').value);$('dl-ct').innerHTML=c?c.contacts.map(x=>`<option value="${esc(x.name)}">`).join(''):'';
-  if(!c)return;bookFill('q-addr',c.address);if(pickContact&&c.contacts[0]&&(!$('q-ct').value||$('q-ct').dataset.auto)){bookFill('q-ct',c.contacts[0].name);bookCt()}}
+function bookCo(pickContact){const c=findCo($('q-co').value);if(!c)return;bookFill('q-addr',c.address);
+  if(pickContact&&c.contacts[0]&&(!$('q-ct').value||$('q-ct').dataset.auto)){bookFill('q-ct',c.contacts[0].name);bookCt()}}
 function bookCt(){const c=findCo($('q-co').value);if(!c)return;const p=c.contacts.find(x=>x.name.toLowerCase()===$('q-ct').value.trim().toLowerCase());if(!p)return;
   for(const[id,v]of[['q-ph',p.phone],['q-em',p.email]]){const el=$(id);if(el.dataset.auto)el.value='';bookFill(id,v)}}
-function bookSetup(){const co=$('q-co'),ct=$('q-ct');if(!co||co.readOnly)return;co.setAttribute('list','dl-co');ct.setAttribute('list','dl-ct');co.autocomplete=ct.autocomplete='off';
-  loadCust().then(()=>bookCo(false))}
+// suggestion dropdown in the site's own style (not the browser's autofill list)
+const AC=document.createElement('div');AC.id='ac';AC.className='ac noprint';AC.hidden=true;AC.setAttribute('role','listbox');document.body.appendChild(AC);
+let acFor=null,acItems=[],acIdx=-1,acQuiet=false;
+const acHi=(t,q)=>{const i=q?t.toLowerCase().indexOf(q.toLowerCase()):-1;return i<0?esc(t):esc(t.slice(0,i))+'<mark>'+esc(t.slice(i,i+q.length))+'</mark>'+esc(t.slice(i+q.length))};
+function acShow(el){if(acQuiet||!el||el.readOnly)return;const q=el.value.trim(),ql=q.toLowerCase();let items,head;
+  if(el.id==='q-co'){head='Customers from past RFQs';
+    items=CUST.filter(c=>!ql||c.company.toLowerCase().includes(ql)).sort((a,b)=>(b.company.toLowerCase().startsWith(ql)-a.company.toLowerCase().startsWith(ql))||a.company.localeCompare(b.company))
+      .slice(0,8).map(c=>({v:c.company,main:acHi(c.company,q),sub:[c.contacts[0]&&c.contacts[0].name,c.address].filter(Boolean).map(esc).join(' · ')}))}
+  else{const c=findCo($('q-co').value);head=c?'Contacts at '+esc(c.company):'';
+    items=(c?c.contacts:[]).filter(x=>!ql||x.name.toLowerCase().includes(ql)).slice(0,8).map(x=>({v:x.name,main:acHi(x.name,q),sub:[x.phone,x.email].filter(Boolean).map(esc).join(' · ')}))}
+  if(!items.length||(items.length===1&&items[0].v.toLowerCase()===ql)){acHide();return}
+  acFor=el;acItems=items;acIdx=-1;
+  AC.innerHTML=`<div class="ac-h">${head}</div>`+items.map((it,i)=>`<div class="ac-i" role="option" data-i="${i}"><b>${it.main}</b>${it.sub?`<span>${it.sub}</span>`:''}</div>`).join('');
+  AC.hidden=false;acPlace()}
+function acPlace(){if(!acFor||AC.hidden)return;const r=acFor.getBoundingClientRect();AC.style.left=(r.left+scrollX)+'px';AC.style.top=(r.bottom+scrollY+4)+'px';AC.style.width=Math.max(280,Math.min(r.width,520))+'px'}
+function acHide(){AC.hidden=true;acFor=null;acIdx=-1}
+function acMark(){AC.querySelectorAll('.ac-i').forEach((d,i)=>{d.classList.toggle('on',i===acIdx);if(i===acIdx)d.scrollIntoView({block:'nearest'})})}
+function acPick(i){const it=acItems[i],el=acFor;if(!it||!el)return;el.value=it.v;acHide();acQuiet=true;el.dispatchEvent(new Event('input',{bubbles:true}));acQuiet=false;fitText(el);el.focus()}
+AC.addEventListener('mousedown',e=>{e.preventDefault();const it=e.target.closest('.ac-i');if(it)acPick(+it.dataset.i)});
+AC.addEventListener('mousemove',e=>{const it=e.target.closest('.ac-i');if(it&&+it.dataset.i!==acIdx){acIdx=+it.dataset.i;acMark()}});
+addEventListener('resize',acPlace);addEventListener('scroll',acPlace,{passive:true});
+function bookSetup(){acHide();const co=$('q-co'),ct=$('q-ct');if(!co||co.readOnly)return;co.autocomplete=ct.autocomplete='off';co.spellcheck=ct.spellcheck=false;loadCust().then(()=>bookCo(false))}
+// opens on click, typing or the down arrow (not on the automatic focus when an RFQ opens)
+$('sheet').addEventListener('mousedown',e=>{const t=e.target;if((t.id==='q-co'||t.id==='q-ct')&&AC.hidden)loadCust().then(()=>{if(document.activeElement===t)acShow(t)})});
+$('sheet').addEventListener('focusout',()=>acHide());
+$('sheet').addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!AC.hidden){e.preventDefault();e.stopPropagation();acHide();return}
+  if(AC.hidden&&e.key==='ArrowDown'&&(e.target.id==='q-co'||e.target.id==='q-ct')){e.preventDefault();loadCust().then(()=>acShow(e.target));return}
+  if(AC.hidden||e.target!==acFor)return;
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();const n=acItems.length;acIdx=e.key==='ArrowDown'?(acIdx+1)%n:(acIdx-1+n)%n;acMark()}
+  else if(e.key==='Enter'&&acIdx>=0){e.preventDefault();acPick(acIdx)}
+  else if(e.key==='Tab')acHide()});
 $('sheet').addEventListener('input',e=>{const t=e.target;if(!t.id||t.readOnly)return;
   if(t.dataset.auto&&t.id!=='q-co'&&t.id!=='q-ct')delete t.dataset.auto;
-  if(t.id==='q-co'){delete t.dataset.auto;if(findCo(t.value))bookCo(true);else $('dl-ct').innerHTML=''}
-  if(t.id==='q-ct'){delete t.dataset.auto;bookCt()}});
+  if(t.id==='q-co'){delete t.dataset.auto;if(findCo(t.value))bookCo(true);acShow(t)}
+  if(t.id==='q-ct'){delete t.dataset.auto;bookCt();acShow(t)}});
 function lockSheet(){outputMode(true);RFQ.ro=true;RFQ.dirty=false;const sh=$('sheet');sh.classList.add('ro');
   sh.querySelectorAll('input,textarea').forEach(el=>el.readOnly=true);sh.querySelectorAll('select').forEach(el=>el.disabled=true);rfqStatus()}
 $('sheet').addEventListener('input',()=>{if(RFQ&&!RFQ.ro){RFQ.dirty=true;rfqStatus()}});
