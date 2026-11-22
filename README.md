@@ -51,6 +51,10 @@ editors and admins see everyone's (**RFQs**, with an *Only mine* filter). Draft 
 Quoted, Won or Lost from the list. Counts per status and the win rate (won ÷ won + lost) sit above the list
 and filter it when clicked.
 
+**Quarterly report.** Won Jobs → *Quarterly report* opens a printable one-page sales performance report for any
+quarter (and, for editors/admins, any rep): headline numbers, win-rate trend, by-rep table, burners quoted and jobs won.
+Use *Print / Save PDF*.
+
 **Oil-to-gas helper.** Pick 1–4 nozzles (each can be a different size) and the pump pressure; it works out the real
 firing rate (sum of nozzles × √(psi ÷ 100), × 140 MBH per GPH) and lists every gas burner that covers it,
 conversion burners tagged and first, each with Create RFQ. It can also set the matrix filters.
