@@ -227,6 +227,9 @@ a.bn[data-img]{cursor:zoom-in}
   .rpt h3,.rpt th,.rpt .kpi,.sh-top .lg{-webkit-print-color-adjust:exact;print-color-adjust:exact}.rpt tr,.rpt .kpi,.rpt .chartbox{break-inside:avoid}.rpt thead{display:table-header-group}}
 #sendd{border:0;border-radius:6px;padding:22px;max-width:420px;width:92vw}#sendd::backdrop{background:rgba(0,0,0,.4)}
 #sendd form{display:grid;gap:12px}#sendd label{display:grid;gap:4px;font-size:13px;font-weight:600}#sendd input[type=text]{font:inherit;padding:8px 10px;border:1px solid #b9b9b2;border-radius:3px}
+#sendd .sendfix{font-size:14px;background:#f6f6f3;border-radius:4px;padding:10px 12px;line-height:1.5}#sendd .sendfix b{word-break:break-all}
+#sendd .lnk{font:600 13px Montserrat,sans-serif;background:none;border:0;padding:0;margin-left:10px;color:var(--red);cursor:pointer;text-decoration:underline}#sendd #senddef{margin:0;justify-self:start}
+#sendd .sm{font-size:12.5px;color:var(--mute)}
 #sendd .ck{display:flex;gap:8px;align-items:center;font-weight:500}#sendd .row{display:flex;gap:8px;justify-content:flex-end}
 .msg.err{background:#fde8ea;color:#8a1020;padding:8px 10px;border-radius:3px;font-size:14px}
 .sheet{background:#fff;max-width:8.5in;margin:0 auto;padding:.55in .6in;box-shadow:0 2px 10px rgba(0,0,0,.12);font-size:12.5px;line-height:1.4;color:#1d1d1d}
@@ -415,7 +418,10 @@ a.bn[data-img]{cursor:zoom-in}
 <dialog id="sendd"><form id="sendf">
   <h2 style="font-size:20px">Email the RFQ PDF</h2>
   <p id="sendnote" style="margin:0;font-size:13px;color:var(--mute)">The RFQ is saved, turned into a PDF and emailed from the server.</p>
-  <label>Send to<input type="text" id="sendto" inputmode="email" autocapitalize="none" placeholder="name@company.com, other@company.com"></label>
+  <div id="sendfix" class="sendfix">Sending to <b id="sendtoshow"></b><button type="button" class="lnk" id="sendother">Send somewhere else</button></div>
+  <label id="sendtol">Send to<input type="text" id="sendto" inputmode="email" autocapitalize="none" placeholder="name@company.com, other@company.com"></label>
+  <div id="sendnodef" class="sm" hidden>No default address is set. An admin can set one in Admin → Settings.</div>
+  <button type="button" class="lnk" id="senddef" hidden>Use the default address instead</button>
   <label class="ck"><input type="checkbox" id="sendcc" checked> <span id="sendccl">Send me a copy</span></label>
   <div id="senderr" class="msg err" hidden></div>
   <div class="row"><button type="button" class="btn" id="sendx">Cancel</button><button class="btn pri" type="submit" id="sendgo">Send</button></div>
@@ -721,13 +727,22 @@ $('sheet').addEventListener('change',e=>{if(e.target.closest('.rq.miss'))flagMis
 $('rfqsend').onclick=()=>{const miss=flagMissing();
   if(miss.length){const el=$(miss[0]);el.scrollIntoView({block:'center',behavior:'smooth'});if(!el.disabled)el.focus({preventScroll:true});
     toast(RFQ&&RFQ.ro?`This RFQ is missing ${andList(miss.map(k=>REQ[k]))}. Use “Copy to new RFQ” to fill them in and send it.`:`Fill in ${andList(miss.map(k=>REQ[k]))} before emailing.`);return}
-  $('senderr').hidden=true;$('sendto').value=(ME&&ME.rfqTo)||'';
+  $('senderr').hidden=true;sendMode(false);
+  // pick up a default address an admin may have changed since this page loaded
+  J('GET','api/me').then(j=>{ME={...ME,...j};if(!$('sendd').open||SENDCHOSE)return;sendMode(false);$('sendgo').disabled=!ME.mail}).catch(()=>{});
   const me=ME&&ME.email;$('sendcc').disabled=!me;$('sendcc').checked=!!me;$('sendccl').textContent=me?`Send me a copy (${me})`:'Send me a copy (add your email in My profile)';
   $('sendnote').textContent=ME&&ME.mail?'The RFQ is saved, turned into a PDF and emailed from the server. Replies go to the rep email on the sheet.':'Email is not set up on the server yet. Ask your admin to add the SMTP settings.';
-  $('sendgo').disabled=!(ME&&ME.mail);$('sendd').showModal();$('sendto').focus()};
+  $('sendgo').disabled=!(ME&&ME.mail);$('sendd').showModal();if(SENDOTHER)$('sendto').focus();else $('sendgo').focus()};
 $('sendx').onclick=()=>$('sendd').close();
+// default address is shown, not typed; "Send somewhere else" opens the box
+let SENDOTHER=false,SENDCHOSE=false;
+function sendMode(other){const def=(ME&&ME.rfqTo)||'';SENDCHOSE=!!other;SENDOTHER=other||!def;
+  $('sendfix').hidden=SENDOTHER;$('sendtoshow').textContent=def;$('sendtol').hidden=!SENDOTHER;$('senddef').hidden=!(SENDOTHER&&def);$('sendnodef').hidden=!!def;
+  if(SENDOTHER&&other)$('sendto').value='';}
+$('sendother').onclick=()=>{sendMode(true);$('sendto').focus()};
+$('senddef').onclick=()=>{sendMode(false);$('sendgo').focus()};
 $('sendf').onsubmit=async e=>{e.preventDefault();const g=$('sendgo');g.disabled=true;g.textContent='Sending…';$('senderr').hidden=true;
-  try{const id=await saveRFQ(true);const r=await J('POST','api/rfqs/'+id+'/send',{to:$('sendto').value,ccMe:$('sendcc').checked});
+  try{const id=await saveRFQ(true);const r=await J('POST','api/rfqs/'+id+'/send',{to:SENDOTHER?$('sendto').value:(ME.rfqTo||''),ccMe:$('sendcc').checked});
     RFQ.sends.push({at:new Date().toISOString(),to:r.to,cc:r.cc});lockSheet();$('sendd').close();toast('Emailed to '+r.to.join(', '))}
   catch(err){$('senderr').textContent=err.message;$('senderr').hidden=false}finally{g.disabled=false;g.textContent='Send'}};
 
