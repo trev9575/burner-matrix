@@ -45,7 +45,7 @@ starts and after each edit, and the burner is switched to the local copy. Admin 
 **Store web photos on server** button to retry; anything that can't be downloaded is listed so you can upload it by hand.
 
 **Saved RFQs.** RFQs are saved on the server (`/data/rfqs`). Reps see their own under **My RFQs**;
-editors and admins see everyone's (**RFQs**, with an *Only mine* filter). Saved RFQs open **read-only** (download, print or resend only); **Copy to new RFQ** starts a revision with a new number. The server also refuses changes once an RFQ is emailed or 2 hours old.
+editors and admins see everyone's (**RFQs**, with an *Only mine* filter). Draft RFQs can be reopened and edited by the rep who made them; once an RFQ is **emailed** it's locked (download, print or resend only), and **Copy to new RFQ** starts a revision with a new number. The server enforces the same rule.
 
 **RFQ status.** Each RFQ shows Draft or Emailed automatically; the rep (or an editor/admin) can mark it
 Quoted, Won or Lost from the list. Counts per status and the win rate (won ÷ won + lost) sit above the list

@@ -662,7 +662,7 @@ const rfqFields=()=>{const f={};$('sheet').querySelectorAll('input[id^="q-"],sel
 const J=async(method,url,body)=>{const r=await fetch(url,{method,credentials:'same-origin',headers:body!==undefined?{'Content-Type':'application/json','X-BM':'1'}:{'X-BM':'1'},body:body!==undefined?JSON.stringify(body):undefined});
   if(r.status===401){location.replace('login');throw new Error('Signed out')}let j={};try{j=await r.json()}catch(e){}if(!r.ok)throw new Error(j.error||'HTTP '+r.status);return j};
 async function saveRFQ(quiet){if(!ME||!RFQ)return null;if(RFQ.id&&(!RFQ.dirty||RFQ.ro))return RFQ.id;
-  const rec=RFQ.id?await J('PUT','api/rfqs/'+RFQ.id,{fields:rfqFields()}):await J('POST','api/rfqs',{no:RFQ.no,burner:RFQ.raw,fit:RFQ.fit,fields:rfqFields()});
+  const rec=RFQ.id?await J('PUT','api/rfqs/'+RFQ.id,{fields:rfqFields()}):await J('POST','api/rfqs',{no:RFQ.no,burner:RFQ.raw,fit:RFQ.fit,locks:RFQ.locks||[],fields:rfqFields()});
   RFQ.id=rec.id;RFQ.dirty=false;RFQ.date=rec.date;rfqStatus();if(!quiet)toast('RFQ saved');return RFQ.id}
 async function closeRFQ(){if(RFQ&&RFQ.dirty&&ME){try{await saveRFQ(true);toast('RFQ saved')}catch(e){toast('Could not save: '+e.message);return}}
   $('rfqv').hidden=true;if(RFQ&&RFQ.from==='list'){RFQ=null;return openList()}if(RFQ&&RFQ.from==='won'){RFQ=null;return openWon()}RFQ=null;$('matrixv').hidden=false;if(rfqB){const t=$('r-'+rfqB.n.replace(/\W/g,''));if(t)t.scrollIntoView({block:'center'})}}
@@ -736,7 +736,8 @@ $('lbody').addEventListener('change',async e=>{const sel=e.target.closest('selec
   try{const r=await J('POST','api/rfqs/'+id+'/status',{status:sel.value});LIST=LIST.map(x=>x.id===id?r:x);renderList();toast(`${r.no}: ${STL[stOf(r)]}`)}catch(err){toast(err.message);renderList()}});$('lq').oninput=renderList;
 $('lback').onclick=()=>{$('listv').hidden=true;$('matrixv').hidden=false};
 async function openSaved(id,from){const rec=await J('GET','api/rfqs/'+id);
-  openRFQ(toRec(rec.burner),{id:rec.id,no:rec.no,date:rec.date,raw:rec.burner,fit:rec.fit||'',fields:rec.fields,sends:rec.sends||[],by:rec.by,byFull:rec.byFull,from,ro:true})}
+  openRFQ(toRec(rec.burner),{id:rec.id,no:rec.no,date:rec.date,raw:rec.burner,fit:rec.fit||'',fields:rec.fields,sends:rec.sends||[],by:rec.by,byFull:rec.byFull,from,locks:rec.locks||[],
+    ro:PDFMODE||(rec.sends||[]).length>0||!ME||rec.by!==ME.name})} // drafts stay editable for the rep who made them until emailed
 $('lbody').onclick=async e=>{if(e.target.closest('select.st'))return;const tr=e.target.closest('tr[data-id]');const d=e.target.closest('.ldel');
   if(d&&tr){try{if(await delRFQ(tr.dataset.id,d)){LIST=LIST.filter(r=>r.id!==tr.dataset.id);renderList()}}catch(err){toast(err.message)}return}
   if(tr)openSaved(tr.dataset.id,'list').catch(err=>toast(err.message))};

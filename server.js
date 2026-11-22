@@ -284,7 +284,8 @@ async function api(req, res, url) {
     if (!/^[0-9A-Za-z-]{6,40}$/.test(no)) return send(res, 422, { error: 'Bad RFQ number' });
     const now = new Date().toISOString();
     const r = { id: crypto.randomBytes(6).toString('hex'), no, date: now, updated: now, by: me.name, byFull: me.full || '',
-      burner, fit: ['ok', 'min', 'max', 'out'].includes(b.fit) ? b.fit : '', fields: cleanFields(b.fields), sends: [] };
+      burner, fit: ['ok', 'min', 'max', 'out'].includes(b.fit) ? b.fit : '', fields: cleanFields(b.fields), sends: [],
+      locks: Array.isArray(b.locks) ? b.locks.filter(k => /^q-[a-z0-9-]{1,20}$/.test(k)).slice(0, 10) : [] };
     writeJSON(rfqFile(r.id), r);
     return send(res, 200, r);
   }
@@ -294,10 +295,10 @@ async function api(req, res, url) {
     if (!canSee(me, r)) return send(res, 404, { error: 'RFQ not found' });
     if (!rm[2] && m === 'GET') return send(res, 200, r);
     if (!rm[2] && m === 'PUT') {
-      // Only the person drafting it can change an RFQ, and only before it's emailed and within 2 hours of creating it.
-      // After that it's a record: reopen shows it read-only, and "Copy to new RFQ" starts a revision.
-      if (r.by !== me.name || (r.sends || []).length || Date.now() - Date.parse(r.date) > 2 * 3600e3)
-        return send(res, 409, { error: 'This RFQ is locked. Use “Copy to new RFQ” to make a revised one.' });
+      // A draft can be changed by the rep who made it until it's emailed. After that it's a record:
+      // it opens read-only, and "Copy to new RFQ" starts a revision.
+      if ((r.sends || []).length) return send(res, 409, { error: 'This RFQ was emailed, so it can’t be changed. Use “Copy to new RFQ” to make a revised one.' });
+      if (r.by !== me.name) return send(res, 403, { error: 'Only the rep who made this RFQ can change it.' });
       const b = await readBody(req, 512 * 1024);
       r.fields = cleanFields(b.fields); r.updated = new Date().toISOString(); r.editedBy = me.name;
       writeJSON(rfqFile(r.id), r);
