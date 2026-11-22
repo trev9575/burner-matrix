@@ -214,8 +214,8 @@ a.bn[data-img]{cursor:zoom-in}
 .sheet textarea{border:1px dashed #b9b9b2;min-height:60px;resize:vertical}
 .sheet.ro input,.sheet.ro select,.sheet.ro textarea{background:transparent;border-bottom-style:solid;border-color:#e2e2dc;color:#1d1d1d;opacity:1;-webkit-text-fill-color:#1d1d1d;cursor:default}
 .sheet.ro select{-webkit-appearance:none;appearance:none}.sheet.ro textarea{border-style:solid;resize:none}.sheet.ro ::placeholder{color:transparent}
-.kv input[data-lock]{background:#f0f0ec;border-bottom:1px solid #d6d6d0;cursor:not-allowed;color:#1d1d1d}
-@media print{.kv input[data-lock]{background:transparent}}
+.kv input[data-lock],.kv select[data-lock]{background:#f0f0ec;border-bottom:1px solid #d6d6d0;cursor:not-allowed;color:#1d1d1d;opacity:1;-webkit-text-fill-color:#1d1d1d}
+@media print{.kv input[data-lock],.kv select[data-lock]{background:transparent}}
 .robadge{display:inline-block;background:#ededeb;color:var(--mute);font-size:12px;font-weight:700;border-radius:3px;padding:2px 8px;margin-left:6px}
 .kv .v{font-weight:600}
 .sh-burner{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:16px;align-items:start}
@@ -370,6 +370,11 @@ a.bn[data-img]{cursor:zoom-in}
   <label>Full name<input id="pf-full" autocomplete="name"></label>
   <label>Phone<input id="pf-phone" type="tel" autocomplete="tel"></label>
   <label>Email<input id="pf-email" type="email" autocomplete="email"></label>
+  <details id="pf-pw"><summary style="cursor:pointer;font-size:13px;font-weight:600">Change password</summary>
+    <div style="display:grid;gap:10px;margin-top:10px">
+      <label>Current password<input id="pf-cur" type="password" autocomplete="current-password"></label>
+      <label>New password<input id="pf-new" type="password" autocomplete="new-password" placeholder="8+ characters"></label></div></details>
+  <div id="pf-err" class="msg err" hidden></div>
   <div class="row"><button type="button" class="btn" id="pf-x">Cancel</button><button class="btn pri" type="submit">Save</button></div>
 </form></dialog>
 <script src="schema.js"></script>
@@ -474,9 +479,9 @@ function o2gRender(){const c=o2gCalc();$('o-go').disabled=!c;const ul=$('o-list'
   ul.hidden=false;ul.innerHTML=m.map(x=>{const fz=fit(x,c.mbh);return`<li><b style="color:var(--gas)">${esc(x.n)}</b><span class="note">${esc(x.b)}</span>${x.a.includes('conv')?'<span class="cv" title="Marketed for oil-to-gas conversions">Conversion</span>':''}<span class="fit ${fz}">${fz==='ok'?'Sweet spot':where(x,c.mbh)==='max'?'Near MAX':'Near MIN'}</span><span class="r">${fmt(x)}</span><button type="button" class="rfqb" data-k="${esc((x.b+'|'+x.n).toLowerCase())}">Create RFQ</button></li>`}).join('')||
     `<li>No gas burner covers ${c.mbh.toLocaleString()} MBH. Check the nozzle sizes and pressure.</li>`}
 $('o-n').addEventListener('change',()=>{o2gNozzles();o2gRender()});$('o-psi').addEventListener('input',o2gRender);o2gNozzles();
-const o2gApply=c=>{CONV=c;Object.assign(S,{fuel:'gas',rate:String(c.mbh),unit:'mbh',app:''});sync();$('o2g').close()};
+const o2gApply=c=>{CONV=c;S={...JSON.parse(JSON.stringify(DEF)),fuel:'gas',rate:String(c.mbh),unit:'mbh'};sync();$('o2g').close()};
 $('o-list').onclick=e=>{const b=e.target.closest('.rfqb');const c=o2gCalc();if(!b||!c)return;const x=D.find(o=>(o.b+'|'+o.n).toLowerCase()===b.dataset.k);if(!x)return;
-  o2gApply(c);b.disabled=true;nextSeq().then(n=>openRFQ(x,{no:rfqNo(x,n)})).finally(()=>b.disabled=false)};
+  o2gApply(c);b.disabled=true;nextSeq().then(n=>openRFQ(x,{no:rfqNo(x,n)})).catch(err=>toast(err.message)).finally(()=>b.disabled=false)};
 $('o2gb').onclick=()=>{o2gRender();$('o2g').showModal();const f=document.querySelector('#o-nz .o-g');if(f)f.focus()};
 $('o-x').onclick=()=>$('o2g').close();
 $('o-go').onclick=()=>{const c=o2gCalc();if(!c)return;o2gApply(c);
@@ -508,8 +513,10 @@ const ymd=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return`${String
 let seqMem={};
 // Daily RFQ sequence: shared counter on the server when available, otherwise per-browser.
 async function nextSeq(){const date=ymd();
-  try{const r=await fetch('api/rfq-seq',{method:'POST',headers:{'Content-Type':'application/json','X-BM':'1'},body:JSON.stringify({date})});
-    if(r.ok){const j=await r.json();if(j.date===date&&j.n>0)return j.n}}catch(e){}
+  let r=null;try{r=await fetch('api/rfq-seq',{method:'POST',headers:{'Content-Type':'application/json','X-BM':'1'},body:JSON.stringify({date})})}catch(e){}
+  if(r&&r.ok){const j=await r.json();if(j.date===date&&j.n>0)return j.n}
+  if(r&&r.status===401){location.replace('login');throw new Error('Signed out')}
+  if(ME||(r&&r.status!==404))throw new Error('Could not get an RFQ number from the server. Try again.');
   let o=seqMem;try{o=JSON.parse(localStorage.getItem('bm-rfq-seq')||'{}')}catch(e){}
   const n=o.date===date?(o.n||0)+1:1;seqMem={date,n};try{localStorage.setItem('bm-rfq-seq',JSON.stringify(seqMem))}catch(e){}return n}
 // Model code for the RFQ number: the first word with a digit in it (LC1500 Nighthawk → LC1500, Comet PCG-050 → PCG050)
@@ -535,7 +542,7 @@ const fmtD=iso=>new Date(iso).toLocaleDateString(undefined,{year:'numeric',month
 const rawOf=x=>RAW.find(o=>(o.brand+'|'+o.name).toLowerCase()===(x.b+'|'+x.n).toLowerCase());
 let RFQ=null;
 // meta: {no, date?, id?, raw?, fit?, fields?, sends?, by?, from?}
-function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);
+function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);$('sheet').classList.remove('ro');
   RFQ={ro:!!meta.ro,id:meta.id||null,no:meta.no,date:meta.date||new Date().toISOString(),raw:meta.raw||rawOf(x),sends:meta.sends||[],by:meta.by||'',byFull:meta.byFull||'',from:meta.from||'matrix',dirty:false};
   const fz0=fit(x,r);RFQ.fit=meta.fit!==undefined?meta.fit:(fz0==='edge'?where(x,r):fz0||'');
   const rateTxt=r==null?'':(S.unit==='gph'?`${S.rate} GPH (≈ ${Math.round(r).toLocaleString()} MBH)`:`${Number(S.rate).toLocaleString()} MBH${x.f==='oil'?` (≈ ${(r/G).toFixed(2)} GPH)`:''}`);
@@ -587,7 +594,7 @@ function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);
     if(el.tagName==='SELECT'&&v&&![...el.options].some(o=>o.value===v))el.add(new Option(v,v));el.value=v}
   // fields filled from the matrix filters are fixed; change the filter in the matrix to change them
   const locks=meta.locks||LOCKABLE.filter(id=>$(id).value.trim());RFQ.locks=locks;
-  locks.forEach(id=>{const el=$(id);if(el&&el.value.trim()){el.readOnly=true;el.dataset.lock='1';el.title='Set by your selections on the matrix page. Change the filter there to change this.'}});
+  locks.forEach(id=>{const el=$(id);if(el&&el.value.trim()){if(el.tagName==='SELECT')el.disabled=true;else el.readOnly=true;el.dataset.lock='1';el.title='Set by your selections on the matrix page. Change the filter there to change this.'}});
   if(!meta.fields&&CONV&&x.f==='gas'&&String(CONV.mbh)===String(S.rate)&&S.unit==='mbh'){
     $('q-notes').value=`Oil-to-gas conversion. Replaces ${nzTxt(CONV)} at ${CONV.p} psi (≈ ${CONV.gph.toFixed(2)} GPH, ${CONV.mbh.toLocaleString()} MBH).`;}
   if(RFQ.ro)lockSheet();
@@ -614,9 +621,9 @@ async function saveRFQ(quiet){if(!ME||!RFQ)return null;if(RFQ.id&&(!RFQ.dirty||R
   RFQ.id=rec.id;RFQ.dirty=false;RFQ.date=rec.date;rfqStatus();if(!quiet)toast('RFQ saved');return RFQ.id}
 async function closeRFQ(){if(RFQ&&RFQ.dirty&&ME){try{await saveRFQ(true);toast('RFQ saved')}catch(e){toast('Could not save: '+e.message);return}}
   $('rfqv').hidden=true;if(RFQ&&RFQ.from==='list'){RFQ=null;return openList()}RFQ=null;$('matrixv').hidden=false;if(rfqB){const t=$('r-'+rfqB.n.replace(/\W/g,''));if(t)t.scrollIntoView({block:'center'})}}
-$('tb').addEventListener('click',e=>{const b=e.target.closest('.rfqb');if(!b)return;const x=D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===b.dataset.k);if(x){b.disabled=true;nextSeq().then(n=>openRFQ(x,{no:rfqNo(x,n)})).finally(()=>b.disabled=false)}});
+$('tb').addEventListener('click',e=>{const b=e.target.closest('.rfqb');if(!b)return;const x=D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===b.dataset.k);if(x){b.disabled=true;nextSeq().then(n=>openRFQ(x,{no:rfqNo(x,n)})).catch(err=>toast(err.message)).finally(()=>b.disabled=false)}});
 $('rfqback').onclick=closeRFQ;
-addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('rfqv').hidden)closeRFQ()});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('rfqv').hidden&&!document.querySelector('dialog[open]')&&!$('um').open)closeRFQ()});
 $('rfqprint').onclick=()=>{try{window.print()}catch(e){toast('Printing is blocked here. Open the page on your server to print.')}};
 const rfqText=()=>{const L=[],sh=$('sheet');
   L.push('BURNER REQUEST FOR QUOTATION  '+RFQ.no+'  '+fmtD(RFQ.date));
@@ -638,7 +645,7 @@ $('rfqpdf').onclick=async e=>{const b=e.currentTarget;b.disabled=true;const t=b.
     if(!r.ok){let j={};try{j=await r.json()}catch(x){}throw new Error(j.error||'HTTP '+r.status)}
     const url=URL.createObjectURL(await r.blob());const a=document.createElement('a');a.href=url;a.download=('RFQ-'+RFQ.no+'.pdf').replace(/[^A-Za-z0-9._-]/g,'');document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000)}
   catch(err){toast(err.message)}finally{b.disabled=false;b.textContent=t}};
-$('rfqsend').onclick=()=>{$('senderr').hidden=true;$('sendto').value=$('sendto').value||(ME&&ME.rfqTo)||'';
+$('rfqsend').onclick=()=>{$('senderr').hidden=true;$('sendto').value=(ME&&ME.rfqTo)||'';
   const me=ME&&ME.email;$('sendcc').disabled=!me;$('sendcc').checked=!!me;$('sendccl').textContent=me?`Send me a copy (${me})`:'Send me a copy (add your email in My profile)';
   $('sendnote').textContent=ME&&ME.mail?'The RFQ is saved, turned into a PDF and emailed from the server. Replies go to the rep email on the sheet.':'Email is not set up on the server yet. Ask your admin to add the SMTP settings.';
   $('sendgo').disabled=!(ME&&ME.mail);$('sendd').showModal();$('sendto').focus()};
@@ -699,13 +706,20 @@ const setNav=()=>{const list=!$('listv').hidden||(!$('rfqv').hidden&&RFQ&&RFQ.fr
 new MutationObserver(setNav).observe($('listv'),{attributes:true,attributeFilter:['hidden']});new MutationObserver(setNav).observe($('rfqv'),{attributes:true,attributeFilter:['hidden']});
 $('navm').onclick=()=>goHome();
 $('admb').onclick=()=>{location.href='admin'};
-$('profb').onclick=()=>{$('um').open=false;$('pf-full').value=ME.full||'';$('pf-phone').value=ME.phone||'';$('pf-email').value=ME.email||'';$('prof').showModal()};
+$('profb').onclick=()=>{$('um').open=false;$('pf-full').value=ME.full||'';$('pf-phone').value=ME.phone||'';$('pf-email').value=ME.email||'';
+  $('pf-cur').value='';$('pf-new').value='';$('pf-pw').open=false;$('pf-err').hidden=true;$('prof').showModal()};
 $('pf-x').onclick=()=>$('prof').close();
-$('proff').onsubmit=async e=>{e.preventDefault();
-  try{const r=await fetch('api/profile',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-BM':'1'},body:JSON.stringify({full:$('pf-full').value,phone:$('pf-phone').value,email:$('pf-email').value})});
-    if(r.status===401)return location.replace('login');if(!r.ok)throw new Error('HTTP '+r.status);ME=await r.json();showMe();$('prof').close();
-    if(rfqB&&!$('rfqv').hidden){$('q-rep').value=repName();$('q-repp').value=repPhone();$('q-repe').value=repEmail()}toast('Profile saved')}
-  catch(err){toast('Could not save: '+err.message)}};
+$('proff').onsubmit=async e=>{e.preventDefault();$('pf-err').hidden=true;
+  try{const cur=$('pf-cur').value,nw=$('pf-new').value;let pw=false;
+    if(cur||nw){if(nw.length<8)throw new Error('New password must be at least 8 characters');
+      const r=await fetch('api/password',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-BM':'1'},body:JSON.stringify({current:cur,next:nw})});
+      if(!r.ok){let j={};try{j=await r.json()}catch(x){}throw new Error(j.error||'HTTP '+r.status)}pw=true}
+    const r=await fetch('api/profile',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-BM':'1'},body:JSON.stringify({full:$('pf-full').value,phone:$('pf-phone').value,email:$('pf-email').value})});
+    if(r.status===401)return location.replace('login');if(!r.ok)throw new Error('HTTP '+r.status);ME={...ME,...await r.json()};showMe();$('prof').close();
+    // an open, editable RFQ picks up the new details (a saved, read-only one keeps what it was sent with)
+    if(RFQ&&!RFQ.ro&&!$('rfqv').hidden){$('q-rep').value=repName();$('q-repp').value=repPhone();$('q-repe').value=repEmail();RFQ.dirty=true;rfqStatus()}
+    toast(pw?'Profile and password saved':'Profile saved')}
+  catch(err){$('pf-err').textContent=err.message;$('pf-err').hidden=false}};
 $('outb').onclick=async()=>{try{await fetch('api/logout',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-BM':'1'},body:'{}'})}catch(e){}location.replace('login')};
 fetch('burners.json',{cache:'no-cache'}).then(r=>{if(r.status===401){location.replace('login');throw new Error('Signed out')}if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(list=>{
   const bad=BurnerSchema.checkAll(list);if(bad.length)console.warn('burners.json problems:',bad);

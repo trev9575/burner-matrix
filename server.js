@@ -95,6 +95,7 @@ const limited = ip => {
   if (!a || now - a.t > 15 * 60e3) return false;
   return a.n >= 8;
 };
+setInterval(() => { const now = Date.now(); for (const [ip, a] of attempts) if (now - a.t > 15 * 60e3) attempts.delete(ip); }, 10 * 60e3).unref();
 const failed = ip => { const a = attempts.get(ip); const now = Date.now();
   if (!a || now - a.t > 15 * 60e3) attempts.set(ip, { n: 1, t: now }); else a.n++; };
 
@@ -193,7 +194,8 @@ function localizePhotos(who = 'server') {
     if (stored) {
       const cur = getBurners(); // apply to the current list in case it changed while downloading
       for (const c of cur) { const n = list.find(x => keyOf(x) === keyOf(c)); if (n && c.image && done.get(c.image)) c.image = done.get(c.image); }
-      saveBurners(cur, who, `Stored ${stored} web photo${stored === 1 ? '' : 's'} on the server`);
+      const errs = saveBurners(cur, who, `Stored ${stored} web photo${stored === 1 ? '' : 's'} on the server`);
+      if (errs) { console.warn('Photos downloaded but the burner list could not be saved:', errs.join('; ')); return { stored: 0, failed: list.map(b => `${b.brand} ${b.name}`) }; }
       console.log(`Stored ${stored} web photos locally.`);
     }
     return { stored, failed };
@@ -250,17 +252,22 @@ async function api(req, res, url) {
   if (p === '/api/logout' && m === 'POST') return send(res, 200, { ok: true }, undefined, { 'Set-Cookie': cookie('', 0) });
 
   const me = readSession(req);
-  if (p === '/api/me') return me ? send(res, 200, { ...pub(me), setup: true, mail: Mail.configured(), rfqTo: RFQ_TO }) : send(res, 401, { error: 'Not signed in', setup: users.length > 0 });
+  const meInfo = u => ({ ...pub(u), setup: true, mail: Mail.configured(), rfqTo: RFQ_TO });
+  if (p === '/api/me') return me ? send(res, 200, meInfo(me)) : send(res, 401, { error: 'Not signed in', setup: users.length > 0 });
   if (!me) return send(res, 401, { error: 'Not signed in' });
 
   // next RFQ sequence number for the day (shared by every rep using this server)
   if (p === '/api/rfq-seq' && m === 'POST') {
     const { date = '' } = await readBody(req, 256);
     if (!/^\d{6}$/.test(String(date))) return send(res, 400, { error: 'Bad date' });
+    // one counter per day (kept for the last 14 days) so reps in different time zones near midnight never share a number
     const f = path.join(DATA, 'rfq-seq.json');
     const cur = readJSON(f, {});
-    const n = cur.date === date ? (cur.n || 0) + 1 : 1;
-    writeJSON(f, { date, n });
+    const days = cur.days && typeof cur.days === 'object' ? cur.days : (cur.date ? { [cur.date]: cur.n || 0 } : {});
+    const n = (+days[date] || 0) + 1;
+    days[date] = n;
+    const keep = Object.keys(days).sort().slice(-14);
+    writeJSON(f, { days: Object.fromEntries(keep.map(k => [k, days[k]])) });
     return send(res, 200, { date, n });
   }
   // ----- RFQs: reps see their own, editors and admins see everyone's -----
@@ -334,7 +341,7 @@ async function api(req, res, url) {
     return send(res, 405, { error: 'Not allowed' });
   }
   if (p === '/api/profile' && m === 'POST') { // anyone can update their own name / phone / email
-    contact(me, await readBody(req, 4096)); saveUsers(); return send(res, 200, pub(me));
+    contact(me, await readBody(req, 4096)); saveUsers(); return send(res, 200, meInfo(me));
   }
   if (p === '/api/burners' && m === 'GET') return send(res, 200, getBurners());
 
@@ -431,7 +438,7 @@ async function api(req, res, url) {
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://x');
-    const p = decodeURIComponent(url.pathname);
+    let p; try { p = decodeURIComponent(url.pathname); } catch { return send(res, 400, 'Bad request', 'text/plain'); }
     if (p.startsWith('/api/')) return await api(req, res, url);
     if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, 'Method not allowed', 'text/plain');
     // public bits: the sign-in page and what it needs
@@ -446,7 +453,8 @@ const server = http.createServer(async (req, res) => {
       if (me.role === 'rep' && p.startsWith('/admin')) return send(res, 302, '', 'text/plain', { Location: '/' });
     }
     if (p === '/burners.json') return sendFile(res, F.burners);
-    if (p === '/admin' || p === '/admin/') return sendPage(res, path.join(HTML, 'admin.html'));
+    if (p === '/admin/') return send(res, 302, '', 'text/plain', { Location: '/admin' }); // relative photo paths need /admin
+    if (p === '/admin') return sendPage(res, path.join(HTML, 'admin.html'));
     if (p === '/' || p === '/index.html') return sendPage(res, path.join(HTML, 'index.html'));
     if (p.startsWith('/photos/')) { // uploaded photos first, then the ones shipped in the image
       const name = path.basename(p);
