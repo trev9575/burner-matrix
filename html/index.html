@@ -384,7 +384,6 @@ tr.fu td{background:#fffaf2 !important}
     <div class="f-last">
       <div class="opts">
         <label class="chk"><input type="checkbox" id="bio"> Biofuel rated (B20 or higher)</label>
-        <label class="chk"><input type="checkbox" id="lp"> Propane / LP capable</label>
       </div>
       <div class="acts"><button class="btn" id="o2gb" title="Size a gas burner from the oil nozzle it replaces">Oil-To-Gas<br>Conversion Tool</button><button class="btn" id="reset">Reset</button></div>
     </div>
@@ -590,7 +589,7 @@ const L0=Math.log10(15),L1=Math.log10(15000);
 const pos=v=>(Math.log10(v)-L0)/(L1-L0)*100;
 const $=id=>document.getElementById(id);
 const VOLTS0={'12dc':1,'24dc':1,'120':1,'240':1,'3p240':1,'3p480':1};
-const DEF={fuel:'all',brand:'all',rate:'',unit:'gph',volt:[],mode:'any',app:'',maxh:'',maxw:'',unk:true,bio:false,lp:false,fl:'',fw:'',td:'',op:'',unks:true};
+const DEF={fuel:'all',brand:'all',rate:'',unit:'gph',volt:[],mode:'any',app:'',maxh:'',maxw:'',unk:true,bio:false,fl:'',fw:'',td:'',op:'',unks:true};
 let S=JSON.parse(JSON.stringify(DEF));try{localStorage.removeItem('burnerSel2')}catch(e){}
 const save=()=>{};
 const seg=(el,opts,key)=>{$(el).innerHTML=opts.map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="${S[key]===v}">${t}</button>`).join('');$(el).onclick=e=>{const b=e.target.closest('button');if(!b)return;S[key]=b.dataset.v;sync();}};
@@ -612,7 +611,6 @@ const pass=(x,st)=>{const S=st||curS();
   if(S.mode!=='any'&&!x.m.includes(S.mode))return false;
   if(S.app&&!x.a.includes(S.app))return false;
   if(S.bio&&!(x.bio&&/B\d|R\d/i.test(x.bio)))return false;
-  if(S.lp&&!x.lp)return false;
   const h=parseFloat(S.maxh),w=parseFloat(S.maxw);
   if(h>0||w>0){if(!Array.isArray(x.dim)){if(!S.unk)return false}else{if(h>0&&x.dim[0]>h)return false;if(w>0&&x.dim[1]>w)return false}}
   const fl=parseFloat(S.fl),fw=parseFloat(S.fw);
@@ -649,21 +647,21 @@ function facets(){const ALL=D.concat(PREV);if(!ALL.length)return;const ok=p=>ALL
   $('f-volt').querySelectorAll('input').forEach(i=>{const v=i.dataset.v,na=v!=='120'&&!S.volt.includes(v)&&!ALL.some(x=>x.v.includes(v)&&pass(x,{...S,volt:[]}));
     i.disabled=na;i.parentNode.classList.toggle('na',na);i.parentNode.title=na?NA:''});
   for(const key of['app','td'])[...$(key).options].forEach(o=>{const na=!!o.value&&S[key]!==o.value&&!ok({[key]:o.value});o.disabled=na;o.title=na?NA:''});
-  for(const key of['bio','lp']){const i=$(key),na=!S[key]&&!ok({[key]:true});i.disabled=na;i.parentNode.classList.toggle('na',na);i.parentNode.title=na?NA:''}}
+  for(const key of['bio']){const i=$(key),na=!S[key]&&!ok({[key]:true});i.disabled=na;i.parentNode.classList.toggle('na',na);i.parentNode.title=na?NA:''}}
 function sync(){
   seg('f-fuel',[['all','All'],['oil','Oil'],['gas','Gas']],'fuel');
   seg('f-brand',[['all','All'],...[...new Set(D.map(x=>x.b))].map(b=>[b,b])],'brand');
   seg('f-mode',[['any','Any'],...Object.entries(MODES)],'mode');
   $('f-volt').innerHTML=['12dc','24dc','120','240','3p240','3p480'].map(k=>[k,VOLTS[k]]).map(([k,t])=>`<label class="chk"><input type="checkbox" data-v="${k}" ${S.volt.includes(k)?'checked':''}> ${t}</label>`).join('');
   $('rate').value=S.rate;$('unit').value=S.unit;$('app').value=S.app;$('maxh').value=S.maxh;$('maxw').value=S.maxw;$('fl').value=S.fl;$('fw').value=S.fw;$('td').value=S.td;$('op').value=S.op;
-  for(const k of['unk','bio','lp','unks'])$(k).checked=S[k];
+  for(const k of['unk','bio','unks'])$(k).checked=S[k];
   save();render();
 }
 $('app').innerHTML+=Object.entries(APPS).map(([k,t])=>`<option value="${k}">${t}</option>`).join('');
 $('f-volt').onchange=e=>{const v=e.target.dataset.v;S.volt=e.target.checked?[...S.volt,v]:S.volt.filter(x=>x!==v);save();render()};
 for(const k of['rate','maxh','maxw','fl','fw','op'])$(k).oninput=e=>{S[k]=e.target.value;save();render()};
 for(const k of['unit','app','td'])$(k).onchange=e=>{S[k]=e.target.value;save();render()};
-for(const k of['unk','bio','lp','unks'])$(k).onchange=e=>{S[k]=e.target.checked;save();render()};
+for(const k of['unk','bio','unks'])$(k).onchange=e=>{S[k]=e.target.checked;save();render()};
 $('reset').onclick=()=>{S=JSON.parse(JSON.stringify(DEF));CONV=null;sync()};
 /* ---------- Oil-to-gas helper ---------- */
 // Actual oil flow = stamped nozzle size × √(pump psi ÷ 100) × nozzles; input ≈ GPH × 140 MBH (same factor as the chart).

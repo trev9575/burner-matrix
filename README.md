@@ -98,7 +98,7 @@ the signal is back. *Keep me signed in* on the sign-in page keeps a session for 
 default inside the installed app. Signing out clears everything the app saved on that device.
 
 **Incompatible filters are grayed out.** Any fuel, brand, firing mode, power supply, application, turndown, biofuel
-or propane option that would leave no burners together with what's already chosen (including the firing rate) is
+option that would leave no burners together with what's already chosen (including the firing rate) is
 grayed out and can't be picked. 120 VAC is always selectable, since it records that the site has 120 V (which
 turns off the step-down transformer warning). Hover it to see why; change another filter or press Reset to free it up.
 
