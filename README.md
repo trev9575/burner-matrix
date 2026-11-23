@@ -99,7 +99,8 @@ default inside the installed app. Signing out clears everything the app saved on
 
 **Incompatible filters are grayed out.** Any fuel, brand, firing mode, power supply, application, turndown, biofuel
 or propane option that would leave no burners together with what's already chosen (including the firing rate) is
-grayed out and can't be picked. Hover it to see why; change another filter or press Reset to free it up.
+grayed out and can't be picked. 120 VAC is always selectable, since it records that the site has 120 V (which
+turns off the step-down transformer warning). Hover it to see why; change another filter or press Reset to free it up.
 
 **Step-down transformer warning.** Tick *Step-down transformer warning* on a burner in Admin → Burners. When a rep
 clicks *Create RFQ* for that burner with only voltages above 120 V ticked in the Power filter (and 120 VAC not ticked),
