@@ -6,7 +6,7 @@
   const APPS = ['residential', 'light commercial', 'commercial/industrial', 'pressure washers/road equipment', 'oil-to-gas conversion', 'ovens/process'];
   const DIMS_TEXT = ['spec sheet', 'not published'];
   const REQUIRED = ['name', 'brand', 'fuel', 'min', 'max', 'power', 'powerText', 'modes', 'dims', 'airTube', 'applications', 'notes', 'link'];
-  const OPTIONAL = ['powerStd', 'biofuel', 'propane', 'discontinued', 'image', 'flameLength', 'flameWidth', 'turndown', 'overfire', 'parts', 'service'];
+  const OPTIONAL = ['powerStd', 'biofuel', 'propane', 'discontinued', 'image', 'flameLength', 'flameWidth', 'turndown', 'overfire', 'parts', 'service', 'stepDown'];
   const PARTS = ['best', 'good', 'bad'];
   const SERVICE = ['easy', 'medium', 'hard'];
 
@@ -52,6 +52,7 @@
     if ('biofuel' in b && !str(b.biofuel)) e.push('biofuel: remove it or describe the rating (e.g. "B20")');
     if ('propane' in b && !str(b.propane)) e.push('propane: remove it or describe how (e.g. "Conversion kit")');
     if ('propane' in b && b.fuel === 'oil') e.push('propane: only applies to gas burners');
+    if ('stepDown' in b && b.stepDown !== true) e.push('stepDown: use true, or remove the field');
     if ('discontinued' in b && b.discontinued !== true) e.push('discontinued: use true, or remove the field');
     return e;
   }

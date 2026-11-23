@@ -144,6 +144,7 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
             <label class="f"><span>Power notes <span class="u">reference only</span></span><input type="text" name="powerText"></label>
             <label class="f">Air tube / insertion<input type="text" name="airTube"></label>
           </div>
+          <label class="chk" style="align-items:flex-start"><input type="checkbox" name="stepDown" style="margin-top:3px"><span><b>Step-down transformer warning</b><br><span class="u">When a rep starts an RFQ for this burner with only voltages above 120 V selected (and not 120 VAC), warn that a step-down transformer is needed if 120 VAC isn't available at the site, which adds cost.</span></span></label>
           <fieldset><legend>Chassis dimensions</legend>
             <div class="row">
               <label class="chk"><input type="radio" name="dimmode" value="published"> Published (inches)</label>
@@ -230,6 +231,7 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
           <label class="f" style="margin-top:8px">Follow-up reminder after (days)
             <input type="number" name="followUpDays" min="0" max="90" step="1" style="max-width:120px"></label>
           <p class="u" style="margin:0">An RFQ that's <b>Emailed</b> or <b>Quoted</b> gets flagged “Follow up” after this many days with no activity (no email, status change or “Followed up” click). Use <b>0</b> to turn reminders off.</p>
+          <label class="chk" style="margin-top:8px;align-items:flex-start"><input type="checkbox" name="stepDownWarn" style="margin-top:3px"><span><b>Step-down transformer warnings</b><br><span class="u">Master switch for the popup reps see when they start an RFQ with only voltages above 120 V selected. It only shows for burners that have <b>Step-down transformer warning</b> ticked in the Burners tab.</span></span></label>
           <div class="row"><button class="btn pri" type="submit">Save</button></div>
         </form>
         <div id="smsg" class="msg" hidden></div>
@@ -324,7 +326,7 @@ function edit(b,isCopy){cur={key:b&&!isCopy?keyOf(b):null};$('none').hidden=true
   if(typeof o.turndown==='number')E.turndown.value=o.turndown+':1';
   if(isCopy)E.name.value=o.name+' (copy)';
   fuelOpts(o.biofuel);brandOpts(o.brand);E.brandSel.value=o.brand||(list[0]?list[0].brand:NEWB);E.brandNew.value='';brandUI();
-  E.powerStd.value=o.powerStd||'';
+  E.powerStd.value=o.powerStd||'';E.stepDown.checked=o.stepDown===true;
   for(const [n,arr] of[['power',o.power],['modes',o.modes],['applications',o.applications]])f.querySelectorAll(`[name=${n}]`).forEach(c=>c.checked=(arr||[]).includes(c.value));
   const pub=Array.isArray(o.dims);E.dimmode.value=pub?'published':(o.dims||'not published');
   E.dh.value=pub?o.dims[0]:'';E.dw.value=pub?o.dims[1]:'';E.dd.value=pub?o.dims[2]:'';
@@ -341,10 +343,11 @@ function read(){const t=k=>E[k].value.trim(),n=k=>E[k].value===''?undefined:Numb
   const fr=[...f.querySelectorAll('[name=fuelOpt]:checked')].map(x=>x.value);if(fr.length)o.biofuel=fr.join(', ');if(o.fuel==='gas'&&t('propane'))o.propane=t('propane');
   for(const k of['flameLength','flameWidth','overfire'])if(E[k].value!=='')o[k]=Number(E[k].value);
   const td=t('turndown');if(td){const m=/^(\d+(?:\.\d+)?)\s*(?::\s*1)?$/.exec(td);o.turndown=m?Number(m[1]):td}
+  if(E.stepDown.checked)o.stepDown=true;
   if(E.parts.value)o.parts=E.parts.value;if(E.service.value)o.service=E.service.value;
   o.notes=t('notes');o.link=t('link');if(t('image'))o.image=t('image');
   for(const k of Object.keys(o))if(o[k]===undefined||o[k]==='')delete o[k];return o}
-const LBL={name:'Model name',brand:'Brand',fuel:'Fuel',min:'Min firing rate',max:'Max firing rate',power:'Power available',powerText:'Power notes',powerStd:'Standard supply',modes:'Firing modes',dims:'Chassis dimensions',airTube:'Air tube',applications:'Applications',notes:'Selling note',link:'Link',biofuel:'Fuel ratings',propane:'Propane',image:'Photo',flameLength:'Flame length',flameWidth:'Flame width',turndown:'Turndown',overfire:'Overfire pressure',parts:'Part availability',service:'Ease of service'};
+const LBL={name:'Model name',brand:'Brand',fuel:'Fuel',min:'Min firing rate',max:'Max firing rate',power:'Power available',powerText:'Power notes',powerStd:'Standard supply',stepDown:'Step-down transformer warning',modes:'Firing modes',dims:'Chassis dimensions',airTube:'Air tube',applications:'Applications',notes:'Selling note',link:'Link',biofuel:'Fuel ratings',propane:'Propane',image:'Photo',flameLength:'Flame length',flameWidth:'Flame width',turndown:'Turndown',overfire:'Overfire pressure',parts:'Part availability',service:'Ease of service'};
 const nice=m=>{let k=m.match(/^Missing "(\w+)"$/);if(k)return`${LBL[k[1]]||k[1]}: required`;k=m.match(/^(\w+):(.*)$/);return k&&LBL[k[1]]?LBL[k[1]]+':'+k[2]:m};
 const showMsg=(el,kind,html)=>{el.className='msg '+kind;el.innerHTML=html;el.hidden=false};
 f.onsubmit=async e=>{e.preventDefault();const b=read();const errs=S.check(b);
@@ -376,13 +379,13 @@ $('loc').onclick=async e=>{const b=e.currentTarget;b.disabled=true;b.textContent
 $('exp').onclick=async e=>{e.preventDefault();const data=await call('GET','/api/burners');const url=URL.createObjectURL(new Blob(['[\n'+data.map(o=>'  '+JSON.stringify(o)).join(',\n')+'\n]\n'],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='burners.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)};
 
 /* ---------- settings ---------- */
-function showSettings(s){$('sf').elements.rfqTo.value=s.rfqTo;$('sf').elements.followUpDays.value=s.followUpDays;
+function showSettings(s){$('sf').elements.rfqTo.value=s.rfqTo;$('sf').elements.followUpDays.value=s.followUpDays;$('sf').elements.stepDownWarn.checked=s.stepDownWarn;
   $('btz').textContent=s.tz||'server time';$('bkeep').textContent=s.backupKeep;
   $('bstat').innerHTML=s.lastBackup?`Last backup: <b>${esc(new Date(s.lastBackup.at).toLocaleString())}</b> (${esc(s.lastBackup.why)})`+(s.backups.length?`<br>Newest copies: ${s.backups.map(esc).join(', ')}`:''):'No backup yet. The first one runs at 1:00 a.m., or click Back up now.';$('envto').textContent=s.envRfqTo?` (currently ${s.envRfqTo})`:' (not set)';
   $('mailstat').innerHTML=s.mail?`Email server: <b>set up</b> – sending through ${esc(s.smtpHost)} as ${esc(s.smtpFrom)}. RFQs go to <b>${esc(s.effective||'(no default – reps must type an address)')}</b>.`:'Email server: <b>not set up yet</b>. Add the SMTP variables to the container (see README) before reps can email RFQs.'}
 async function loadSettings(){$('smsg').hidden=true;try{showSettings(await call('GET','/api/settings'))}catch(err){showMsg($('smsg'),'err',esc(err.message))}}
 $('sf').onsubmit=async e=>{e.preventDefault();$('smsg').hidden=true;
-  try{const s=await call('PUT','/api/settings',{rfqTo:e.target.elements.rfqTo.value,followUpDays:Number(e.target.elements.followUpDays.value||0)});showSettings(s);toast('Settings saved')}catch(err){showMsg($('smsg'),'err',esc(err.message))}};
+  try{const s=await call('PUT','/api/settings',{rfqTo:e.target.elements.rfqTo.value,followUpDays:Number(e.target.elements.followUpDays.value||0),stepDownWarn:e.target.elements.stepDownWarn.checked});showSettings(s);toast('Settings saved')}catch(err){showMsg($('smsg'),'err',esc(err.message))}};
 
 $('bnow').onclick=async e=>{const b=e.currentTarget;b.disabled=true;b.textContent='Backing up…';
   try{await call('POST','/api/backup',{});await loadSettings();toast('Backup saved')}catch(err){showMsg($('smsg'),'err',esc(err.message))}finally{b.disabled=false;b.textContent='Back up now'}};

@@ -23,6 +23,7 @@ const RFQ_TO_ENV = process.env.RFQ_TO || '';   // fallback default "send to" add
 const getSettings = () => readJSON(F.settings, {});
 const rfqTo = () => { const s = getSettings(); return typeof s.rfqTo === 'string' && s.rfqTo.trim() ? s.rfqTo : RFQ_TO_ENV; };
 const followUpDays = () => { const d = getSettings().followUpDays; return Number.isInteger(d) && d >= 0 && d <= 90 ? d : 7; }; // 0 = off
+const stepDownWarn = () => getSettings().stepDownWarn !== false; // default on
 const LOST_REASONS = ['Price', 'Lead time', 'Went with a competitor', 'Job cancelled / on hold', 'Technical fit', 'No response', 'Other'];
 
 const F = {
@@ -324,7 +325,7 @@ async function api(req, res, url) {
   if (p === '/api/logout' && m === 'POST') return send(res, 200, { ok: true }, undefined, { 'Set-Cookie': cookie('', 0) });
 
   const me = readSession(req);
-  const meInfo = u => ({ ...pub(u), setup: true, mail: Mail.configured(), rfqTo: rfqTo(), followUpDays: followUpDays(), lostReasons: LOST_REASONS });
+  const meInfo = u => ({ ...pub(u), setup: true, mail: Mail.configured(), rfqTo: rfqTo(), followUpDays: followUpDays(), stepDownWarn: stepDownWarn(), lostReasons: LOST_REASONS });
   if (p === '/api/me') return me ? send(res, 200, meInfo(me)) : send(res, 401, { error: 'Not signed in', setup: users.length > 0 });
   if (!me) return send(res, 401, { error: 'Not signed in' });
 
@@ -599,7 +600,7 @@ async function api(req, res, url) {
   if (p === '/api/settings') {
     if (me.role !== 'admin') return send(res, 403, { error: 'Admins only' });
     const info = () => { const c = Mail.config(), s = getSettings(); return { rfqTo: s.rfqTo || '', envRfqTo: RFQ_TO_ENV, effective: rfqTo(),
-      mail: Mail.configured(), smtpHost: c.host, smtpFrom: c.from, followUpDays: followUpDays(),
+      mail: Mail.configured(), smtpHost: c.host, smtpFrom: c.from, followUpDays: followUpDays(), stepDownWarn: stepDownWarn(),
       lastBackup: s.lastBackup || null, backups: listBackups().slice(0, 5), backupKeep: BACKUP_KEEP, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }; };
     if (m === 'GET') return send(res, 200, info());
     if (m === 'PUT') {
@@ -615,6 +616,7 @@ async function api(req, res, url) {
         if (!Number.isInteger(d) || d < 0 || d > 90) return send(res, 422, { error: 'Follow-up days must be a whole number from 0 (off) to 90' });
         s.followUpDays = d;
       }
+      if (b.stepDownWarn !== undefined) s.stepDownWarn = b.stepDownWarn === true;
       s.updated = new Date().toISOString(); s.updatedBy = me.name;
       writeJSON(F.settings, s);
       return send(res, 200, info());

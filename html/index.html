@@ -245,6 +245,7 @@ a.bn[data-img]{cursor:zoom-in}
 .ctable td{padding:8px;border-bottom:1px solid var(--rule);vertical-align:top}#cbody tr,#hbody tr.hopen{cursor:pointer}#cbody tr:hover td,#hbody tr.hopen:hover td{background:#f6f6f3}
 #hbody tr.hlim td{color:#77776f}.sm{font-size:12.5px;color:var(--mute)}
 #histv .tiles{display:flex;flex-wrap:wrap;gap:12px;margin:4px 0 16px}#histv .tile{border:1px solid var(--rule);border-radius:6px;padding:10px 16px;min-width:120px}#histv .tile b{display:block;font-size:24px;line-height:1.1}#histv .tile span{font-size:12.5px;color:var(--mute)}
+#sdd{border:0;border-radius:6px;padding:22px;max-width:460px;width:92vw}#sdd::backdrop{background:rgba(0,0,0,.4)}#sdd .row{display:flex;gap:8px;justify-content:flex-end}
 #custd{border:0;border-radius:6px;padding:22px;max-width:560px;width:94vw}#custd::backdrop{background:rgba(0,0,0,.4)}
 #custd form{display:grid;gap:12px}#custd label,.cu-lab{display:grid;gap:4px;font-size:13px;font-weight:600}#custd .sm{font-weight:500;color:var(--mute);font-size:12.5px}
 #custd input,#custd textarea{font:inherit;padding:8px 10px;border:1px solid #b9b9b2;border-radius:3px;background:#fff;width:100%;min-height:0;box-sizing:border-box}#custd textarea{resize:none}
@@ -543,6 +544,11 @@ tr.fu td{background:#fffaf2 !important}
   <div id="cuerr" class="msg err" hidden></div>
   <div class="row"><button type="button" class="btn danger" id="cudel" hidden>Remove</button><span style="flex:1"></span><button type="button" class="btn" id="cux">Cancel</button><button class="btn pri" type="submit" id="cugo">Save</button></div>
 </form></dialog>
+<dialog id="sdd" aria-labelledby="sdh"><div style="display:grid;gap:12px">
+  <h2 id="sdh" style="font-size:20px;display:flex;gap:10px;align-items:center"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 1 21h22L12 2z" fill="#f2b705"/><path d="M12 9v5m0 3v.5" stroke="#1c1c1c" stroke-width="2.2" stroke-linecap="round"/></svg>Step-down transformer required</h2>
+  <p id="sdtxt" style="margin:0;font-size:14.5px;line-height:1.5"></p>
+  <div class="row"><button type="button" class="btn" id="sdx">Go back</button><button type="button" class="btn pri" id="sdgo">Continue to RFQ</button></div>
+</div></dialog>
 <div class="toast" id="toast" role="status"></div>
 <div id="pic" aria-hidden="true"><img alt=""><span></span></div>
 
@@ -568,7 +574,7 @@ const PW={'12 VDC':'12dc','24 VDC':'24dc','120 VAC':'120','208-240 VAC 1P':'240'
 const MW={'on/off':'onoff','low-high-low':'hilo','modulating':'mod'};
 const AW={'residential':'res','light commercial':'lc','commercial/industrial':'ci','pressure washers/road equipment':'mob','oil-to-gas conversion':'conv','ovens/process':'proc'};
 // readable burners.json entry -> internal record
-const toRec=o=>({fl:o.flameLength??null,fw:o.flameWidth??null,td:o.turndown??(o.modes.length===1&&o.modes[0]==='on/off'?1:null),tdx:o.turndown==null,op:o.overfire??null,parts:o.parts||null,svc:o.service||null,img:o.image||null,std:o.powerStd?PW[o.powerStd]:null,n:o.name,b:o.brand,f:o.fuel,lo:o.min,hi:o.max,v:o.power.map(x=>PW[x]),vt:o.powerText,m:o.modes.map(x=>MW[x]),dim:Array.isArray(o.dims)?o.dims:o.dims==='spec sheet'?'spec':null,tube:o.airTube,a:o.applications.map(x=>AW[x]),bio:o.biofuel,lp:o.propane,disc:!!o.discontinued,note:o.notes,u:o.link,raw:o});
+const toRec=o=>({fl:o.flameLength??null,fw:o.flameWidth??null,td:o.turndown??(o.modes.length===1&&o.modes[0]==='on/off'?1:null),tdx:o.turndown==null,op:o.overfire??null,parts:o.parts||null,svc:o.service||null,img:o.image||null,std:o.powerStd?PW[o.powerStd]:null,n:o.name,b:o.brand,f:o.fuel,lo:o.min,hi:o.max,v:o.power.map(x=>PW[x]),vt:o.powerText,m:o.modes.map(x=>MW[x]),dim:Array.isArray(o.dims)?o.dims:o.dims==='spec sheet'?'spec':null,tube:o.airTube,a:o.applications.map(x=>AW[x]),bio:o.biofuel,lp:o.propane,disc:!!o.discontinued,sd:o.stepDown===true,note:o.notes,u:o.link,raw:o});
 let D=[],RAW=[],PREV=[];
 const APPS={res:'Residential heating',lc:'Light commercial',ci:'Commercial / industrial',mob:'Pressure washers / road equipment',conv:'Oil-to-gas conversion',proc:'Ovens & process heat'};
 const VOLTS={'12dc':'12 VDC','24dc':'24 VDC','120':'120 VAC','240':'208-240 VAC 1P','3p240':'208-240 VAC 3P','3p480':'480 VAC 3P'};
@@ -860,7 +866,16 @@ async function saveRFQ(quiet){if(!ME||!RFQ)return null;if(RFQ.offline){if(RFQ.di
   RFQ.id=rec.id;RFQ.dirty=false;RFQ.date=rec.date;rfqStatus();if(!quiet)toast('RFQ saved');return RFQ.id}
 async function closeRFQ(){if(RFQ&&RFQ.dirty&&ME){try{await saveRFQ(true);toast('RFQ saved')}catch(e){toast('Could not save: '+e.message);return}}
   $('rfqv').hidden=true;if(RFQ&&RFQ.from==='list'){RFQ=null;return openList()}if(RFQ&&RFQ.from==='won'){RFQ=null;return openWon()}if(RFQ&&RFQ.from==='hist'&&HIST){RFQ=null;return openHistory(HIST.company)}RFQ=null;$('matrixv').hidden=false;if(rfqB){const t=$('r-'+rfqB.n.replace(/\W/g,''));if(t)t.scrollIntoView({block:'center'})}}
-$('tb').addEventListener('click',e=>{const b=e.target.closest('.rfqb');if(!b)return;const x=D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===b.dataset.k);if(x){b.disabled=true;newRFQ(x).catch(err=>toast(err.message)).finally(()=>b.disabled=false)}});
+$('tb').addEventListener('click',async e=>{const b=e.target.closest('.rfqb');if(!b)return;const x=D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===b.dataset.k);if(!x)return;
+  if(!await stepDownOK(x))return;b.disabled=true;newRFQ(x).catch(err=>toast(err.message)).finally(()=>b.disabled=false)});
+// Step-down transformer warning: burner has it switched on (Admin → Burners), the master switch is on (Admin → Settings),
+// and the Power filter has only voltages above 120 V ticked (no 120 VAC)
+const HIV=['240','3p240','3p480'];
+function stepDownOK(x){const hi=S.volt.filter(v=>HIV.includes(v));
+  if(!x.sd||(ME&&ME.stepDownWarn===false)||!hi.length||S.volt.includes('120'))return Promise.resolve(true);
+  $('sdtxt').innerHTML=`You selected <b>${esc(hi.map(v=>VOLTS[v]).join(', '))}</b> without 120 VAC. The <b>${esc(x.b+' '+x.n)}</b> needs a <b>step-down transformer</b> if 120 VAC is not available at the install site. This will increase the cost of the burner.`;
+  const d=$('sdd');d.showModal();$('sdgo').focus();
+  return new Promise(res=>{const done=v=>{d.onclose=null;if(d.open)d.close();res(v)};$('sdgo').onclick=()=>done(true);$('sdx').onclick=()=>done(false);d.onclose=()=>done(false)})}
 $('rfqback').onclick=closeRFQ;
 addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('rfqv').hidden&&!document.querySelector('dialog[open]')&&!$('um').open)closeRFQ()});
 $('rfqprint').onclick=()=>{try{window.print()}catch(e){toast('Printing is blocked here. Open the page on your server to print.')}};

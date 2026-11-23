@@ -97,6 +97,11 @@ still shows the matrix, photos and your RFQ list, and new RFQs are saved on the 
 the signal is back. *Keep me signed in* on the sign-in page keeps a session for 30 days (`REMEMBER_DAYS`); it's ticked by
 default inside the installed app. Signing out clears everything the app saved on that device.
 
+**Step-down transformer warning.** Tick *Step-down transformer warning* on a burner in Admin → Burners. When a rep
+clicks *Create RFQ* for that burner with only voltages above 120 V ticked in the Power filter (and 120 VAC not ticked),
+a popup says a step-down transformer is required if 120 VAC isn't available at the site, which adds cost; they can go
+back or continue. Admin → Settings has a master switch to turn these popups off for everyone.
+
 **Oil-To-Gas Conversion Tool.** Pick 1 or 2 nozzles (each can be a different size) and the pump pressure; it works out the real
 firing rate (sum of nozzles × √(psi ÷ 100), × 140 MBH per GPH) and lists every gas burner that covers it,
 conversion burners tagged and first, each with Create RFQ. It can also set the matrix filters.
@@ -160,6 +165,7 @@ To throw away the live list and start again from the repo copy, stop the contain
 | `overfire` | Optional. Max overfire (combustion chamber) pressure the burner handles, inches WC |
 | `parts` | Optional. Aftermarket part availability: `"best"`, `"good"` or `"bad"` |
 | `service` | Optional. Ease of service: `"easy"`, `"medium"` or `"hard"` |
+| `stepDown` | Optional. `true` = show the step-down transformer warning for this burner (admin checkbox *Step-down transformer warning*) |
 | `biofuel` | Optional. Fuel ratings, comma-separated, picked in admin from `#2`, `B20`, `B100`, `R100` (e.g. `"B20, B100, R100"`; every oil burner has B20) |
 | `propane` | Optional. e.g. `"Conversion kit"` |
 
