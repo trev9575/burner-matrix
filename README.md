@@ -172,7 +172,8 @@ To throw away the live list and start again from the repo copy, stop the contain
 | `overfire` | Optional. Max overfire (combustion chamber) pressure the burner handles, inches WC |
 | `parts` | Optional. Aftermarket part availability: `"best"`, `"good"` or `"bad"` |
 | `service` | Optional. Ease of service: `"easy"`, `"medium"` or `"hard"` |
-| `airTubes` | Optional. Air tube lengths you can order, e.g. `["6", "9", "13"]` (admin: *Available air tube lengths*). The RFQ's Air Tube Length becomes a dropdown of these plus “Other (see notes)”; plain numbers show as inches |
+| `airTubes` | Optional. Air tube lengths you can order, in inches (decimals OK), e.g. `["6", "7.5", "9"]`. Picked in admin from a dropdown of every length used on any burner, or added there. The RFQ's Air Tube Length becomes a dropdown of these plus “Other (see notes)” |
+| `airTubeStd` | Optional. The standard length, one of `airTubes`. Marked “(std)” and preselected on the RFQ |
 | `stepDown` | Optional. `true` = show the step-down transformer warning for this burner (admin checkbox *Step-down transformer warning*) |
 | `biofuel` | Optional. Fuel ratings, comma-separated, picked in admin from `#2`, `B20`, `B100`, `R100` (e.g. `"B20, B100, R100"`; every oil burner has B20) |
 | `propane` | Optional. e.g. `"Conversion kit"` |

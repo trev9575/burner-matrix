@@ -78,6 +78,8 @@ td{border-bottom:1px solid var(--rule);padding:8px;vertical-align:middle}
 .toast.on{opacity:1}
 [hidden]{display:none !important}
 details.ms{position:relative}
+.tubestd{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;margin-top:4px}.tubestd select{flex:1;min-height:0;padding:6px 8px}
+.tubeadd{display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--rule)}.tubeadd input{flex:1;min-width:0}.tubeadd .btn{min-height:0;padding:6px 12px}#tubeopts:empty::before{content:'No lengths yet. Add one below.';font-size:13px;color:var(--mute)}
 details.ms summary{list-style:none;cursor:pointer;min-height:42px;padding:9px 34px 9px 10px;border:1px solid #b9b9b2;border-radius:3px;background:#fff;font-size:15px;position:relative}
 details.ms summary::-webkit-details-marker{display:none}
 details.ms summary::after{content:"";position:absolute;right:12px;top:50%;width:8px;height:8px;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:translateY(-70%) rotate(45deg)}
@@ -143,7 +145,13 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
             <label class="f"><span>Standard supply <span class="u">optional, shows a Std tag</span></span><select name="powerStd"><option value="">None</option></select></label>
             <label class="f"><span>Power notes <span class="u">reference only</span></span><input type="text" name="powerText"></label>
             <label class="f">Air tube / insertion<input type="text" name="airTube"></label>
-            <label class="f"><span>Available air tube lengths <span class="u">optional, inches, comma-separated; becomes a dropdown on the RFQ</span></span><input type="text" name="airTubes" placeholder='e.g. 6, 9, 13, 13 (extended head)' autocomplete="off"></label>
+            <div class="f" style="display:flex;flex-direction:column;gap:4px"><span style="font-weight:700;font-size:13.5px">Available air tube lengths <span class="u">optional, inches; becomes a dropdown on the RFQ</span></span>
+              <details class="ms" id="tubems"><summary id="tubesum">None</summary><div>
+                <div id="tubeopts"></div>
+                <div class="tubeadd"><input type="text" id="tubeadd" inputmode="decimal" autocomplete="off" placeholder="Add a length, e.g. 7.5" aria-label="Add an air tube length in inches"><button type="button" class="btn" id="tubeaddb">Add</button></div>
+                <div class="u" id="tubeerr" hidden style="color:#b3141f;margin-top:4px"></div>
+              </div></details>
+              <label class="tubestd"><span>Standard length <span class="u">optional</span></span><select name="airTubeStd"><option value="">None</option></select></label></div>
           </div>
           <label class="chk" style="align-items:flex-start"><input type="checkbox" name="stepDown" style="margin-top:3px"><span><b>Step-down transformer warning</b><br><span class="u">When a rep starts an RFQ for this burner with only voltages above 120 V selected (and not 120 VAC), warn that a step-down transformer is needed if 120 VAC isn't available at the site, which adds cost.</span></span></label>
           <fieldset><legend>Chassis dimensions</legend>
@@ -298,6 +306,27 @@ const FUELR=['#2','B20','B100','R100'];
 const splitF=v=>String(v||'').split(',').map(x=>x.trim()).filter(Boolean);
 function fuelOpts(cur){const have=splitF(cur);const opts=FUELR.concat(have.filter(x=>!FUELR.includes(x)));
   $('fuelopts').innerHTML=opts.map(v=>`<label class="chk"><input type="checkbox" name="fuelOpt" value="${esc(v)}"${have.includes(v)?' checked':''}> ${esc(v)}${FUELR.includes(v)?'':' <span class="u">(existing value)</span>'}</label>`).join('');fuelSum()}
+// air tube lengths: tick from every length used on any burner, or add a new one (decimals OK)
+const tubeSort=(a,b)=>(parseFloat(a)||1e9)-(parseFloat(b)||1e9)||a.localeCompare(b);
+const tubeNum=v=>{const m=/^(\d*\.?\d+)\s*(?:"|in\.?|inch(?:es)?)?$/i.exec(String(v).trim());const n=m?+m[1]:NaN;return n>0&&n<=240?String(n):null};
+function tubeOpts(cur,std){const have=cur||[];const all=[...new Set(list.flatMap(b=>b.airTubes||[]).concat(have))].sort(tubeSort);
+  $('tubeopts').innerHTML=all.map(v=>`<label class="chk"><input type="checkbox" name="tubeOpt" value="${esc(v)}"${have.includes(v)?' checked':''}> ${esc(tubeNum(v)?v+' in':v)}</label>`).join('');
+  $('tubeadd').value='';$('tubeerr').hidden=true;tubeSum(std||'')}
+const tubeSum=keepStd=>{const c=[...document.querySelectorAll('[name=tubeOpt]:checked')].map(x=>x.value).sort(tubeSort),L=v=>tubeNum(v)?v+' in':v;
+  const sel=E.airTubeStd,was=keepStd!==undefined?keepStd:sel.value;
+  sel.innerHTML='<option value="">None</option>'+c.map(v=>`<option value="${esc(v)}">${esc(L(v))}</option>`).join('');
+  sel.value=c.includes(was)?was:'';sel.disabled=!c.length;
+  $('tubesum').textContent=c.length?c.map(v=>L(v)+(v===sel.value?' (std)':'')).join(', '):'None'};
+function tubeAdd(){const raw=$('tubeadd').value.trim();if(!raw)return;const v=tubeNum(raw);
+  if(!v){$('tubeerr').textContent='Enter a length in inches, like 9 or 7.5';$('tubeerr').hidden=false;return}
+  const cur=[...document.querySelectorAll('[name=tubeOpt]:checked')].map(x=>x.value);
+  const box=[...document.querySelectorAll('[name=tubeOpt]')].find(x=>tubeNum(x.value)===v);
+  if(box)box.checked=true;else{const keep=[...document.querySelectorAll('[name=tubeOpt]')].map(x=>x.value);
+    $('tubeopts').innerHTML='';const all=[...new Set(keep.concat(v))].sort(tubeSort);
+    $('tubeopts').innerHTML=all.map(t=>`<label class="chk"><input type="checkbox" name="tubeOpt" value="${esc(t)}"${cur.includes(t)||t===v?' checked':''}> ${esc(tubeNum(t)?t+' in':t)}</label>`).join('')}
+  $('tubeadd').value='';$('tubeerr').hidden=true;tubeSum();dirty=true;$('dirty').hidden=false;$('tubeadd').focus()}
+$('tubeaddb').onclick=tubeAdd;
+$('tubeadd').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();tubeAdd()}});
 const fuelSum=()=>{const c=[...document.querySelectorAll('[name=fuelOpt]:checked')].map(x=>x.value);$('fuelsum').textContent=c.length?c.join(', '):'None'};
 function fmt(b){return b.fuel==='oil'?`${b.min}–${b.max} GPH`:`${(+b.min).toLocaleString()}–${(+b.max).toLocaleString()} MBH`}
 function renderList(){const q=$('q').value.trim().toLowerCase();
@@ -327,14 +356,14 @@ function edit(b,isCopy){cur={key:b&&!isCopy?keyOf(b):null};$('none').hidden=true
   if(typeof o.turndown==='number')E.turndown.value=o.turndown+':1';
   if(isCopy)E.name.value=o.name+' (copy)';
   fuelOpts(o.biofuel);brandOpts(o.brand);E.brandSel.value=o.brand||(list[0]?list[0].brand:NEWB);E.brandNew.value='';brandUI();
-  E.powerStd.value=o.powerStd||'';E.stepDown.checked=o.stepDown===true;E.airTubes.value=(o.airTubes||[]).join(', ');
+  E.powerStd.value=o.powerStd||'';E.stepDown.checked=o.stepDown===true;tubeOpts(o.airTubes,o.airTubeStd);
   for(const [n,arr] of[['power',o.power],['modes',o.modes],['applications',o.applications]])f.querySelectorAll(`[name=${n}]`).forEach(c=>c.checked=(arr||[]).includes(c.value));
   const pub=Array.isArray(o.dims);E.dimmode.value=pub?'published':(o.dims||'not published');
   E.dh.value=pub?o.dims[0]:'';E.dw.value=pub?o.dims[1]:'';E.dd.value=pub?o.dims[2]:'';
   $('ft').textContent=b&&!isCopy?`${o.brand} ${o.name}`:'New burner';$('del').hidden=!cur.key;$('dup').hidden=!cur.key;$('cancel').textContent=cur.key?'Discard changes':'Cancel';
   units();dimUI();pic();dirty=!!isCopy;$('dirty').hidden=!dirty;renderList();E.name.focus()}
 f.addEventListener('input',e=>{dirty=true;$('dirty').hidden=false;if(e.target===E.fuel)units();if(e.target.name==='dimmode')dimUI();if(e.target===E.image)pic()});
-f.addEventListener('change',e=>{if(e.target.name==='fuelOpt')fuelSum();if(e.target===E.brandSel)brandUI();if(e.target===E.fuel)units();if(e.target.name==='dimmode')dimUI()});
+f.addEventListener('change',e=>{if(e.target.name==='fuelOpt')fuelSum();if(e.target.name==='tubeOpt')tubeSum();if(e.target===E.airTubeStd)tubeSum();if(e.target===E.brandSel)brandUI();if(e.target===E.fuel)units();if(e.target.name==='dimmode')dimUI()});
 function read(){const t=k=>E[k].value.trim(),n=k=>E[k].value===''?undefined:Number(E[k].value),o={};
   o.name=t('name');o.brand=E.brandSel.value===NEWB?t('brandNew'):E.brandSel.value;o.fuel=E.fuel.value;o.min=n('min');o.max=n('max');
   o.power=[...f.querySelectorAll('[name=power]:checked')].map(x=>x.value);if(E.powerStd.value)o.powerStd=E.powerStd.value;o.powerText=t('powerText');
@@ -345,11 +374,11 @@ function read(){const t=k=>E[k].value.trim(),n=k=>E[k].value===''?undefined:Numb
   for(const k of['flameLength','flameWidth','overfire'])if(E[k].value!=='')o[k]=Number(E[k].value);
   const td=t('turndown');if(td){const m=/^(\d+(?:\.\d+)?)\s*(?::\s*1)?$/.exec(td);o.turndown=m?Number(m[1]):td}
   if(E.stepDown.checked)o.stepDown=true;
-  const at=[...new Set(E.airTubes.value.split(',').map(v=>v.trim().replace(/\s*("|in\.?|inch(es)?)$/i,'')).filter(Boolean))];if(at.length)o.airTubes=at;
+  const at=[...f.querySelectorAll('[name=tubeOpt]:checked')].map(x=>x.value).sort(tubeSort);if(at.length){o.airTubes=at;if(E.airTubeStd.value&&at.includes(E.airTubeStd.value))o.airTubeStd=E.airTubeStd.value}
   if(E.parts.value)o.parts=E.parts.value;if(E.service.value)o.service=E.service.value;
   o.notes=t('notes');o.link=t('link');if(t('image'))o.image=t('image');
   for(const k of Object.keys(o))if(o[k]===undefined||o[k]==='')delete o[k];return o}
-const LBL={name:'Model name',brand:'Brand',fuel:'Fuel',min:'Min firing rate',max:'Max firing rate',power:'Power available',powerText:'Power notes',powerStd:'Standard supply',stepDown:'Step-down transformer warning',airTubes:'Available air tube lengths',modes:'Firing modes',dims:'Chassis dimensions',airTube:'Air tube',applications:'Applications',notes:'Selling note',link:'Link',biofuel:'Fuel ratings',propane:'Propane',image:'Photo',flameLength:'Flame length',flameWidth:'Flame width',turndown:'Turndown',overfire:'Overfire pressure',parts:'Part availability',service:'Ease of service'};
+const LBL={name:'Model name',brand:'Brand',fuel:'Fuel',min:'Min firing rate',max:'Max firing rate',power:'Power available',powerText:'Power notes',powerStd:'Standard supply',stepDown:'Step-down transformer warning',airTubes:'Available air tube lengths',airTubeStd:'Standard air tube length',modes:'Firing modes',dims:'Chassis dimensions',airTube:'Air tube',applications:'Applications',notes:'Selling note',link:'Link',biofuel:'Fuel ratings',propane:'Propane',image:'Photo',flameLength:'Flame length',flameWidth:'Flame width',turndown:'Turndown',overfire:'Overfire pressure',parts:'Part availability',service:'Ease of service'};
 const nice=m=>{let k=m.match(/^Missing "(\w+)"$/);if(k)return`${LBL[k[1]]||k[1]}: required`;k=m.match(/^(\w+):(.*)$/);return k&&LBL[k[1]]?LBL[k[1]]+':'+k[2]:m};
 const showMsg=(el,kind,html)=>{el.className='msg '+kind;el.innerHTML=html;el.hidden=false};
 f.onsubmit=async e=>{e.preventDefault();const b=read();const errs=S.check(b);
@@ -417,7 +446,7 @@ $('pclose').onclick=()=>$('pwd').close();
 $('pf').onsubmit=async e=>{e.preventDefault();const P=e.target.elements;
   try{await call('POST','/api/password',{current:P.current.value,next:P.next.value});$('pwd').close();toast('Password changed')}catch(err){showMsg($('pmsg'),'err',esc(err.message))}};
 
-document.addEventListener('click',e=>{const d=$('fuelms');if(d.open&&!d.contains(e.target))d.open=false});
+document.addEventListener('click',e=>{for(const id of['fuelms','tubems']){const d=$(id);if(d.open&&!d.contains(e.target))d.open=false}});
 boot();
 }
 </script>

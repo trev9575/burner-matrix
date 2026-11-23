@@ -6,7 +6,7 @@
   const APPS = ['residential', 'light commercial', 'commercial/industrial', 'pressure washers/road equipment', 'oil-to-gas conversion', 'ovens/process'];
   const DIMS_TEXT = ['spec sheet', 'not published'];
   const REQUIRED = ['name', 'brand', 'fuel', 'min', 'max', 'power', 'powerText', 'modes', 'dims', 'airTube', 'applications', 'notes', 'link'];
-  const OPTIONAL = ['powerStd', 'biofuel', 'propane', 'discontinued', 'image', 'flameLength', 'flameWidth', 'turndown', 'overfire', 'parts', 'service', 'stepDown', 'airTubes'];
+  const OPTIONAL = ['powerStd', 'biofuel', 'propane', 'discontinued', 'image', 'flameLength', 'flameWidth', 'turndown', 'overfire', 'parts', 'service', 'stepDown', 'airTubes', 'airTubeStd'];
   const PARTS = ['best', 'good', 'bad'];
   const SERVICE = ['easy', 'medium', 'hard'];
 
@@ -54,6 +54,7 @@
     if ('propane' in b && b.fuel === 'oil') e.push('propane: only applies to gas burners');
     if ('airTubes' in b && !(Array.isArray(b.airTubes) && b.airTubes.length > 0 && b.airTubes.length <= 20 && b.airTubes.every(t => str(t) && t.length <= 30) && new Set(b.airTubes.map(t => t.toLowerCase())).size === b.airTubes.length))
       e.push('airTubes: a list of the air tube lengths you can order (e.g. ["6", "9", "13"]), each listed once, or leave it out');
+    if ('airTubeStd' in b && !(Array.isArray(b.airTubes) && b.airTubes.includes(b.airTubeStd))) e.push('airTubeStd: must be one of the available air tube lengths (or leave it out)');
     if ('stepDown' in b && b.stepDown !== true) e.push('stepDown: use true, or remove the field');
     if ('discontinued' in b && b.discontinued !== true) e.push('discontinued: use true, or remove the field');
     return e;
