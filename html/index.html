@@ -380,7 +380,7 @@ tr.fu td{background:#fffaf2 !important}
         <label class="chk"><input type="checkbox" id="bio"> Biofuel rated (B20 or higher)</label>
         <label class="chk"><input type="checkbox" id="lp"> Propane / LP capable</label>
       </div>
-      <div class="acts"><button class="btn" id="o2gb" title="Size a gas burner from the oil nozzle it replaces">Oil-To-Gas<br>Conversion Tool</button><button class="btn pri" id="copy">Copy shortlist</button><button class="btn" id="reset">Reset</button></div>
+      <div class="acts"><button class="btn" id="o2gb" title="Size a gas burner from the oil nozzle it replaces">Oil-To-Gas<br>Conversion Tool</button><button class="btn" id="reset">Reset</button></div>
     </div>
   </aside>
 
@@ -671,9 +671,6 @@ $('o-go').onclick=()=>{const c=o2gCalc();if(!c)return;o2gApply(c);
 
 $('lad').onclick=e=>{const row=e.target.closest('.lr');if(!row)return;const t=$('r-'+row.dataset.n.replace(/\W/g,''));if(!t)return;document.querySelectorAll('tr.hl').forEach(x=>x.classList.remove('hl'));t.classList.add('hl');t.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'center'})};
 const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),Math.max(1800,String(m).length*60))};
-$('copy').onclick=async()=>{const r=reqMBH();const head=r!=null?`Required input: ${S.rate} ${S.unit.toUpperCase()} (~${Math.round(r).toLocaleString()} MBH)\n`:'';
-  const txt=head+list.map(x=>{const fz=fit(x,r);return`${x.b} ${x.n} | ${x.f==='oil'?'Oil':'Gas'} | ${fmt(x)} | ${x.vt} | ${x.m.map(m=>MODES[m]).join('/')}${x.parts?' | Parts: '+CAP(x.parts):''}${x.svc?' | Service: '+CAP(x.svc):''}${fz?' | '+(fz==='ok'?'sweet spot':'edge of range'):''}\n  ${x.u}`}).join('\n');
-  try{await navigator.clipboard.writeText(txt||'No matches');toast(`Copied ${list.length} burners`)}catch(e){toast('Copy blocked by browser')}};
 /* ---------- Hover photo ---------- */
 const pic=$('pic'),pimg=pic.querySelector('img'),pcap=pic.querySelector('span');
 pimg.onerror=()=>{pic.classList.remove('ld');pic.classList.add('err')};pimg.onload=()=>pic.classList.remove('ld','err');

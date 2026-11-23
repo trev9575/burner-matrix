@@ -695,6 +695,24 @@ const server = http.createServer(async (req, res) => {
     if (!e.code) console.error(e);
   }
 });
+// one-time data updates for the live burner list (each runs once; recorded in settings.json and in History & undo)
+function migrate() {
+  const st = getSettings(), done = Array.isArray(st.migrations) ? st.migrations : [];
+  if (!done.includes('oil-b20')) {
+    const ORDER = ['#2', 'B20', 'B100', 'R100'], rank = x => ORDER.includes(x) ? ORDER.indexOf(x) : 9;
+    const list = getBurners(); let n = 0;
+    for (const b of list) if (b.fuel === 'oil') {
+      const have = String(b.biofuel || '').split(',').map(x => x.trim()).filter(Boolean);
+      if (!have.includes('B20')) { have.push('B20'); n++; }
+      b.biofuel = have.sort((a, c) => rank(a) - rank(c)).join(', ');
+    }
+    const err = n ? saveBurners(list, 'system', 'Added B20 fuel rating to all oil burners') : null;
+    if (err) { console.warn('B20 update skipped:', err.join('; ')); return; }
+    if (n) console.log(`Added B20 to ${n} oil burner(s)`);
+    const s2 = getSettings(); s2.migrations = [...done, 'oil-b20']; writeJSON(F.settings, s2);
+  }
+}
+try { migrate(); } catch (e) { console.error('Data update failed:', e.message); }
 server.listen(PORT, () => {
   console.log(`Burner matrix on port ${PORT}, data in ${DATA}`);
   setTimeout(() => localizePhotos().catch(e => console.warn('Photo download failed:', e.message)), 3000);

@@ -291,7 +291,7 @@ const NEWB='__new__';
 function brandOpts(extra){const bs=[...new Set(list.map(b=>b.brand).concat(extra?[extra]:[]))].sort((a,b)=>a.localeCompare(b));
   E.brandSel.innerHTML=bs.map(b=>`<option value="${esc(b)}">${esc(b)}</option>`).join('')+`<option value="${NEWB}">+ Add a new brand…</option>`}
 const brandUI=()=>{const n=E.brandSel.value===NEWB;$('bnew').hidden=!n;if(n)$('bnew').focus()};
-const FUELR=['#2','B100','R100'];
+const FUELR=['#2','B20','B100','R100'];
 const splitF=v=>String(v||'').split(',').map(x=>x.trim()).filter(Boolean);
 function fuelOpts(cur){const have=splitF(cur);const opts=FUELR.concat(have.filter(x=>!FUELR.includes(x)));
   $('fuelopts').innerHTML=opts.map(v=>`<label class="chk"><input type="checkbox" name="fuelOpt" value="${esc(v)}"${have.includes(v)?' checked':''}> ${esc(v)}${FUELR.includes(v)?'':' <span class="u">(existing value)</span>'}</label>`).join('');fuelSum()}
