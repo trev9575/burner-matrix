@@ -453,6 +453,9 @@ async function api(req, res, url) {
     const r = { id: crypto.randomBytes(6).toString('hex'), no, date: now, updated: now, by: me.name, byFull: me.full || '',
       burner, fit: ['ok', 'min', 'max', 'out'].includes(b.fit) ? b.fit : '', fields: cleanFields(b.fields), sends: [],
       locks: Array.isArray(b.locks) ? b.locks.filter(k => /^q-[a-z0-9-]{1,20}$/.test(k)).slice(0, 10) : [] };
+    // step-down transformer note: set once when the RFQ is made, never changed afterwards (PUT ignores it)
+    const xf = typeof b.xfmr === 'string' ? b.xfmr.replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 400) : '';
+    if (xf) r.xfmr = xf;
     writeJSON(rfqFile(r.id), r);
     return send(res, 200, r);
   }

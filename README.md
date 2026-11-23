@@ -106,6 +106,8 @@ turns off the step-down transformer warning). Hover it to see why; change anothe
 clicks *Create RFQ* for that burner with only voltages above 120 V ticked in the Power filter (and 120 VAC not ticked),
 a popup says a step-down transformer is required if 120 VAC isn't available at the site, which adds cost; they can go
 back or continue. Admin → Settings has a master switch to turn these popups off for everyone.
+If they continue, the RFQ sheet (and its PDF and copied text) carries a locked **Step-down transformer required** note
+with the site power they selected. Nobody can edit or remove it; *Copy to new RFQ* carries it over.
 
 **Oil-To-Gas Conversion Tool.** Pick 1 or 2 nozzles (each can be a different size) and the pump pressure; it works out the real
 firing rate (sum of nozzles × √(psi ÷ 100), × 140 MBH per GPH) and lists every gas burner that covers it,

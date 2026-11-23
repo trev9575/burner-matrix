@@ -309,6 +309,8 @@ tr.fu td{background:#fffaf2 !important}
 .sheet.ro select{-webkit-appearance:none;appearance:none}.sheet.ro textarea{border-style:solid;resize:none}.sheet.ro ::placeholder{color:transparent}
 .kv input[data-lock],.kv select[data-lock]{background:#f0f0ec;border-bottom:1px solid #d6d6d0;cursor:not-allowed;color:#1d1d1d;opacity:1;-webkit-text-fill-color:#1d1d1d}
 @media print{.kv input[data-lock],.kv select[data-lock]{background:transparent}}
+.xfmr{display:flex;gap:10px;align-items:flex-start;margin:14px 0 0;padding:10px 12px;border:1.5px solid #e0a800;background:#fff8e1;border-radius:4px;font-size:13px;line-height:1.45;-webkit-print-color-adjust:exact;print-color-adjust:exact}.xfmr svg{flex:none;margin-top:1px}.xfmr b{font-size:13.5px}.xlk{margin-left:8px;font-size:11px;font-weight:600;color:#8a6d00}
+@media print{.xfmr{margin:6px 0 0;padding:4px 8px;font-size:10px;line-height:1.3;gap:6px}.xfmr b{font-size:10.5px}.xfmr svg{width:13px;height:13px}.xfmr br{display:none}.xfmr b::after{content:' – '}}
 .rqm{color:#c8102e;font-weight:700}.rqnote{font-size:12px;color:var(--mute);margin-top:6px}
 .sheet.ro .rqm,.sheet.ro .rqnote{display:none}@media print{.rqm,.rqnote{display:none !important}}
 .kv .rq.miss select,.kv .rq.miss input{outline:2px solid #c8102e;outline-offset:1px;background:#fde8ea}
@@ -747,7 +749,7 @@ const rawOf=x=>RAW.find(o=>(o.brand+'|'+o.name).toLowerCase()===(x.b+'|'+x.n).to
 let RFQ=null;
 // meta: {no, date?, id?, raw?, fit?, fields?, sends?, by?, from?}
 function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);$('sheet').classList.remove('ro');
-  RFQ={offline:!!meta.offline,oid:meta.oid||'',ymd:meta.ymd||'',ro:!!meta.ro,id:meta.id||null,no:meta.offline?'Offline draft':meta.no,date:meta.date||new Date().toISOString(),raw:meta.raw||rawOf(x),sends:meta.sends||[],by:meta.by||'',byFull:meta.byFull||'',from:meta.from||'matrix',dirty:false};
+  RFQ={offline:!!meta.offline,oid:meta.oid||'',ymd:meta.ymd||'',ro:!!meta.ro,id:meta.id||null,no:meta.offline?'Offline draft':meta.no,date:meta.date||new Date().toISOString(),raw:meta.raw||rawOf(x),sends:meta.sends||[],by:meta.by||'',byFull:meta.byFull||'',from:meta.from||'matrix',xfmr:typeof meta.xfmr==='string'?meta.xfmr:'',dirty:false};
   const fz0=fit(x,r);RFQ.fit=meta.fit!==undefined?meta.fit:(fz0==='edge'?where(x,r):fz0||'');
   const rateTxt=r==null?'':(S.unit==='gph'?`${S.rate} GPH (≈ ${Math.round(r).toLocaleString()} MBH)`:`${Number(S.rate).toLocaleString()} MBH${x.f==='oil'?` (≈ ${(r/G).toFixed(2)} GPH)`:''}`);
   const siteKeys=S.volt.filter(v=>x.v.includes(v));const site=siteKeys.map(vlabel).join(', ');
@@ -793,6 +795,7 @@ function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);$('sheet').cla
     ${inp('q-ins','Insertion Depth','','inches')}${inp('q-ctl','Controls / Panel','','Primary control, panel, CSD-1…')}
     ${inp('q-opt','Other Options','','Nozzle, head, solenoid…','w')}</div>
   <div class="noprint rqnote" id="rqnote"><span class="rqm">*</span> Required before the RFQ can be emailed</div>
+  ${RFQ.xfmr?`<div class="xfmr" id="q-xfmr" title="Added automatically because of the power selected on the matrix page. It can’t be edited or removed."><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 1 21h22L12 2z" fill="#f2b705"/><path d="M12 9v5m0 3v.5" stroke="#1c1c1c" stroke-width="2.4" stroke-linecap="round"/></svg><div><b>Step-down transformer required</b><span class="xlk noprint">🔒 Locked</span><br>${esc(RFQ.xfmr)}</div></div>`:''}
   <h3>Notes</h3>
   <textarea id="q-notes" aria-label="Notes" placeholder="Anything else the quote needs to cover"></textarea>
   <div class="kv" style="margin-top:12px">${inp('q-rep','Prepared by',repName())}${inp('q-repp','Rep phone',repPhone())}${inp('q-repe','Rep email',repEmail(),'','w')}</div>
@@ -878,17 +881,21 @@ const rfqFields=()=>{const f={};$('sheet').querySelectorAll('input[id^="q-"],sel
 const J=async(method,url,body)=>{const r=await fetch(url,{method,credentials:'same-origin',headers:body!==undefined?{'Content-Type':'application/json','X-BM':'1'}:{'X-BM':'1'},body:body!==undefined?JSON.stringify(body):undefined});
   if(r.status===401){location.replace('login');throw new Error('Signed out')}let j={};try{j=await r.json()}catch(e){}if(!r.ok)throw new Error(j.error||'HTTP '+r.status);return j};
 async function saveRFQ(quiet){if(!ME||!RFQ)return null;if(RFQ.offline){if(RFQ.dirty||!RFQ.saved)saveOffline(quiet);return null}if(RFQ.id&&(!RFQ.dirty||RFQ.ro))return RFQ.id;
-  const rec=RFQ.id?await J('PUT','api/rfqs/'+RFQ.id,{fields:rfqFields()}):await J('POST','api/rfqs',{no:RFQ.no,burner:RFQ.raw,fit:RFQ.fit,locks:RFQ.locks||[],fields:rfqFields()});
+  const rec=RFQ.id?await J('PUT','api/rfqs/'+RFQ.id,{fields:rfqFields()}):await J('POST','api/rfqs',{no:RFQ.no,burner:RFQ.raw,fit:RFQ.fit,locks:RFQ.locks||[],xfmr:RFQ.xfmr||'',fields:rfqFields()});
   RFQ.id=rec.id;RFQ.dirty=false;RFQ.date=rec.date;rfqStatus();if(!quiet)toast('RFQ saved');return RFQ.id}
 async function closeRFQ(){if(RFQ&&RFQ.dirty&&ME){try{await saveRFQ(true);toast('RFQ saved')}catch(e){toast('Could not save: '+e.message);return}}
   $('rfqv').hidden=true;if(RFQ&&RFQ.from==='list'){RFQ=null;return openList()}if(RFQ&&RFQ.from==='won'){RFQ=null;return openWon()}if(RFQ&&RFQ.from==='hist'&&HIST){RFQ=null;return openHistory(HIST.company)}RFQ=null;$('matrixv').hidden=false;if(rfqB){const t=$('r-'+rfqB.n.replace(/\W/g,''));if(t)t.scrollIntoView({block:'center'})}}
 $('tb').addEventListener('click',async e=>{const b=e.target.closest('.rfqb');if(!b)return;const x=D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===b.dataset.k);if(!x)return;
-  if(!await stepDownOK(x))return;b.disabled=true;newRFQ(x).catch(err=>toast(err.message)).finally(()=>b.disabled=false)});
+  const xfmr=stepDownNote(x);if(xfmr&&!await stepDownOK(x))return;b.disabled=true;newRFQ(x,xfmr?{xfmr}:{}).catch(err=>toast(err.message)).finally(()=>b.disabled=false)});
 // Step-down transformer warning: burner has it switched on (Admin → Burners), the master switch is on (Admin → Settings),
 // and the Power filter has only voltages above 120 V ticked (no 120 VAC)
 const HIV=['240','3p240','3p480'];
+// the locked note that goes on the RFQ sheet when the warning applies ('' when it doesn't)
+function stepDownNote(x){const hi=S.volt.filter(v=>HIV.includes(v));
+  if(!x.sd||(ME&&ME.stepDownWarn===false)||!hi.length||S.volt.includes('120'))return '';
+  return `Site power selected: ${hi.map(v=>VOLTS[v]).join(', ')} (no 120 VAC). A step-down transformer is required if 120 VAC is not available at the install site. This will increase the cost of the burner.`}
 function stepDownOK(x){const hi=S.volt.filter(v=>HIV.includes(v));
-  if(!x.sd||(ME&&ME.stepDownWarn===false)||!hi.length||S.volt.includes('120'))return Promise.resolve(true);
+  if(!stepDownNote(x))return Promise.resolve(true);
   $('sdtxt').innerHTML=`You selected <b>${esc(hi.map(v=>VOLTS[v]).join(', '))}</b> without 120 VAC. The <b>${esc(x.b+' '+x.n)}</b> needs a <b>step-down transformer</b> if 120 VAC is not available at the install site. This will increase the cost of the burner.`;
   const d=$('sdd');d.showModal();$('sdgo').focus();
   return new Promise(res=>{const done=v=>{d.onclose=null;if(d.open)d.close();res(v)};$('sdgo').onclick=()=>done(true);$('sdx').onclick=()=>done(false);d.onclose=()=>done(false)})}
@@ -901,12 +908,13 @@ const rfqText=()=>{const L=[],sh=$('sheet');
     if(n&&n.tagName==='TEXTAREA'){L.push(n.value||'-');return}
     const box=n&&n.classList.contains('sh-burner')?n.querySelector('.kv'):n;
     if(box)box.querySelectorAll(':scope>div').forEach(r=>{const k=((r.querySelector('label,.k')||{}).textContent||'').replace(/\s*\*$/,'');const f=r.querySelector('input,select');const v=f?f.value:((r.querySelector('.v')||{}).textContent||'');L.push(`${k}: ${v||'-'}`)})});
+  if(RFQ.xfmr){const i=L.indexOf('== NOTES ==');L.splice(i<0?L.length:i-1,0,'','!! STEP-DOWN TRANSFORMER REQUIRED: '+RFQ.xfmr)}
   const reps=['q-rep','q-repp','q-repe'].map(i=>$(i).value).filter(Boolean).join(' · ');if(reps)L.push('','Prepared by: '+reps);
   L.push('','Confirm against the current manufacturer spec sheet before quoting.');return L.join('\n')};
 $('rfqcopy').onclick=async()=>{try{if(ME)await saveRFQ(true);await navigator.clipboard.writeText(rfqText());toast('RFQ copied')}catch(e){toast('Copy blocked by browser')}};
 $('rfqdup').onclick=async e=>{const b=e.currentTarget;if(!RFQ)return;b.disabled=true;
   try{const f=rfqFields(),raw=RFQ.raw,fk=RFQ.fit,from=RFQ.from,locks=RFQ.locks||[];delete f['q-rep'];delete f['q-repp'];delete f['q-repe'];
-    const x=toRec(raw);await newRFQ(x,{raw,fit:fk,fields:f,from,locks});if(!RFQ.offline)toast('New RFQ '+RFQ.no+' – make your changes, then save or email it')}
+    const xfmr=RFQ.xfmr||'';const x=toRec(raw);await newRFQ(x,{raw,fit:fk,fields:f,from,locks,xfmr});if(!RFQ.offline)toast('New RFQ '+RFQ.no+' – make your changes, then save or email it')}
   catch(err){toast(err.message)}finally{b.disabled=false}};
 $('rfqdel').onclick=async e=>{try{if(await delRFQ(RFQ.id,e.currentTarget,RFQ.sends.length>0)){const from=RFQ.from;RFQ=null;$('rfqv').hidden=true;from==='list'?openList():from==='won'?openWon():from==='hist'&&HIST?openHistory(HIST.company):($('matrixv').hidden=false)}}catch(err){toast(err.message)}};
 $('rfqsave').onclick=async()=>{try{await saveRFQ()}catch(e){toast('Could not save: '+e.message)}};
@@ -999,7 +1007,7 @@ $('lxls').onclick=async e=>{const b=e.currentTarget;b.disabled=true;const t=b.te
   catch(err){toast('Export failed: '+err.message)}finally{b.disabled=false;b.textContent=t}};
 $('lback').onclick=()=>{$('listv').hidden=true;$('matrixv').hidden=false};
 async function openSaved(id,from){const rec=await J('GET','api/rfqs/'+id);
-  openRFQ(toRec(rec.burner),{id:rec.id,no:rec.no,date:rec.date,raw:rec.burner,fit:rec.fit||'',fields:rec.fields,sends:rec.sends||[],by:rec.by,byFull:rec.byFull,from,locks:rec.locks||[],
+  openRFQ(toRec(rec.burner),{id:rec.id,no:rec.no,date:rec.date,raw:rec.burner,fit:rec.fit||'',fields:rec.fields,sends:rec.sends||[],by:rec.by,byFull:rec.byFull,from,locks:rec.locks||[],xfmr:rec.xfmr||'',
     ro:PDFMODE||(rec.sends||[]).length>0||!ME||rec.by!==ME.name})} // drafts stay editable for the rep who made them until emailed
 $('lbody').onclick=async e=>{if(e.target.closest('select.st'))return;const tr=e.target.closest('tr[data-id]');const d=e.target.closest('.ldel');
   const fu=e.target.closest('.lfu'),lv=e.target.closest('.lval');
@@ -1227,14 +1235,14 @@ const setOutbox=a=>{try{localStorage.setItem(OUTBOX,JSON.stringify(a))}catch(e){
 async function newRFQ(x,meta={}){try{const n=await nextSeq();openRFQ(x,{...meta,no:rfqNo(x,n)})}
   catch(err){if(!err.offline)throw err;openRFQ(x,{...meta,offline:true,oid:'o'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),ymd:ymd()});toast('No connection – this RFQ will be saved on this device and numbered when you’re back online.')}}
 function saveOffline(quiet){const ob=getOutbox().filter(o=>o.oid!==RFQ.oid);
-  ob.push({oid:RFQ.oid,ymd:RFQ.ymd,date:RFQ.date,model:modelCode(rfqB.n),raw:RFQ.raw,fit:RFQ.fit,locks:RFQ.locks||[],fields:rfqFields(),by:ME&&ME.name});
+  ob.push({oid:RFQ.oid,ymd:RFQ.ymd,date:RFQ.date,model:modelCode(rfqB.n),raw:RFQ.raw,fit:RFQ.fit,locks:RFQ.locks||[],xfmr:RFQ.xfmr||'',fields:rfqFields(),by:ME&&ME.name});
   setOutbox(ob);RFQ.dirty=false;RFQ.saved=true;rfqStatus();if(!quiet)toast('Saved on this device');offlineNote()}
 let syncing=false;
 async function syncOutbox(){if(syncing||!ME||!navigator.onLine)return;const ob=getOutbox().filter(o=>!o.by||o.by===ME.name);if(!ob.length)return;syncing=true;let done=0;
   try{for(const o of ob){let n;
       try{const r=await fetch('api/rfq-seq',{method:'POST',headers:{'Content-Type':'application/json','X-BM':'1'},body:JSON.stringify({date:o.ymd})});if(!r.ok)break;n=(await r.json()).n}catch(e){break}
       const no=`${o.ymd}-${String(n).padStart(2,'0')}${o.model}`;let rec;
-      try{rec=await J('POST','api/rfqs',{no,burner:o.raw,fit:o.fit,locks:o.locks,fields:o.fields})}catch(e){toast('Could not upload an offline RFQ: '+e.message);break}
+      try{rec=await J('POST','api/rfqs',{no,burner:o.raw,fit:o.fit,locks:o.locks,xfmr:o.xfmr||'',fields:o.fields})}catch(e){toast('Could not upload an offline RFQ: '+e.message);break}
       setOutbox(getOutbox().filter(x=>x.oid!==o.oid));done++;
       if(RFQ&&RFQ.offline&&RFQ.oid===o.oid){RFQ.offline=false;RFQ.id=rec.id;RFQ.no=rec.no;RFQ.date=rec.date;const m=$('sheet').querySelector('.meta b');if(m)m.textContent=rec.no;
         if(RFQ.dirty){RFQ.dirty=false;await saveRFQ(true).catch(()=>{})}rfqStatus()}}}
@@ -1243,7 +1251,7 @@ async function syncOutbox(){if(syncing||!ME||!navigator.onLine)return;const ob=g
 function offlineNote(){const el=$('lout');if(!el)return;const ob=ME?getOutbox().filter(o=>!o.by||o.by===ME.name):[];el.hidden=!ob.length;
   el.innerHTML=ob.length?`<b>${ob.length} RFQ${ob.length>1?'s':''} saved on this device</b> ${navigator.onLine?'– uploading…':'– will upload when you’re back online'}: `+ob.map(o=>`<a href="#" data-oid="${esc(o.oid)}">${esc(o.fields['q-co']||'(no company)')} – ${esc(o.raw.brand+' '+o.raw.name)}</a>`).join(', '):''}
 $('lout').onclick=e=>{const a=e.target.closest('a[data-oid]');if(!a)return;e.preventDefault();const o=getOutbox().find(x=>x.oid===a.dataset.oid);if(!o)return;
-  openRFQ(toRec(o.raw),{offline:true,oid:o.oid,ymd:o.ymd,date:o.date,raw:o.raw,fit:o.fit,locks:o.locks,fields:o.fields,from:'list'});RFQ.saved=true;rfqStatus()};
+  openRFQ(toRec(o.raw),{offline:true,oid:o.oid,ymd:o.ymd,date:o.date,raw:o.raw,fit:o.fit,locks:o.locks,xfmr:o.xfmr||'',fields:o.fields,from:'list'});RFQ.saved=true;rfqStatus()};
 function netState(){$('offl').hidden=navigator.onLine;if(navigator.onLine)syncOutbox();offlineNote()}
 addEventListener('online',netState);addEventListener('offline',netState);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncOutbox()});
