@@ -51,7 +51,7 @@ editors and admins see everyone's (**RFQs**, with an *Only mine* filter). Draft 
 Quoted, Won or Lost from the list. Counts per status and the win rate (won ÷ won + lost) sit above the list
 and filter it when clicked.
 
-**Jobs.** The Jobs tab shows jobs won, the quarterly win rate, and *Why jobs were lost*: a pie chart and
+**Jobs.** The Jobs tab shows jobs won, the quarterly win rate, and *Lost Jobs*: a pie chart and
 table of lost reasons (count, share, quoted value) with a period picker (all time, this quarter, last quarter,
 last 4 quarters), followed by the list of lost jobs and their notes. Reps see their own; editors and admins can
 pick a rep or everyone, and the lost-reason numbers follow that choice.

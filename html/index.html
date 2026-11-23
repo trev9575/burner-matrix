@@ -435,7 +435,7 @@ tr.fu td{background:#fffaf2 !important}
     <details><summary>Show the numbers as a table</summary>
       <table><thead><tr><th>Quarter</th><th>Won</th><th>Lost</th><th>Still open</th><th>Win rate</th></tr></thead><tbody id="wqtbl"></tbody></table></details>
     <div class="lostbox">
-      <div class="lbar" style="margin:0 0 6px"><h3 style="margin:0;font-size:16px">Why jobs were lost</h3><span class="sm" id="lsub" style="margin-left:6px"></span><span style="flex:1"></span>
+      <div class="lbar" style="margin:0 0 6px"><h3 style="margin:0;font-size:16px">Lost Jobs</h3><span class="sm" id="lsub" style="margin-left:6px"></span><span style="flex:1"></span>
         <select id="lperiod" aria-label="Period"><option value="all">All time</option><option value="q">This quarter</option><option value="lq">Last quarter</option><option value="4q">Last 4 quarters</option></select></div>
       <div class="lgrid"><div id="lchart" class="lchart"><div id="lpie"></div><div class="wtip" id="ltip" hidden></div></div>
         <table class="ltable"><thead><tr><th>Reason</th><th class="n">Jobs</th><th class="n">Share</th><th class="n" id="lvalth" hidden>Quoted value</th></tr></thead><tbody id="ltbl"></tbody></table></div>
@@ -1046,7 +1046,7 @@ function renderLost(base){const per=$('lperiod').value,now=qOf(new Date().toISOS
     const path=frac>=0.9999?`<circle cx="${cx}" cy="${cy}" r="${R}"/>`:`<path d="M${cx},${cy} L${cx+R*Math.cos(a0)},${cy+R*Math.sin(a0)} A${R},${R} 0 ${a1-a0>Math.PI?1:0} 1 ${cx+R*Math.cos(a1)},${cy+R*Math.sin(a1)} Z"/>`;
     const lbl=frac>=0.07?`<text x="${cx+R*0.62*Math.cos(mid)}" y="${cy+R*0.62*Math.sin(mid)+4.5}" text-anchor="middle" font-size="13" font-weight="700" fill="#fff" style="paint-order:stroke" stroke="rgba(0,0,0,.25)" stroke-width="2">${pc}%</text>`:'';
     svg+=`<g class="sl" tabindex="0" data-i="${i}" role="img" aria-label="${esc(r.k)}: ${r.n} job${r.n>1?'s':''}, ${pc}%" fill="${r.c}" stroke="#fff" stroke-width="2" stroke-linejoin="round">${path}${lbl}</g>`;a0=a1});
-  $('lpie').innerHTML=`<svg viewBox="0 0 220 220" width="220" height="220" aria-label="Why jobs were lost">${svg}</svg>`;
+  $('lpie').innerHTML=`<svg viewBox="0 0 220 220" width="220" height="220" aria-label="Lost jobs by reason">${svg}</svg>`;
   const tip=$('ltip');$('lpie').querySelectorAll('.sl').forEach(g=>{const r=rows[+g.dataset.i],show=()=>{tip.innerHTML=`<b>${esc(r.k)}</b><br>${r.n} job${r.n>1?'s':''} · ${Math.round(r.n/total*100)}% of lost${r.val?`<br>Quoted value ${money(r.val)}`:''}`;tip.hidden=false;
       const bb=g.getBoundingClientRect(),cb=$('lchart').getBoundingClientRect();tip.style.left=Math.max(4,bb.left-cb.left+bb.width/2-tip.offsetWidth/2)+'px';tip.style.top=(bb.top-cb.top+bb.height/2-tip.offsetHeight-10)+'px';
       $('lpie').querySelectorAll('.sl').forEach(o=>o.style.opacity=o===g?1:.45)},hide=()=>{tip.hidden=true;$('lpie').querySelectorAll('.sl').forEach(o=>o.style.opacity=1)};
@@ -1054,7 +1054,7 @@ function renderLost(base){const per=$('lperiod').value,now=qOf(new Date().toISOS
   const anyVal=rows.some(r=>r.val);$('lvalth').hidden=!anyVal;
   $('ltbl').innerHTML=rows.slice().sort((a,b)=>b.n-a.n).map(r=>`<tr><td><span class="sw" style="background:${r.c}"></span>${esc(r.k)}</td><td class="n">${r.n}</td><td class="n">${Math.round(r.n/total*100)}%</td>${anyVal?`<td class="n">${money(r.val)||'—'}</td>`:''}</tr>`).join('')+
     `<tr class="tot"><td>Total lost</td><td class="n">${total}</td><td class="n">100%</td>${anyVal?`<td class="n">${money(rows.reduce((a,r)=>a+r.val,0))||'—'}</td>`:''}</tr>`;
-  const staff=ME&&ME.role!=='rep';$('llh').hidden=false;$('llh').textContent=`Lost jobs (${total})`;
+  const staff=ME&&ME.role!=='rep';$('llh').hidden=false;$('llh').textContent=`Each lost job (${total})`;
   $('llist').innerHTML=lost.map(r=>`<tr data-id="${esc(r.id)}"><td class="no" style="font-weight:700;white-space:nowrap">${esc(r.no)}</td><td style="white-space:nowrap">${fmtD(r.statusAt||r.date)}</td><td>${r.company?`<a href="#" class="colink" data-co="${esc(r.company)}">${esc(r.company)}</a>`:''}</td><td>${esc(r.burner)}</td>${staff?`<td>${esc(r.byFull||r.by)}</td>`:''}
     <td><span class="sw" style="background:${(LOSTC.find(x=>x[0]===(r.lostReason||'Not given'))||[,'#9a9a92'])[1]}"></span>${esc(r.lostReason||'Not given')}${r.lostNote?`<div class="sm">${esc(r.lostNote)}</div>`:''}</td></tr>`).join('');
   $('llrepth').hidden=!staff;$('lltable').hidden=false}
