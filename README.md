@@ -97,6 +97,10 @@ still shows the matrix, photos and your RFQ list, and new RFQs are saved on the 
 the signal is back. *Keep me signed in* on the sign-in page keeps a session for 30 days (`REMEMBER_DAYS`); it's ticked by
 default inside the installed app. Signing out clears everything the app saved on that device.
 
+**Incompatible filters are grayed out.** Any fuel, brand, firing mode, power supply, application, turndown, biofuel
+or propane option that would leave no burners together with what's already chosen (including the firing rate) is
+grayed out and can't be picked. Hover it to see why; change another filter or press Reset to free it up.
+
 **Step-down transformer warning.** Tick *Step-down transformer warning* on a burner in Admin → Burners. When a rep
 clicks *Create RFQ* for that burner with only voltages above 120 V ticked in the Power filter (and 120 VAC not ticked),
 a popup says a step-down transformer is required if 120 VAC isn't available at the site, which adds cost; they can go

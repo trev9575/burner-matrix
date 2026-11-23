@@ -78,6 +78,9 @@ legend,.lbl{font-weight:700;font-size:14px;margin-bottom:6px;padding:0;display:b
 .seg{display:flex;flex-wrap:wrap;gap:6px}
 .seg button,.btn{font:500 14px Montserrat,Helvetica,Arial,sans-serif;min-height:40px;padding:6px 14px;border-radius:3px;border:0;background:var(--btn);color:var(--red);cursor:pointer}
 .seg button[aria-pressed=true]{background:var(--red);color:#fff}
+.seg button:disabled{background:#ecece8;color:#b3b3ad;cursor:not-allowed}
+.chk.na{opacity:.45;cursor:not-allowed}.chk.na input{cursor:not-allowed}.chips .chk.na{background:#ecece8;opacity:1;color:#a5a5a0}
+select option:disabled{color:#b3b3ad}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 .row{display:flex;gap:8px}
 input[type=number],select{font:500 16px Montserrat,Helvetica,Arial,sans-serif;height:44px;padding:0 10px;border-radius:3px;border:1px solid #b9b9b2;background:#fff;color:var(--ink);width:100%}
@@ -599,7 +602,8 @@ const where=(x,r)=>{const[a,b]=mb(x);const t=(Math.log(r)-Math.log(a))/(Math.log
 const pctOf=(x,r)=>{const[a,b]=mb(x);return Math.round(r/b*100)};
 const fmt=x=>x.f==='oil'?`${x.lo.toFixed(2)}–${x.hi.toFixed(2)} GPH`:`${x.lo.toLocaleString()}–${x.hi.toLocaleString()} MBH`;
 const sub=x=>{const[a,b]=mb(x);return x.f==='oil'?`${Math.round(a).toLocaleString()}–${Math.round(b).toLocaleString()} MBH`:''};
-const pass=x=>{
+const curS=()=>S;
+const pass=(x,st)=>{const S=st||curS();
   if(S.fuel!=='all'&&x.f!==S.fuel)return false;
   if(S.brand!=='all'&&x.b!==S.brand)return false;
   if(S.volt.length&&!x.v.includes('none')&&!S.volt.some(v=>x.v.includes(v)))return false;
@@ -620,7 +624,7 @@ let list=[];
 function render(){
   const r=reqMBH();
   const ALL=D.concat(PREV);
-  list=ALL.filter(pass).sort((p,q)=>{const o={ok:0,edge:1};if(r!=null&&fit(p,r)!==fit(q,r))return o[fit(p,r)]-o[fit(q,r)];return mb(p)[0]-mb(q)[0]});
+  list=ALL.filter(x=>pass(x)).sort((p,q)=>{const o={ok:0,edge:1};if(r!=null&&fit(p,r)!==fit(q,r))return o[fit(p,r)]-o[fit(q,r)];return mb(p)[0]-mb(q)[0]});
   $('count').innerHTML=`${list.length}<small>of ${ALL.length} burners match</small>`;
   $('conv').textContent=r==null?'Leave blank to see every rating.':S.unit==='gph'?`≈ ${Math.round(r).toLocaleString()} MBH input`:`≈ ${(r/G).toFixed(2)} GPH oil equivalent`;
   const ticks=[20,50,100,200,500,1000,2000,5000,10000];
@@ -631,7 +635,18 @@ function render(){
   $('tb').innerHTML=list.map(x=>{const fz=fit(x,r);const d=Array.isArray(x.dim)?x.dim.map(n=>+n.toFixed(2)).join(' × '):x.dim==='spec'?'See spec sheet':'Not published';
     return`<tr id="r-${x.n.replace(/\W/g,'')}" class="${fz==='edge'?'edge':''}"><td><b class="nm-${x.f}"><a class="bn" href="${esc(x.u)}"${x.img?` data-img="${esc(x.img)}"`:''} target="_blank" rel="noopener">${esc(x.n)}</a></b><br><span class="note">${esc(x.b)}${x.disc?' · discontinued':''}${x.prev?' · <b class=pv>preview, not saved</b>':''}</span><br><button type="button" class="rfqb" data-k="${esc((x.b+'|'+x.n).toLowerCase())}">Create RFQ</button></td><td><span class="fuel ${x.f}">${x.f==='oil'?'Oil':'Gas'}</span>${x.bio?`<br><span class="tag">${esc(x.bio)}</span>`:''}${x.lp?`<br><span class="tag">LP: ${esc(x.lp)}</span>`:''}</td><td class="n">${fmt(x)}${sub(x)?`<br><span class="note">${sub(x)}</span>`:''}${fz==='ok'?`<br><span class="fit ok">Sweet spot</span>`:fz==='edge'?`<br><span class="fit edge">${where(x,r)==='max'?`Near MAX · ${pctOf(x,r)}% of max`:`Near MIN · ${Math.round((r/mb(x)[0]-1)*100)}% above min`}</span>`:''}</td><td><div class="pws">${['12dc','24dc','120','240','3p240','3p480','none'].filter(k=>x.v.includes(k)).map(k=>`<span class="pw ${PCH[k][1]}">${PCH[k][0]}${x.std===k&&x.v.length>1?' <i>Std</i>':''}</span>`).join('')}</div></td><td>${x.m.map(m=>`<span class="tag">${MODES[m]}</span>`).join('')}</td><td class="n">${x.fl!=null||x.fw!=null?`${x.fl!=null?n2(x.fl):'?'} × ${x.fw!=null?n2(x.fw):'?'}`:NS}</td><td class="n">${x.td!=null?(x.td===1&&x.tdx?'':n2(x.td)+':1'):NS}</td><td class="n">${x.op!=null?'up to '+n2(x.op):NS}</td><td>${x.parts?`<span class="rate p-${x.parts}">${CAP(x.parts)}</span>`:'<span class="note" style="white-space:nowrap">Not set</span>'}</td><td>${x.svc?`<span class="rate s-${x.svc}">${CAP(x.svc)}</span>`:'<span class="note" style="white-space:nowrap">Not set</span>'}</td><td class="n">${d}</td><td>${x.a.map(a=>`<span class="tag">${APPS[a]}</span>`).join('')}</td><td>${esc(x.note)}</td></tr>`}).join('');
   const TH=[...document.querySelectorAll('#tbl thead th')].map(t=>t.textContent);$('tb').querySelectorAll('tr').forEach(tr=>[...tr.cells].forEach((c,i)=>c.dataset.l=TH[i]));
+  facets();
 }
+// Gray out any filter option that, combined with everything else already chosen, would leave no burners.
+const NA='No burners match this together with your other selections';
+function facets(){const ALL=D.concat(PREV);if(!ALL.length)return;const ok=p=>ALL.some(x=>pass(x,{...S,...p}));
+  for(const [el,key,skip] of[['f-fuel','fuel','all'],['f-brand','brand','all'],['f-mode','mode','any']])
+    $(el).querySelectorAll('button').forEach(b=>{const v=b.dataset.v,na=v!==skip&&S[key]!==v&&!ok({[key]:v});b.disabled=na;b.title=na?NA:''});
+  // power is "any of the ticked supplies": a supply is unavailable when no burner that fits the other filters runs on it
+  $('f-volt').querySelectorAll('input').forEach(i=>{const v=i.dataset.v,na=!S.volt.includes(v)&&!ALL.some(x=>x.v.includes(v)&&pass(x,{...S,volt:[]}));
+    i.disabled=na;i.parentNode.classList.toggle('na',na);i.parentNode.title=na?NA:''});
+  for(const key of['app','td'])[...$(key).options].forEach(o=>{const na=!!o.value&&S[key]!==o.value&&!ok({[key]:o.value});o.disabled=na;o.title=na?NA:''});
+  for(const key of['bio','lp']){const i=$(key),na=!S[key]&&!ok({[key]:true});i.disabled=na;i.parentNode.classList.toggle('na',na);i.parentNode.title=na?NA:''}}
 function sync(){
   seg('f-fuel',[['all','All'],['oil','Oil'],['gas','Gas']],'fuel');
   seg('f-brand',[['all','All'],...[...new Set(D.map(x=>x.b))].map(b=>[b,b])],'brand');
