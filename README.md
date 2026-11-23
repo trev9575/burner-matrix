@@ -97,7 +97,7 @@ still shows the matrix, photos and your RFQ list, and new RFQs are saved on the 
 the signal is back. *Keep me signed in* on the sign-in page keeps a session for 30 days (`REMEMBER_DAYS`); it's ticked by
 default inside the installed app. Signing out clears everything the app saved on that device.
 
-**Oil-to-gas helper.** Pick 1–4 nozzles (each can be a different size) and the pump pressure; it works out the real
+**Oil-To-Gas Conversion Tool.** Pick 1 or 2 nozzles (each can be a different size) and the pump pressure; it works out the real
 firing rate (sum of nozzles × √(psi ÷ 100), × 140 MBH per GPH) and lists every gas burner that covers it,
 conversion burners tagged and first, each with Create RFQ. It can also set the matrix filters.
 RFQs made from there note the oil nozzle being replaced.
