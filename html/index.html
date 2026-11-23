@@ -579,7 +579,7 @@ const PW={'12 VDC':'12dc','24 VDC':'24dc','120 VAC':'120','208-240 VAC 1P':'240'
 const MW={'on/off':'onoff','low-high-low':'hilo','modulating':'mod'};
 const AW={'residential':'res','light commercial':'lc','commercial/industrial':'ci','pressure washers/road equipment':'mob','oil-to-gas conversion':'conv','ovens/process':'proc'};
 // readable burners.json entry -> internal record
-const toRec=o=>({fl:o.flameLength??null,fw:o.flameWidth??null,td:o.turndown??(o.modes.length===1&&o.modes[0]==='on/off'?1:null),tdx:o.turndown==null,op:o.overfire??null,parts:o.parts||null,svc:o.service||null,img:o.image||null,std:o.powerStd?PW[o.powerStd]:null,n:o.name,b:o.brand,f:o.fuel,lo:o.min,hi:o.max,v:o.power.map(x=>PW[x]),vt:o.powerText,m:o.modes.map(x=>MW[x]),dim:Array.isArray(o.dims)?o.dims:o.dims==='spec sheet'?'spec':null,tube:o.airTube,a:o.applications.map(x=>AW[x]),bio:o.biofuel,lp:o.propane,disc:!!o.discontinued,sd:o.stepDown===true,note:o.notes,u:o.link,raw:o});
+const toRec=o=>({fl:o.flameLength??null,fw:o.flameWidth??null,td:o.turndown??(o.modes.length===1&&o.modes[0]==='on/off'?1:null),tdx:o.turndown==null,op:o.overfire??null,parts:o.parts||null,svc:o.service||null,img:o.image||null,std:o.powerStd?PW[o.powerStd]:null,n:o.name,b:o.brand,f:o.fuel,lo:o.min,hi:o.max,v:o.power.map(x=>PW[x]),vt:o.powerText,m:o.modes.map(x=>MW[x]),dim:Array.isArray(o.dims)?o.dims:o.dims==='spec sheet'?'spec':null,tube:o.airTube,a:o.applications.map(x=>AW[x]),bio:o.biofuel,lp:o.propane,disc:!!o.discontinued,sd:o.stepDown===true,tubes:Array.isArray(o.airTubes)?o.airTubes:[],note:o.notes,u:o.link,raw:o});
 let D=[],RAW=[],PREV=[];
 const APPS={res:'Residential heating',lc:'Light commercial',ci:'Commercial / industrial',mob:'Pressure washers / road equipment',conv:'Oil-to-gas conversion',proc:'Ovens & process heat'};
 const VOLTS={'12dc':'12 VDC','24dc':'24 VDC','120':'120 VAC','240':'208-240 VAC 1P','3p240':'208-240 VAC 3P','3p480':'480 VAC 3P'};
@@ -734,6 +734,7 @@ const sel=(id,label,opts,val)=>`<div><label for="${id}">${label}</label><select 
 // dropdown that starts blank; "Select…" never prints or goes out in a PDF
 const dd=(id,label,opts,val='',req)=>`<div${req?' class="rq"':''}><label for="${id}">${label}${req?'<span class="rqm" aria-hidden="true"> *</span>':''}</label><select id="${id}" class="dd"><option value="">Select…</option>${opts.map(o=>`<option${o===val?' selected':''}>${esc(o)}</option>`).join('')}</select></div>`;
 const OTHER='Other (see notes)';
+const tubeLbl=t=>/^[\d\s./-]+$/.test(t)?t.trim()+' in':t; // "9" -> "9 in"; anything with words stays as typed
 const DD={
   type:['Hot water boiler','Steam boiler','Warm air furnace','Water heater','Oven / process heat','Pressure washer / mobile equipment',OTHER],
   oil:['#2 heating oil','#1 oil / kerosene','Bioheat blend (B5–B20)','Biodiesel (B100)','Renewable diesel (R100)',OTHER],
@@ -791,7 +792,7 @@ function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);$('sheet').cla
   </div>${x.img?`<img src="${esc(x.img)}" alt="${esc(x.n)}" onerror="this.remove()">`:''}</div>
   <h3>Configuration requested</h3>
   <div class="kv">${dd('q-v','Voltage',pOpts,siteKeys.length||pOpts.length===1?pDefault:'',1)}${dd('q-m','Firing mode',mOpts,mOpts.length===1?mOpts[0]:'',1)}
-    ${dd('q-mount','Mounting',DD.mount,'',1)}${inp('q-tube','Air Tube Length','','inches')}
+    ${dd('q-mount','Mounting',DD.mount,'',1)}${x.tubes.length?dd('q-tube','Air Tube Length',[...x.tubes.map(tubeLbl),OTHER]):inp('q-tube','Air Tube Length','','inches')}
     ${inp('q-ins','Insertion Depth','','inches')}${inp('q-ctl','Controls / Panel','','Primary control, panel, CSD-1…')}
     ${inp('q-opt','Other Options','','Nozzle, head, solenoid…','w')}</div>
   <div class="noprint rqnote" id="rqnote"><span class="rqm">*</span> Required before the RFQ can be emailed</div>

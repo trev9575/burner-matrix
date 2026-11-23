@@ -143,6 +143,7 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
             <label class="f"><span>Standard supply <span class="u">optional, shows a Std tag</span></span><select name="powerStd"><option value="">None</option></select></label>
             <label class="f"><span>Power notes <span class="u">reference only</span></span><input type="text" name="powerText"></label>
             <label class="f">Air tube / insertion<input type="text" name="airTube"></label>
+            <label class="f"><span>Available air tube lengths <span class="u">optional, inches, comma-separated; becomes a dropdown on the RFQ</span></span><input type="text" name="airTubes" placeholder='e.g. 6, 9, 13, 13 (extended head)' autocomplete="off"></label>
           </div>
           <label class="chk" style="align-items:flex-start"><input type="checkbox" name="stepDown" style="margin-top:3px"><span><b>Step-down transformer warning</b><br><span class="u">When a rep starts an RFQ for this burner with only voltages above 120 V selected (and not 120 VAC), warn that a step-down transformer is needed if 120 VAC isn't available at the site, which adds cost.</span></span></label>
           <fieldset><legend>Chassis dimensions</legend>
@@ -326,7 +327,7 @@ function edit(b,isCopy){cur={key:b&&!isCopy?keyOf(b):null};$('none').hidden=true
   if(typeof o.turndown==='number')E.turndown.value=o.turndown+':1';
   if(isCopy)E.name.value=o.name+' (copy)';
   fuelOpts(o.biofuel);brandOpts(o.brand);E.brandSel.value=o.brand||(list[0]?list[0].brand:NEWB);E.brandNew.value='';brandUI();
-  E.powerStd.value=o.powerStd||'';E.stepDown.checked=o.stepDown===true;
+  E.powerStd.value=o.powerStd||'';E.stepDown.checked=o.stepDown===true;E.airTubes.value=(o.airTubes||[]).join(', ');
   for(const [n,arr] of[['power',o.power],['modes',o.modes],['applications',o.applications]])f.querySelectorAll(`[name=${n}]`).forEach(c=>c.checked=(arr||[]).includes(c.value));
   const pub=Array.isArray(o.dims);E.dimmode.value=pub?'published':(o.dims||'not published');
   E.dh.value=pub?o.dims[0]:'';E.dw.value=pub?o.dims[1]:'';E.dd.value=pub?o.dims[2]:'';
@@ -344,10 +345,11 @@ function read(){const t=k=>E[k].value.trim(),n=k=>E[k].value===''?undefined:Numb
   for(const k of['flameLength','flameWidth','overfire'])if(E[k].value!=='')o[k]=Number(E[k].value);
   const td=t('turndown');if(td){const m=/^(\d+(?:\.\d+)?)\s*(?::\s*1)?$/.exec(td);o.turndown=m?Number(m[1]):td}
   if(E.stepDown.checked)o.stepDown=true;
+  const at=[...new Set(E.airTubes.value.split(',').map(v=>v.trim().replace(/\s*("|in\.?|inch(es)?)$/i,'')).filter(Boolean))];if(at.length)o.airTubes=at;
   if(E.parts.value)o.parts=E.parts.value;if(E.service.value)o.service=E.service.value;
   o.notes=t('notes');o.link=t('link');if(t('image'))o.image=t('image');
   for(const k of Object.keys(o))if(o[k]===undefined||o[k]==='')delete o[k];return o}
-const LBL={name:'Model name',brand:'Brand',fuel:'Fuel',min:'Min firing rate',max:'Max firing rate',power:'Power available',powerText:'Power notes',powerStd:'Standard supply',stepDown:'Step-down transformer warning',modes:'Firing modes',dims:'Chassis dimensions',airTube:'Air tube',applications:'Applications',notes:'Selling note',link:'Link',biofuel:'Fuel ratings',propane:'Propane',image:'Photo',flameLength:'Flame length',flameWidth:'Flame width',turndown:'Turndown',overfire:'Overfire pressure',parts:'Part availability',service:'Ease of service'};
+const LBL={name:'Model name',brand:'Brand',fuel:'Fuel',min:'Min firing rate',max:'Max firing rate',power:'Power available',powerText:'Power notes',powerStd:'Standard supply',stepDown:'Step-down transformer warning',airTubes:'Available air tube lengths',modes:'Firing modes',dims:'Chassis dimensions',airTube:'Air tube',applications:'Applications',notes:'Selling note',link:'Link',biofuel:'Fuel ratings',propane:'Propane',image:'Photo',flameLength:'Flame length',flameWidth:'Flame width',turndown:'Turndown',overfire:'Overfire pressure',parts:'Part availability',service:'Ease of service'};
 const nice=m=>{let k=m.match(/^Missing "(\w+)"$/);if(k)return`${LBL[k[1]]||k[1]}: required`;k=m.match(/^(\w+):(.*)$/);return k&&LBL[k[1]]?LBL[k[1]]+':'+k[2]:m};
 const showMsg=(el,kind,html)=>{el.className='msg '+kind;el.innerHTML=html;el.hidden=false};
 f.onsubmit=async e=>{e.preventDefault();const b=read();const errs=S.check(b);
