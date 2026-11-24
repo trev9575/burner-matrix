@@ -85,6 +85,8 @@ th .infob{border-color:#cfcfc9;background:transparent;color:#fff;width:16px;heig
 .cm .ch{font-size:12px;color:var(--mute);display:flex;gap:8px;align-items:baseline}.cm .ch b{color:var(--ink)}.cm .ct{white-space:pre-wrap;word-break:break-word}.cm .cdel{border:0;background:none;color:var(--mute);font-size:12px;cursor:pointer;padding:0;margin-left:auto;text-decoration:underline}
 .cform textarea{font:500 14px Montserrat,sans-serif;width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #b9b9b2;border-radius:3px;resize:vertical;min-height:44px}.crow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px}
 .cnew{display:inline-block;background:var(--red);color:#fff;font-size:11px;font-weight:700;border-radius:10px;padding:1px 7px;margin-left:6px;vertical-align:1px}
+.nqt{display:inline-block;margin-left:6px;background:#2e9d5b;color:#fff;font-size:11px;font-weight:700;border-radius:3px;padding:1px 7px;vertical-align:1px}
+#lbody tr.nqr td{background:#eaf6ee}
 .lq{display:block;font-size:12px;color:var(--mute);margin-top:3px}.wait{display:inline-block;margin-top:3px;font-size:11.5px;font-weight:700;color:#b35c00;background:#fff3e8;border-radius:3px;padding:1px 6px}
 .xbar{flex:1 1 420px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;min-width:0}.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .xbar label{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;white-space:nowrap}.xbar label svg{color:var(--red)}
@@ -325,8 +327,12 @@ a.colink{color:inherit;text-decoration:underline dotted;text-underline-offset:3p
 tr.fu td{background:#fffaf2 !important}
 .lmini{min-height:28px !important;padding:2px 9px !important;font-size:12.5px !important}
 .lval{font:600 13px Montserrat,sans-serif;background:none;border:0;padding:0;cursor:pointer;color:var(--ink);text-decoration:underline dotted;white-space:nowrap}.lval.add{color:var(--mute);font-weight:500}
+.stat.nqs{border-color:#9fd3b2;background:#eaf6ee;color:#1d6b35}.stat.nqs[aria-pressed="true"]{background:#2e9d5b;border-color:#2e9d5b;color:#fff}
 .stat.wq{border-color:#b9cbe8;background:#eef3fb;color:#1f4f99}.stat.wq[aria-pressed="true"]{background:#1f4f99;border-color:#1f4f99;color:#fff}
 .stat.fu{border-color:#f3c98b;background:#fff3e0;color:#9a4b00}.stat.fu[aria-pressed="true"]{background:#9a4b00;border-color:#9a4b00;color:#fff}
+.util .nav .nb.nq{background:#2e9d5b;color:#fff;box-shadow:0 0 0 0 rgba(46,157,91,.6);animation:nqpulse 2s ease-out 3}
+@keyframes nqpulse{to{box-shadow:0 0 0 8px rgba(46,157,91,0)}}
+@media(prefers-reduced-motion:reduce){.util .nav .nb.nq{animation:none}}
 .util .nav .nb{display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:#e8a23a;color:#1c1c1c;font-size:11px;font-weight:700;text-align:center;padding:0 5px;margin-left:6px;vertical-align:1px}
 .rpt .kpis{grid-template-columns:repeat(7,minmax(0,1fr)) !important}.rpt .kpi b{font-size:19px !important}
 #sendd{border:0;border-radius:6px;padding:22px;max-width:420px;width:92vw}#sendd::backdrop{background:rgba(0,0,0,.4)}
@@ -1148,9 +1154,19 @@ const stOf=r=>r.status||(r.sent?'sent':'draft');
 let LST='';
 // money, follow-ups and the status dialog (quote value / lost reason)
 const money=v=>typeof v==='number'?v.toLocaleString(undefined,{style:'currency',currency:'USD',minimumFractionDigits:v%1?2:0,maximumFractionDigits:2}):'';
+// green badge: my RFQs that the office has quoted since I last opened them
+function quoteBadge(){const b=$('rfqsb'),n=LIST.filter(r=>r.newQuote).length;let q=b.querySelector('.nq');
+  if(!n){if(q)q.remove();return}if(!q){q=document.createElement('span');q.className='nb nq';b.insertBefore(q,b.querySelector('.nb'))}
+  q.textContent=n;q.title=`${n} RFQ${n>1?'s have':' has'} a new quote`;q.setAttribute('aria-label',q.title)}
 const waiting=r=>!!r.sent&&!r.status&&!r.quote; // emailed to the office, no quote yet
-async function refreshFollow(){if(!ME)return;try{LIST=await J('GET','api/rfqs');followBadge()}catch(e){}}
-function followBadge(){const qt=ME.role==='quoter',n=qt?LIST.filter(waiting).length:LIST.filter(r=>r.followUp&&r.by===ME.name).length,b=$('rfqsb');let nb=b.querySelector('.nb');
+let NQSEEN=null; // new-quote ids already announced this session
+async function refreshFollow(){if(!ME)return;try{LIST=await J('GET','api/rfqs');followBadge();
+  const nq=LIST.filter(r=>r.newQuote);if(NQSEEN){const fresh=nq.filter(r=>!NQSEEN.has(r.id));
+    if(fresh.length)toast(fresh.length>1?`${fresh.length} of your RFQs were just quoted`:`RFQ ${fresh[0].no}${fresh[0].company?' ('+fresh[0].company+')':''} was quoted${fresh[0].quote&&fresh[0].quote.value!=null?': '+money(fresh[0].quote.value):''}`)}
+  NQSEEN=new Set(nq.map(r=>r.id))}catch(e){}}
+// check for new quotes every 2 minutes while the app is open, and whenever it comes back to the front
+setInterval(()=>{if(document.visibilityState==='visible'&&navigator.onLine&&!PDFMODE)refreshFollow()},120e3);
+function followBadge(){quoteBadge();const qt=ME.role==='quoter',n=qt?LIST.filter(waiting).length:LIST.filter(r=>r.followUp&&r.by===ME.name).length,b=$('rfqsb');let nb=b.querySelector('.nb:not(.nq)');
   if(!n){if(nb)nb.remove();b.removeAttribute('title');return}if(!nb){nb=document.createElement('span');nb.className='nb';b.appendChild(nb)}nb.textContent=n;b.title=qt?`${n} RFQ${n>1?'s are':' is'} waiting for a quote`:`${n} RFQ${n>1?'s need':' needs'} a follow-up`}
 let STR=null;
 function openStatus(r,status){STR={r,status};const L={quoted:'Mark as Quoted',won:'Mark as Won',lost:'Mark as Lost'};
@@ -1172,12 +1188,13 @@ function renderList(){const staff=ME&&ME.role!=='rep',mine=!staff||$('lwho').val
   const q=$('lq').value.trim().toLowerCase();
   const base=LIST.filter(r=>!mine||r.by===ME.name);
   const cnt={};base.forEach(r=>cnt[stOf(r)]=(cnt[stOf(r)]||0)+1);const dec=(cnt.won||0)+(cnt.lost||0),nfu=base.filter(r=>r.followUp).length,nw=base.filter(waiting).length;
-  $('lstats').innerHTML=`<button class="stat" data-s="" aria-pressed="${!LST}"><b>${base.length}</b>All</button>`+(staff?`<button class="stat wq" data-s="wait" aria-pressed="${LST==='wait'}" title="Emailed and not quoted yet, oldest first"><b>${nw}</b>Waiting for quote</button>`:'')+(ME&&ME.followUpDays?`<button class="stat fu" data-s="follow" aria-pressed="${LST==='follow'}" title="Emailed or Quoted with no activity for ${ME.followUpDays}+ days"><b>${nfu}</b>Follow up</button>`:'')+Object.entries(STL).filter(([k])=>!(k==='draft'&&ME&&ME.role==='quoter')).map(([k,l])=>`<button class="stat" data-s="${k}" aria-pressed="${LST===k}"><b>${cnt[k]||0}</b>${l}</button>`).join('')+
+  const nnq=base.filter(r=>r.newQuote).length;
+  $('lstats').innerHTML=`<button class="stat" data-s="" aria-pressed="${!LST}"><b>${base.length}</b>All</button>`+(nnq||LST==='newq'?`<button class="stat nqs" data-s="newq" aria-pressed="${LST==='newq'}" title="Quoted by the office since you last opened them"><b>${nnq}</b>New quote${nnq===1?'':'s'}</button>`:'')+(staff?`<button class="stat wq" data-s="wait" aria-pressed="${LST==='wait'}" title="Emailed and not quoted yet, oldest first"><b>${nw}</b>Waiting for quote</button>`:'')+(ME&&ME.followUpDays?`<button class="stat fu" data-s="follow" aria-pressed="${LST==='follow'}" title="Emailed or Quoted with no activity for ${ME.followUpDays}+ days"><b>${nfu}</b>Follow up</button>`:'')+Object.entries(STL).filter(([k])=>!(k==='draft'&&ME&&ME.role==='quoter')).map(([k,l])=>`<button class="stat" data-s="${k}" aria-pressed="${LST===k}"><b>${cnt[k]||0}</b>${l}</button>`).join('')+
     `<span class="stat wr" title="Won ÷ (won + lost)"><b>${dec?Math.round((cnt.won||0)/dec*100)+'%':'—'}</b>win rate</span>`;
-  let rows=base.filter(r=>(!LST||(LST==='follow'?r.followUp:LST==='wait'?waiting(r):stOf(r)===LST))&&(!q||[r.no,r.company,r.contact,r.job,r.burner,r.by,r.byFull].join(' ').toLowerCase().includes(q)));
+  let rows=base.filter(r=>(!LST||(LST==='follow'?r.followUp:LST==='wait'?waiting(r):LST==='newq'?r.newQuote:stOf(r)===LST))&&(!q||[r.no,r.company,r.contact,r.job,r.burner,r.by,r.byFull].join(' ').toLowerCase().includes(q)));
   if(LST==='wait')rows=rows.sort((a,b)=>String(a.sent.at).localeCompare(String(b.sent.at)));
   $('lbody').innerHTML=rows.map(r=>{const st=stOf(r),can=ME&&(r.by===ME.name||ME.role!=='rep');
-    return`<tr data-id="${esc(r.id)}"${r.followUp?' class="fu"':''}><td class="no">${esc(r.no)}${r.unread?`<span class="cnew" title="${r.unread} new comment${r.unread>1?'s':''}">💬 ${r.unread}</span>`:r.comments?`<span class="sm" title="${r.comments} comment${r.comments>1?'s':''}" style="margin-left:6px">💬 ${r.comments}</span>`:''}${waiting(r)?`<br><span class="wait" title="Emailed ${fmtD(r.sent.at)}, no quote yet">Waiting for quote · ${daysSince(r.sent.at)?daysSince(r.sent.at)+' day'+(daysSince(r.sent.at)===1?'':'s'):'since today'}</span>`:''}${r.followUp?`<br><span class="fub" title="No activity for ${r.idleDays} days">Follow up · ${r.idleDays} days</span>`:''}</td><td style="white-space:nowrap">${fmtD(r.date)}</td><td>${r.company?`<a href="#" class="colink" data-co="${esc(r.company)}">${esc(r.company)}</a>`:''}${r.contact?`<div class="sm">${esc(r.contact)}</div>`:''}</td><td>${esc(r.job)}</td>
+    return`<tr data-id="${esc(r.id)}"${r.newQuote?' class="nqr"':r.followUp?' class="fu"':''}><td class="no">${esc(r.no)}${r.newQuote?'<span class="nqt">New quote</span>':''}${r.unread?`<span class="cnew" title="${r.unread} new comment${r.unread>1?'s':''}">💬 ${r.unread}</span>`:r.comments?`<span class="sm" title="${r.comments} comment${r.comments>1?'s':''}" style="margin-left:6px">💬 ${r.comments}</span>`:''}${waiting(r)?`<br><span class="wait" title="Emailed ${fmtD(r.sent.at)}, no quote yet">Waiting for quote · ${daysSince(r.sent.at)?daysSince(r.sent.at)+' day'+(daysSince(r.sent.at)===1?'':'s'):'since today'}</span>`:''}${r.followUp?`<br><span class="fub" title="No activity for ${r.idleDays} days">Follow up · ${r.idleDays} days</span>`:''}</td><td style="white-space:nowrap">${fmtD(r.date)}</td><td>${r.company?`<a href="#" class="colink" data-co="${esc(r.company)}">${esc(r.company)}</a>`:''}${r.contact?`<div class="sm">${esc(r.contact)}</div>`:''}</td><td>${esc(r.job)}</td>
     <td><span style="color:${r.fuel==='gas'?'var(--gas)':'var(--oil)'};font-weight:600">${esc(r.burner)}</span></td>${staff?`<td${$('lrepth').hidden?' hidden':''}>${esc(r.byFull||r.by)}</td>`:''}
     <td class="sm">${r.sent?`${fmtD(r.sent.at)}<br>${esc(r.sent.to.join(', '))}`:'—'}</td>
     <td>${can?`<select class="st st-${st}" aria-label="Status of ${esc(r.no)}">${['','quoted','won','lost'].map(v=>`<option value="${v}"${(r.status||'')===v?' selected':''}>${v?STL[v]:(r.sent?'Emailed':'Draft')}</option>`).join('')}</select>`:`<span class="st st-${st}">${STL[st]}</span>`}${r.status==='lost'&&r.lostReason?`<div class="sm" style="margin-top:3px">${esc(r.lostReason)}</div>`:''}${r.quote?`<span class="lq">Quote ${esc(r.quote.no||'')}${r.quote.file?' · PDF':''}</span>`:''}</td>
@@ -1188,6 +1205,7 @@ async function goHome(){if(!$('rfqv').hidden&&RFQ&&RFQ.dirty&&ME){try{await save
   RFQ=null;hideMain();$('matrixv').hidden=false;scrollTo(0,0)}
 $('home').onclick=goHome;$('home').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();goHome()}};
 $('lwho').onchange=renderList;
+$('rfqsb').addEventListener('click',e=>{if(e.target.closest('.nq'))LST='newq'},true);
 $('lstats').onclick=e=>{const b=e.target.closest('button.stat');if(!b)return;LST=b.dataset.s;renderList()};
 $('lbody').addEventListener('change',async e=>{const sel=e.target.closest('select.st');if(!sel)return;const id=sel.closest('tr').dataset.id,r=LIST.find(x=>x.id===id);
   if(['quoted','won','lost'].includes(sel.value))return openStatus(r,sel.value);
@@ -1246,7 +1264,7 @@ async function openSaved(id,from){const rec=await J('GET','api/rfqs/'+id);
   openRFQ(toRec(rec.burner),{id:rec.id,no:rec.no,date:rec.date,raw:rec.burner,fit:rec.fit||'',fields:rec.fields,sends:rec.sends||[],by:rec.by,byFull:rec.byFull,from,locks:rec.locks||[],xfmr:rec.xfmr||'',
     ro:PDFMODE||(rec.sends||[]).length>0||!ME||rec.by!==ME.name});
   RFQ.quote=rec.quote?{...rec.quote,file:!!rec.quote.file}:null;RFQ.comments=rec.comments||[];QEDIT=false;rxRender();
-  if(ME&&!PDFMODE&&(rec.comments||[]).length)J('POST','api/rfqs/'+id+'/seen',{}).then(()=>{const l=LIST.find(x=>x.id===id);if(l)l.unread=0}).catch(()=>{})} // drafts stay editable for the rep who made them until emailed
+  if(ME&&!PDFMODE&&((rec.comments||[]).length||rec.quote))J('POST','api/rfqs/'+id+'/seen',{}).then(()=>{const l=LIST.find(x=>x.id===id);if(l){l.unread=0;l.newQuote=false}quoteBadge()}).catch(()=>{})} // drafts stay editable for the rep who made them until emailed
 $('lbody').onclick=async e=>{if(e.target.closest('select.st'))return;const tr=e.target.closest('tr[data-id]');const d=e.target.closest('.ldel');
   const fu=e.target.closest('.lfu'),lv=e.target.closest('.lval');
   if(fu&&tr){try{const r=await J('POST','api/rfqs/'+tr.dataset.id+'/followup',{});LIST=LIST.map(x=>x.id===r.id?r:x);renderList();toast(`${r.no}: follow-up logged`)}catch(err){toast(err.message)}return}
@@ -1508,7 +1526,7 @@ $('lout').onclick=e=>{const a=e.target.closest('a[data-oid]');if(!a)return;e.pre
   openRFQ(toRec(o.raw),{offline:true,oid:o.oid,ymd:o.ymd,date:o.date,raw:o.raw,fit:o.fit,locks:o.locks,xfmr:o.xfmr||'',fields:o.fields,from:'list'});RFQ.saved=true;rfqStatus()};
 function netState(){$('offl').hidden=navigator.onLine;if(navigator.onLine)syncOutbox();offlineNote()}
 addEventListener('online',netState);addEventListener('offline',netState);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncOutbox()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){syncOutbox();if(!PDFMODE&&navigator.onLine)refreshFollow()}});
 // install: Android/desktop Chrome gives a prompt; iPhone/iPad need Share → Add to Home Screen
 const STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 const IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);

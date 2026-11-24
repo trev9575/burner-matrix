@@ -321,6 +321,7 @@ const rfqSummary = (r, me) => ({ id: r.id, no: r.no, date: r.date, by: r.by, byF
   sent: (r.sends || []).slice(-1)[0] || null, status: r.status || '', statusAt: r.statusAt || '',
   value: typeof r.value === 'number' ? r.value : null, lostReason: r.status === 'lost' ? r.lostReason || '' : '', lostNote: r.status === 'lost' ? r.lostNote || '' : '',
   quote: quoteInfo(r.quote), comments: (r.comments || []).length, unread: unreadFor(r, me),
+  newQuote: !!(me && r.quote && r.by === me.name && r.quote.at > ((r.seen || {})[me.name] || '')), // the rep hasn't opened it since it was quoted
   ...followUp(r) });
 // Emailed or Quoted RFQs with no activity for N days need a follow-up. Activity = last email, status change or "followed up".
 function followUp(r) {

@@ -111,7 +111,8 @@ controls, and the table's fit tags) opens a plain-English explanation. They're h
 **Quotes from the office.** Under every saved RFQ there's a **Quote** panel. Quoters and admins click *Add quote*
 and enter the quote number, price and the quote PDF (up to 10 MB), plus an optional note; the RFQ moves to **Quoted**
 with that value, and (if email is set up) the rep gets an email with the PDF attached. The rep sees the price, note and
-a *Download quote PDF* button. Quote PDFs are stored in `quotes/` in the data folder (included in backups).
+a *Download quote PDF* button. Until the rep opens it, a green number on their **RFQs** tab counts their newly quoted RFQs (it also pops a
+message if a quote lands while the app is open); the rows are tinted green with a *New quote* tag and a *New quotes* filter. Quote PDFs are stored in `quotes/` in the data folder (included in backups).
 
 **Waiting for quote.** In RFQs, staff get a *Waiting for quote* filter: emailed RFQs with no quote yet, oldest first,
 each showing how long it has waited. Quoters land on it by default and their RFQs tab badge counts them.
