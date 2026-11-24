@@ -67,6 +67,9 @@ fieldset{border:0;padding:0;margin:0}legend{font-weight:700;font-size:13.5px;mar
 .pic{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .pic img{width:120px;height:120px;object-fit:contain;background:#fff;border:1px solid var(--rule);border-radius:4px}
 .empty{color:var(--mute);padding:30px 0;text-align:center}
+.xform{display:grid;gap:12px;background:#f6f6f3;border:1px solid var(--rule);border-radius:4px;padding:14px}.xopts{max-height:260px;overflow:auto}.xopts .bh{font-size:12px;font-weight:700;color:var(--mute);margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em}
+#xlist td{vertical-align:top}#xlist .bt{display:inline-block;background:#eef3fb;color:var(--gas);font-weight:700;font-size:12.5px;border-radius:3px;padding:1px 7px;margin:0 4px 4px 0}#xlist .bt.oil{background:#fdecee;color:var(--red)}#xlist .bt.gone{background:#eee;color:#888;text-decoration:line-through}
+.ximp summary{cursor:pointer;font-weight:700;font-size:14px}
 .confirm{background:#fff3e8;border-left:4px solid #d9480f;padding:10px 14px;border-radius:3px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .dirty{color:#b35c00;font-size:13px;font-weight:700}
 /* tables */
@@ -112,6 +115,7 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
   </header>
   <nav class="tabs" role="tablist">
     <button role="tab" data-t="burners" aria-selected="true">Burners</button>
+    <button role="tab" data-t="xref" aria-selected="false">Cross-reference</button>
     <button role="tab" data-t="history" aria-selected="false">History &amp; undo</button>
     <button role="tab" data-t="users" aria-selected="false" id="usertab">Users</button>
     <button role="tab" data-t="settings" aria-selected="false" id="settab">Settings</button>
@@ -200,6 +204,34 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
     </section>
 
     <!-- HISTORY -->
+    <section id="t-xref" hidden>
+      <div class="panel" style="display:grid;gap:14px">
+        <div class="row" style="justify-content:space-between"><h2>Cross-reference</h2><span class="u" id="xcnt"></span></div>
+        <p class="u" style="margin:0">List another maker's burner (or an older Beckett/Wayne model) and what to sell instead. Reps search this from <b>Replacing a burner?</b> on the matrix page and can start an RFQ from it.</p>
+        <form id="xf" class="xform">
+          <h3 id="xfh" style="margin:0;font-size:15px">Add a cross-reference</h3>
+          <div class="grid">
+            <label class="f">Brand being replaced<input type="text" name="brand" list="xbrands" maxlength="60" autocomplete="off" placeholder="e.g. Carlin"></label>
+            <label class="f">Model being replaced<input type="text" name="model" maxlength="80" autocomplete="off" placeholder="e.g. 301CRD"></label>
+            <div class="f" style="display:flex;flex-direction:column;gap:4px"><span style="font-weight:700;font-size:13.5px">Replace with <span class="u">pick 1 or more</span></span>
+              <details class="ms" id="xms"><summary id="xsum">None</summary><div><input type="search" id="xbq" placeholder="Filter burners" aria-label="Filter burners" style="margin-bottom:6px"><div id="xopts" class="xopts"></div></div></details></div>
+          </div>
+          <label class="f"><span>Note for reps <span class="u">optional, e.g. which air tube or head to quote</span></span><input type="text" name="note" maxlength="400" autocomplete="off"></label>
+          <datalist id="xbrands"></datalist>
+          <div class="row"><button class="btn pri" type="submit" id="xgo">Add</button><button class="btn" type="button" id="xcancel" hidden>Cancel</button></div>
+          <div id="xmsg" class="msg" hidden></div>
+        </form>
+        <div class="row"><input type="search" id="xq" placeholder="Search the list" aria-label="Search cross-references" style="flex:1;max-width:360px"></div>
+        <div class="scroll"><table><thead><tr><th>Replaces</th><th>Use instead</th><th>Note</th><th></th></tr></thead><tbody id="xlist"></tbody></table></div>
+        <details class="ximp"><summary>Add many at once (paste from a spreadsheet)</summary>
+          <p class="u">One per line: <b>Brand, Model, Replacement(s), Note</b>. Separate several replacements with <b>;</b> and use the burner names as they appear in the Burners tab, e.g. <code>Carlin, 301CRD, AF/AFG, Use a 7 in tube</code> or <code>Riello, 40F5, AF/AFG; NX</code>. Tabs work too, so you can copy straight from Excel.</p>
+          <textarea id="ximp" rows="6" style="width:100%;font:13px ui-monospace,monospace"></textarea>
+          <div class="row" style="margin-top:8px"><button class="btn" type="button" id="ximpgo">Import</button></div>
+          <div id="ximpmsg" class="msg" hidden></div>
+        </details>
+      </div>
+    </section>
+
     <section id="t-history" hidden>
       <div class="panel">
         <div class="row" style="justify-content:space-between;margin-bottom:12px"><h2>Change history</h2><span class="row" style="gap:8px"><button class="btn" id="loc" type="button" title="Download any photo that still points at a website and store it on this server">Store web photos on server</button><a class="btn" id="exp" download="burners.json" href="#">Download burners.json</a></span></div>
@@ -293,7 +325,7 @@ function start(){if(me.role==='rep'){location.replace('/');return}$('login').hid
 
 /* ---------- tabs ---------- */
 function tab(t){if(t!=='burners'&&!leaveOk())return;document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));
-  ['burners','history','users','settings'].forEach(x=>$('t-'+x).hidden=x!==t);if(t==='history')loadHistory();if(t==='users')loadUsers();if(t==='settings')loadSettings()}
+  ['burners','xref','history','users','settings'].forEach(x=>$('t-'+x).hidden=x!==t);if(t==='xref')loadXref();if(t==='history')loadHistory();if(t==='users')loadUsers();if(t==='settings')loadSettings()}
 document.querySelector('.tabs').onclick=e=>{const b=e.target.closest('button');if(b)tab(b.dataset.t)};
 
 /* ---------- burner list ---------- */
@@ -409,6 +441,48 @@ $('loc').onclick=async e=>{const b=e.currentTarget;b.disabled=true;b.textContent
   catch(err){toast(err.message)}finally{b.disabled=false;b.textContent='Store web photos on server'}};
 $('exp').onclick=async e=>{e.preventDefault();const data=await call('GET','/api/burners');const url=URL.createObjectURL(new Blob(['[\n'+data.map(o=>'  '+JSON.stringify(o)).join(',\n')+'\n]\n'],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='burners.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)};
 
+/* ---------- cross-reference ---------- */
+let XR=[],XED=null;
+const bKey=b=>(b.brand+'|'+b.name).toLowerCase(),bByKey=k=>list.find(b=>bKey(b)===k);
+async function loadXref(){try{if(!list.length)await loadBurners();XR=await call('GET','/api/xref');xRender();xReset()}catch(e){showMsg($('xmsg'),'err',esc(e.message))}}
+function xRender(){const q=$('xq').value.trim().toLowerCase();
+  const rows=XR.filter(x=>!q||[x.brand,x.model,x.note,...x.to.map(k=>{const b=bByKey(k);return b?b.brand+' '+b.name:k})].join(' ').toLowerCase().includes(q))
+    .sort((a,b)=>a.brand.localeCompare(b.brand)||a.model.localeCompare(b.model,undefined,{numeric:true}));
+  $('xcnt').textContent=`${XR.length} entr${XR.length===1?'y':'ies'}`;
+  $('xbrands').innerHTML=[...new Set(XR.map(x=>x.brand))].sort().map(b=>`<option value="${esc(b)}">`).join('');
+  $('xlist').innerHTML=rows.map(x=>`<tr data-id="${x.id}"><td><b>${esc(x.brand)}</b> ${esc(x.model)}</td><td>${x.to.map(k=>{const b=bByKey(k);return b?`<span class="bt ${b.fuel}">${esc(b.brand+' '+b.name)}</span>`:`<span class="bt gone" title="No longer in the burner list">${esc(k.replace('|',' '))}</span>`}).join('')}</td>
+    <td class="u" style="max-width:340px">${esc(x.note||'')}</td><td style="white-space:nowrap;text-align:right"><button class="btn" data-a="edit">Edit</button> <button class="btn dan" data-a="del">Delete</button></td></tr>`).join('')||
+    `<tr><td colspan="4" class="empty">${XR.length?'No matches.':'Nothing yet. Add the first cross-reference above.'}</td></tr>`}
+function xOpts(sel){const q=$('xbq').value.trim().toLowerCase();const bs=[...list].sort((a,b)=>a.brand.localeCompare(b.brand)||a.name.localeCompare(b.name,undefined,{numeric:true}));let last='';
+  $('xopts').innerHTML=bs.filter(b=>!q||(b.brand+' '+b.name).toLowerCase().includes(q)||sel.includes(bKey(b))).map(b=>{const h=b.brand!==last?`<div class="bh">${esc(b.brand)}</div>`:'';last=b.brand;
+    return h+`<label class="chk"><input type="checkbox" name="xto" value="${esc(bKey(b))}"${sel.includes(bKey(b))?' checked':''}> ${esc(b.name)} <span class="u">${esc(fmt(b))}</span></label>`}).join('')||'<div class="u">No burners match.</div>';xSum()}
+const xSel=()=>[...$('xopts').querySelectorAll('[name=xto]:checked')].map(i=>i.value).concat((XSEL||[]).filter(k=>!$('xopts').querySelector(`[name=xto][value="${CSS.escape(k)}"]`)));
+let XSEL=[];
+const xSum=()=>{XSEL=xSel();$('xsum').textContent=XSEL.length?XSEL.map(k=>{const b=bByKey(k);return b?b.brand+' '+b.name:k}).join(', '):'None'};
+function xReset(x){XED=x||null;const f=$('xf');f.reset();$('xmsg').hidden=true;XSEL=x?[...x.to]:[];$('xbq').value='';xOpts(XSEL);
+  if(x){f.elements.brand.value=x.brand;f.elements.model.value=x.model;f.elements.note.value=x.note||''}
+  $('xfh').textContent=x?`Edit ${x.brand} ${x.model}`:'Add a cross-reference';$('xgo').textContent=x?'Save':'Add';$('xcancel').hidden=!x}
+$('xopts').addEventListener('change',xSum);$('xbq').oninput=()=>xOpts(XSEL);$('xq').oninput=xRender;$('xcancel').onclick=()=>xReset();
+$('xf').onsubmit=async e=>{e.preventDefault();const f=e.target;$('xmsg').hidden=true;
+  const body={brand:f.elements.brand.value,model:f.elements.model.value,note:f.elements.note.value,to:XSEL};
+  try{if(XED)await call('PUT','/api/xref/'+XED.id,body);else await call('POST','/api/xref',body);toast(XED?'Saved':'Added '+body.brand.trim()+' '+body.model.trim());XR=await call('GET','/api/xref');xRender();xReset();$('xms').open=false}
+  catch(err){showMsg($('xmsg'),'err',esc(err.message))}};
+$('xlist').onclick=async e=>{const b=e.target.closest('button[data-a]');if(!b)return;const x=XR.find(o=>o.id===b.closest('tr').dataset.id);if(!x)return;
+  if(b.dataset.a==='edit'){xReset(x);$('xf').scrollIntoView({behavior:'smooth',block:'start'});$('xf').elements.brand.focus({preventScroll:true});return}
+  if(!b.dataset.sure){b.dataset.sure=1;b.textContent='Click again to delete';setTimeout(()=>{delete b.dataset.sure;b.textContent='Delete'},3000);return}
+  try{await call('DELETE','/api/xref/'+x.id,{});toast('Deleted');XR=XR.filter(o=>o.id!==x.id);if(XED&&XED.id===x.id)xReset();xRender()}catch(err){toast(err.message)}};
+// paste import: Brand, Model, Replacement(s) separated by ;, Note
+$('ximpgo').onclick=async()=>{const lines=$('ximp').value.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);if(!lines.length)return;
+  const find=n=>{n=n.trim().toLowerCase();return list.find(b=>bKey(b)===n||b.name.toLowerCase()===n||(b.brand+' '+b.name).toLowerCase()===n)};
+  let ok=0;const bad=[];$('ximpgo').disabled=true;
+  for(const [i,l] of lines.entries()){const c=l.includes('\t')?l.split('\t'):l.split(',');const [brand='',model='',reps='',...rest]=c.map(s=>s.trim());
+    if(i===0&&/^brand$/i.test(brand))continue; // header row
+    const names=reps.split(';').map(s=>s.trim()).filter(Boolean),to=names.map(find);
+    const miss=names.filter((n,j)=>!to[j]);if(miss.length){bad.push(`Line ${i+1}: no burner called “${miss.join('”, “')}”`);continue}
+    try{await call('POST','/api/xref',{brand,model,note:rest.join(', '),to:to.map(bKey)});ok++}catch(err){bad.push(`Line ${i+1}: ${err.message}`)}}
+  $('ximpgo').disabled=false;XR=await call('GET','/api/xref');xRender();
+  showMsg($('ximpmsg'),bad.length?'err':'ok',`Added ${ok}.`+(bad.length?'<br>'+bad.map(esc).join('<br>'):''));if(!bad.length)$('ximp').value=''};
+
 /* ---------- settings ---------- */
 function showSettings(s){$('sf').elements.rfqTo.value=s.rfqTo;$('sf').elements.followUpDays.value=s.followUpDays;$('sf').elements.stepDownWarn.checked=s.stepDownWarn;
   $('btz').textContent=s.tz||'server time';$('bkeep').textContent=s.backupKeep;
@@ -446,7 +520,7 @@ $('pclose').onclick=()=>$('pwd').close();
 $('pf').onsubmit=async e=>{e.preventDefault();const P=e.target.elements;
   try{await call('POST','/api/password',{current:P.current.value,next:P.next.value});$('pwd').close();toast('Password changed')}catch(err){showMsg($('pmsg'),'err',esc(err.message))}};
 
-document.addEventListener('click',e=>{for(const id of['fuelms','tubems']){const d=$(id);if(d.open&&!d.contains(e.target))d.open=false}});
+document.addEventListener('click',e=>{for(const id of['fuelms','tubems','xms']){const d=$(id);if(d.open&&!d.contains(e.target))d.open=false}});
 boot();
 }
 </script>

@@ -35,6 +35,7 @@ const F = {
   rfqs: path.join(DATA, 'rfqs'),
   settings: path.join(DATA, 'settings.json'),
   customers: path.join(DATA, 'customers.json'),
+  xref: path.join(DATA, 'xref.json'),
 };
 
 // ---------- storage ----------
@@ -249,6 +250,21 @@ function scheduleBackup() {
 const rfqFile = id => path.join(F.rfqs, id + '.json');
 const getRfq = id => /^[a-f0-9]{12}$/.test(id) ? readJSON(rfqFile(id), null) : null;
 const allRfqs = () => fs.readdirSync(F.rfqs).filter(f => f.endsWith('.json')).map(f => readJSON(path.join(F.rfqs, f), null)).filter(r => r && r.burner && r.fields);
+// cross-reference: another maker's (or an old) burner model -> the Beckett/Wayne burner(s) to replace it with
+const getXref = () => { const l = readJSON(F.xref, []); return Array.isArray(l) ? l.filter(x => x && x.id && x.brand && x.model && Array.isArray(x.to)) : []; };
+const cleanXref = b => {
+  const str = (x, n) => String(x == null ? '' : x).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n);
+  const brand = str(b.brand, 60), model = str(b.model, 80), note = str(b.note, 400);
+  if (!brand) return { error: 'Enter the brand of the burner being replaced.' };
+  if (!model) return { error: 'Enter the model being replaced.' };
+  const keys = new Set(getBurners().map(keyOf));
+  const to = [...new Set((Array.isArray(b.to) ? b.to : []).map(k => String(k).toLowerCase()))].slice(0, 6);
+  if (!to.length) return { error: 'Pick at least one replacement burner.' };
+  if (to.some(k => !keys.has(k))) return { error: 'One of the replacement burners isn’t in the burner list any more.' };
+  return { brand, model, note, to };
+};
+const xrefKey = x => (x.brand + '|' + x.model).toLowerCase().replace(/[\s-]+/g, '');
+
 // saved customers (Customers → Add customer); RFQs add to these automatically
 const getCustomers = () => { const l = readJSON(F.customers, []); return Array.isArray(l) ? l.filter(c => c && typeof c.company === 'string' && Array.isArray(c.contacts)) : []; };
 const saveCustomers = l => writeJSON(F.customers, l, true);
@@ -537,8 +553,30 @@ async function api(req, res, url) {
     contact(me, await readBody(req, 4096)); saveUsers(); return send(res, 200, meInfo(me));
   }
   if (p === '/api/burners' && m === 'GET') return send(res, 200, getBurners());
+  if (p === '/api/xref' && m === 'GET') return send(res, 200, getXref());
 
   if (me.role === 'rep' && p !== '/api/password') return send(res, 403, { error: 'Your account can view the matrix only' });
+  const xm = /^\/api\/xref(?:\/([a-f0-9]{10}))?$/.exec(p);
+  if (xm && m !== 'GET') { // editors and admins keep the cross-reference list
+    const list = getXref(), now = new Date().toISOString();
+    if (m === 'POST' && !xm[1]) {
+      const v = cleanXref((await readBody(req, 16 * 1024)) || {}); if (v.error) return send(res, 422, v);
+      const ex = list.find(x => xrefKey(x) === xrefKey(v));
+      if (ex) return send(res, 409, { error: `${ex.brand} ${ex.model} is already in the list.` });
+      const x = { id: crypto.randomBytes(5).toString('hex'), ...v, by: me.name, added: now, updated: now };
+      list.push(x); writeJSON(F.xref, list, true); return send(res, 201, x);
+    }
+    const i = xm[1] ? list.findIndex(x => x.id === xm[1]) : -1;
+    if (i < 0) return send(res, 404, { error: 'Not found' });
+    if (m === 'PUT') {
+      const v = cleanXref((await readBody(req, 16 * 1024)) || {}); if (v.error) return send(res, 422, v);
+      const ex = list.find((x, j) => j !== i && xrefKey(x) === xrefKey(v));
+      if (ex) return send(res, 409, { error: `${ex.brand} ${ex.model} is already in the list.` });
+      list[i] = { ...list[i], ...v, updated: now, updatedBy: me.name }; writeJSON(F.xref, list, true); return send(res, 200, list[i]);
+    }
+    if (m === 'DELETE') { list.splice(i, 1); writeJSON(F.xref, list, true); return send(res, 200, { ok: true }); }
+    return send(res, 405, { error: 'Method not allowed' });
+  }
   if (p === '/api/burners' && m === 'PUT') { // save one burner (add or replace); body {original?:key, burner}
     const { original, burner } = await readBody(req);
     const list = getBurners();
@@ -550,6 +588,11 @@ async function api(req, res, url) {
     if (dup >= 0 && dup !== i) return send(res, 422, { errors: [`${burner.brand} ${burner.name} already exists`] });
     if (i >= 0) list[i] = burner; else list.push(burner);
     const e = saveBurners(list, me.name, (i >= 0 ? 'Edited ' : 'Added ') + burner.brand + ' ' + burner.name);
+    if (!e && i >= 0 && keyOf(burner) !== String(original).toLowerCase()) { // renamed: keep cross-references pointing at it
+      const xs = getXref(), ok = String(original).toLowerCase(), nk = keyOf(burner); let ch = false;
+      for (const x of xs) if (x.to.includes(ok)) { x.to = [...new Set(x.to.map(k => k === ok ? nk : k))]; ch = true; }
+      if (ch) writeJSON(F.xref, xs, true);
+    }
     if (!e && /^https?:/i.test(burner.image || '')) setTimeout(() => localizePhotos(me.name).catch(() => {}), 100);
     return e ? send(res, 422, { errors: e }) : send(res, 200, { ok: true });
   }

@@ -97,6 +97,17 @@ still shows the matrix, photos and your RFQ list, and new RFQs are saved on the 
 the signal is back. *Keep me signed in* on the sign-in page keeps a session for 30 days (`REMEMBER_DAYS`); it's ticked by
 default inside the installed app. Signing out clears everything the app saved on that device.
 
+**Replacing a burner? (cross-reference).** At the top of the matrix filters, reps type another maker's (or an older)
+model, e.g. *Carlin 301CRD*, and see the Beckett/Wayne burner(s) to sell instead, plus any note. *Show in matrix*
+highlights it in the table (clearing filters if they hid it); *Create RFQ* starts an RFQ with "Replaces Carlin 301CRD."
+in Notes. Editors and admins keep the list in **Admin → Cross-reference**: add, edit or delete entries one at a time,
+or paste many rows from a spreadsheet (Brand, Model, Replacement(s) separated by `;`, Note). Stored in `xref.json`
+(included in backups); renaming a burner keeps its cross-references pointing at it.
+
+**Info buttons.** A small **?** next to technical terms (firing rate, firing mode, power, turndown, overfire pressure,
+flame size, footprint, biofuel, air tube, insertion depth, mounting, oil supply, venting, altitude, gas pressure,
+controls, and the table's fit tags) opens a plain-English explanation. They're hidden on printouts and PDFs.
+
 **Incompatible filters are grayed out.** Any fuel, brand, firing mode, power supply, application, turndown, biofuel
 option that would leave no burners together with what's already chosen (including the firing rate) is
 grayed out and can't be picked. 120 VAC is always selectable, since it records that the site has 120 V (which

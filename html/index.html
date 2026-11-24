@@ -67,6 +67,23 @@ h2{font-size:22px}
 .rail{background:var(--panel);border-radius:4px;padding:18px 20px 14px;box-shadow:0 1px 2px rgba(0,0,0,.08);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px 28px;align-items:start}
 .rail fieldset{margin:0}
 .rail .f-power{grid-column:span 2}
+.infob{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;margin-left:6px;padding:0;border-radius:50%;border:1.5px solid #8c8c86;background:#fff;color:#55554f;font:700 11.5px Montserrat,sans-serif;line-height:1;cursor:pointer;vertical-align:1px;flex:none}
+.infob::before{content:'?'}.infob:hover,.infob[aria-expanded=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+th .infob{border-color:#cfcfc9;background:transparent;color:#fff;width:16px;height:16px;font-size:10.5px;margin-left:4px}th .infob:hover,th .infob[aria-expanded=true]{background:#fff;color:var(--ink)}
+.infop{position:absolute;z-index:60;background:#fff;border:1px solid #b9b9b2;border-radius:5px;box-shadow:0 10px 28px rgba(0,0,0,.18);padding:12px 34px 12px 14px;font-size:13.5px;line-height:1.5;color:var(--ink)}
+.infop b:first-of-type{font-size:14px}.infop p{margin:4px 0 0}.infop .ix{position:absolute;top:4px;right:6px;border:0;background:none;font-size:20px;line-height:1;color:var(--mute);cursor:pointer;padding:4px}
+@media print{.infob,.infop{display:none !important}}
+.xbar{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding-bottom:14px;border-bottom:1px solid var(--rule)}
+.xbar label{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;white-space:nowrap}.xbar label svg{color:var(--red)}
+.xwrap{position:relative;flex:1 1 320px;max-width:560px}.xwrap input{width:100%;font:500 15px Montserrat,Helvetica,Arial,sans-serif;height:44px;padding:0 12px;border-radius:3px;border:1px solid #b9b9b2;background:#fff;color:var(--ink);box-sizing:border-box}.xwrap input:focus{border-color:var(--ink);outline:2px solid var(--ink);outline-offset:-1px}
+.xbar .hint{flex-basis:100%;margin:0}
+.xres{position:absolute;z-index:20;left:0;right:0;top:100%;margin-top:3px;background:#fff;border:1px solid #b9b9b2;border-radius:4px;box-shadow:0 8px 24px rgba(0,0,0,.14);max-height:min(420px,60vh);overflow:auto}
+.xr{padding:10px 12px;border-bottom:1px solid var(--rule)}.xr:last-child{border-bottom:0}
+.xr .from{font-size:13px;color:var(--mute)}.xr .from b{color:var(--ink)}
+.xr .to{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:6px}.xr .to .nm{font-weight:700}.xr .to .nm.oil{color:var(--oil)}.xr .to .nm.gas{color:var(--gas)}
+.xr .to button{font:600 12.5px Montserrat,sans-serif;min-height:30px;padding:3px 10px;border-radius:3px;border:1px solid var(--red);background:#fff;color:var(--red);cursor:pointer}.xr .to button.pri{background:var(--red);color:#fff}
+.xr .tline{display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%}.xr .xn{font-size:12.5px;margin-top:6px;background:#fff8e1;border-left:3px solid #e0a800;padding:4px 8px;border-radius:2px}
+.xr.none{color:var(--mute);font-size:13.5px}
 .rail .f-last{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 24px;border-top:1px solid var(--rule);padding-top:12px}
 .rail .opts{display:flex;flex-wrap:wrap;gap:4px 24px}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -361,6 +378,12 @@ tr.fu td{background:#fffaf2 !important}
 
 <div class="band main">
   <aside class="rail" aria-label="Filters">
+    <div class="xbar" id="xbar">
+      <label for="xq"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h13l-3-3M20 17H7l3 3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Replacing a burner?</label>
+      <div class="xwrap"><input type="search" id="xq" autocomplete="off" placeholder="Type the brand or model, e.g. Carlin 301CRD" aria-describedby="xhint" aria-controls="xres" aria-expanded="false">
+        <div class="xres" id="xres" hidden role="listbox" aria-label="Cross-reference matches"></div></div>
+      <span class="hint" id="xhint">Finds the Beckett or Wayne burner to sell instead of another maker’s or an older model.</span>
+    </div>
     <fieldset class="f-rate">
       <label class="lbl" for="rate">Required firing rate</label>
       <div class="row"><input type="number" id="rate" min="0" step="any" inputmode="decimal" placeholder="e.g. 1.25"><select id="unit" aria-label="Rate unit" style="width:96px;flex:none"><option value="gph">GPH</option><option value="mbh">MBH</option></select></div>
@@ -560,6 +583,7 @@ tr.fu td{background:#fffaf2 !important}
   <p id="sdtxt" style="margin:0;font-size:14.5px;line-height:1.5"></p>
   <div class="row"><button type="button" class="btn" id="sdx">Go back</button><button type="button" class="btn pri" id="sdgo">Continue to RFQ</button></div>
 </div></dialog>
+<div class="infop" id="infop" role="dialog" aria-live="polite" hidden></div>
 <div class="toast" id="toast" role="status"></div>
 <div id="pic" aria-hidden="true"><img alt=""><span></span></div>
 
@@ -641,7 +665,7 @@ function render(){
   $('lad').innerHTML=list.length?list.map(x=>{const[a,b]=mb(x);const fz=fit(x,r);return`<div class="lr" data-n="${esc(x.n)}" title="${esc(x.b+' '+x.n)}: ${fmt(x)}"><div class="nm">${esc(x.n)}<small>${x.prev?'Preview':esc(x.b)}</small></div><div class="track">${gl}${req}<div class="bar ${x.f}${x.disc?' off':''}${fz==='edge'?' edgebar':''}" style="left:${pos(a)}%;width:${Math.max(pos(b)-pos(a),.8)}%"></div></div></div>`}).join(''):'<div class="empty">No burner meets every filter. Loosen the footprint or power limits, or check the firing rate unit.</div>';
   $('tb').innerHTML=list.map(x=>{const fz=fit(x,r);const d=Array.isArray(x.dim)?x.dim.map(n=>+n.toFixed(2)).join(' × '):x.dim==='spec'?'See spec sheet':'Not published';
     return`<tr id="r-${x.n.replace(/\W/g,'')}" class="${fz==='edge'?'edge':''}"><td><b class="nm-${x.f}"><a class="bn" href="${esc(x.u)}"${x.img?` data-img="${esc(x.img)}"`:''} target="_blank" rel="noopener">${esc(x.n)}</a></b><br><span class="note">${esc(x.b)}${x.disc?' · discontinued':''}${x.prev?' · <b class=pv>preview, not saved</b>':''}</span><br><button type="button" class="rfqb" data-k="${esc((x.b+'|'+x.n).toLowerCase())}">Create RFQ</button></td><td><span class="fuel ${x.f}">${x.f==='oil'?'Oil':'Gas'}</span>${x.bio?`<br><span class="tag">${esc(x.bio)}</span>`:''}${x.lp?`<br><span class="tag">LP: ${esc(x.lp)}</span>`:''}</td><td class="n">${fmt(x)}${sub(x)?`<br><span class="note">${sub(x)}</span>`:''}${fz==='ok'?`<br><span class="fit ok">Sweet spot</span>`:fz==='edge'?`<br><span class="fit edge">${where(x,r)==='max'?`Near MAX · ${pctOf(x,r)}% of max`:`Near MIN · ${Math.round((r/mb(x)[0]-1)*100)}% above min`}</span>`:''}</td><td><div class="pws">${['12dc','24dc','120','240','3p240','3p480','none'].filter(k=>x.v.includes(k)).map(k=>`<span class="pw ${PCH[k][1]}">${PCH[k][0]}${x.std===k&&x.v.length>1?' <i>Std</i>':''}</span>`).join('')}</div></td><td>${x.m.map(m=>`<span class="tag">${MODES[m]}</span>`).join('')}</td><td class="n">${x.fl!=null||x.fw!=null?`${x.fl!=null?n2(x.fl):'?'} × ${x.fw!=null?n2(x.fw):'?'}`:NS}</td><td class="n">${x.td!=null?(x.td===1&&x.tdx?'':n2(x.td)+':1'):NS}</td><td class="n">${x.op!=null?'up to '+n2(x.op):NS}</td><td>${x.parts?`<span class="rate p-${x.parts}">${CAP(x.parts)}</span>`:'<span class="note" style="white-space:nowrap">Not set</span>'}</td><td>${x.svc?`<span class="rate s-${x.svc}">${CAP(x.svc)}</span>`:'<span class="note" style="white-space:nowrap">Not set</span>'}</td><td class="n">${d}</td><td>${x.a.map(a=>`<span class="tag">${APPS[a]}</span>`).join('')}</td><td>${esc(x.note)}</td></tr>`}).join('');
-  const TH=[...document.querySelectorAll('#tbl thead th')].map(t=>t.textContent);$('tb').querySelectorAll('tr').forEach(tr=>[...tr.cells].forEach((c,i)=>c.dataset.l=TH[i]));
+  const TH=[...document.querySelectorAll('#tbl thead th')].map(t=>t.dataset.t||t.textContent);$('tb').querySelectorAll('tr').forEach(tr=>[...tr.cells].forEach((c,i)=>c.dataset.l=TH[i]));
   facets();
 }
 // Gray out any filter option that, combined with everything else already chosen, would leave no burners.
@@ -698,10 +722,38 @@ $('o-x').onclick=()=>$('o2g').close();
 $('o-go').onclick=()=>{const c=o2gCalc();if(!c)return;o2gApply(c);
   (document.querySelector('.ladder')||$('lad')).scrollIntoView({behavior:'smooth',block:'start'});toast(`Showing gas burners for ${c.mbh.toLocaleString()} MBH`)};
 
-$('lad').onclick=e=>{const row=e.target.closest('.lr');if(!row)return;const t=$('r-'+row.dataset.n.replace(/\W/g,''));if(!t)return;
+$('lad').onclick=e=>{const row=e.target.closest('.lr');if(row)hiBurner(row.dataset.n)};
+// ---------- cross-reference lookup ("Replacing a burner?") ----------
+let XREF=[];
+const xnorm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+const loadXref=()=>J('GET','api/xref').then(l=>{XREF=Array.isArray(l)?l:[]}).catch(()=>{});
+function xFind(q){const toks=q.toLowerCase().split(/\s+/).map(xnorm).filter(Boolean),all=xnorm(q);if(!toks.length)return[];
+  return XREF.map(x=>{const hay=xnorm(x.brand+' '+x.model),mod=xnorm(x.model);
+    const hit=toks.every(t=>hay.includes(t))||hay.includes(all);if(!hit)return null;
+    const score=(mod===all||xnorm(x.brand+x.model)===all?0:mod.startsWith(toks[toks.length-1])?1:2);return{x,score}}).filter(Boolean)
+    .sort((a,b)=>a.score-b.score||a.x.brand.localeCompare(b.x.brand)||a.x.model.localeCompare(b.x.model,undefined,{numeric:true})).slice(0,8).map(o=>o.x)}
+const bOf=k=>D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===k);
+function xShow(){const q=$('xq').value.trim(),box=$('xres');if(!q){box.hidden=true;$('xq').setAttribute('aria-expanded','false');return}
+  const m=xFind(q);
+  box.innerHTML=m.length?m.map(x=>{const bs=x.to.map(bOf).filter(Boolean);return`<div class="xr" role="option"><div class="from">Replaces <b>${esc(x.brand)} ${esc(x.model)}</b> with:</div>
+    ${bs.map(b=>`<div class="to"><div class="tline"><span class="nm ${b.f}">${esc(b.b+' '+b.n)}</span><span class="sm" style="color:var(--mute)">${esc(fmt(b))}</span><span style="flex:1"></span>
+      <button type="button" data-a="show" data-k="${esc((b.b+'|'+b.n).toLowerCase())}">Show in matrix</button><button type="button" class="pri" data-a="rfq" data-k="${esc((b.b+'|'+b.n).toLowerCase())}" data-from="${esc(x.brand+' '+x.model)}">Create RFQ</button></div></div>`).join('')||'<div class="sm">The replacement burner is no longer in the list. Ask an admin to update this entry.</div>'}
+    ${x.note?`<div class="xn">${esc(x.note)}</div>`:''}</div>`}).join('')
+    :`<div class="xr none">No match for “${esc(q)}”. ${XREF.length?'Try just the model number, or':'The cross-reference list is empty, so'} ask an editor or admin to add it. You can still use the filters below.</div>`;
+  box.hidden=false;$('xq').setAttribute('aria-expanded','true')}
+$('xq').addEventListener('input',xShow);$('xq').addEventListener('focus',()=>{if(!XREF.length)loadXref().then(xShow);else xShow()});
+$('xq').addEventListener('keydown',e=>{if(e.key==='Escape'){$('xres').hidden=true;$('xq').setAttribute('aria-expanded','false')}});
+document.addEventListener('click',e=>{if(!e.target.closest('.xwrap')){$('xres').hidden=true;$('xq').setAttribute('aria-expanded','false')}});
+$('xres').addEventListener('click',async e=>{const b=e.target.closest('button[data-a]');if(!b)return;const x=bOf(b.dataset.k);if(!x)return;$('xres').hidden=true;
+  if(b.dataset.a==='show'){if(!$('r-'+x.n.replace(/\W/g,''))||!list.includes(x)){S=JSON.parse(JSON.stringify(DEF));CONV=null;sync();toast('Filters cleared so the burner shows')}hiBurner(x.n,'Replacement');return}
+  const xfmr=stepDownNote(x);if(xfmr&&!await stepDownOK(x))return;b.disabled=true;
+  newRFQ(x,{...(xfmr?{xfmr}:{}),note:`Replaces ${b.dataset.from}.`}).catch(err=>toast(err.message)).finally(()=>b.disabled=false)});
+
+// mark one burner in the chart and the table, and scroll its table row into view
+function hiBurner(n,label='Selected'){const t=$('r-'+n.replace(/\W/g,''));if(!t)return false;const row=[...document.querySelectorAll('#lad .lr')].find(r=>r.dataset.n===n);
   document.querySelectorAll('tr.hl').forEach(x=>x.classList.remove('hl','flash'));document.querySelectorAll('.selb').forEach(x=>x.remove());document.querySelectorAll('.lr.on').forEach(x=>x.classList.remove('on'));
-  row.classList.add('on');t.classList.add('hl');void t.offsetWidth;t.classList.add('flash');
-  const nm=t.querySelector('td b');if(nm)nm.insertAdjacentHTML('afterend','<span class="selb">Selected</span>');t.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'center'})};
+  if(row)row.classList.add('on');t.classList.add('hl');void t.offsetWidth;t.classList.add('flash');
+  const nm=t.querySelector('td b');if(nm)nm.insertAdjacentHTML('afterend',`<span class="selb">${esc(label)}</span>`);t.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'center'});return true}
 const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),Math.max(1800,String(m).length*60))};
 /* ---------- Hover photo ---------- */
 const pic=$('pic'),pimg=pic.querySelector('img'),pcap=pic.querySelector('span');
@@ -753,6 +805,54 @@ const DD={
   mount:['Adjustable flange','Welded flange'],
 };
 const ro=(label,val)=>`<div><span class="k">${label}</span><span class="v">${val}</span></div>`;
+/* ---------- info buttons: plain-English help for technical terms ---------- */
+const GLOSS={
+  rate:['Firing rate / required input','How much fuel the burner burns per hour. Oil is in <b>GPH</b> (gallons per hour); gas is in <b>MBH</b> (thousands of BTU per hour of input). Take it from the appliance’s rating plate or manual (“input”, not “output”). Rule of thumb used here: <b>1 GPH of oil ≈ 140 MBH</b>.'],
+  fit:['Sweet spot / Near MAX / Near MIN','Where the required input falls in the burner’s range. <b>Sweet spot</b> = comfortably in the middle, the best choice. <b>Near MAX</b> or <b>Near MIN</b> = it will work but is close to the limit, so there’s little room if the appliance turns out to need more or less. Prefer a sweet-spot burner when there’s a choice.'],
+  mode:['Firing mode','<b>On/Off</b>: runs at one fixed rate, full fire or off. Simple and lowest cost.<br><b>Lo-Hi-Lo</b>: two stages; runs at low fire and steps up to high fire when the load needs it. Fewer starts and smoother heat.<br><b>Modulating</b>: varies smoothly anywhere between its minimum and maximum to match the load. Most efficient and most expensive; common on larger commercial boilers.'],
+  power:['Power available','The electrical supply at the burner location. Tick <b>every</b> supply the site has. 120 VAC is the normal single-phase supply; 208–240 VAC and 480 VAC 3-phase are common in commercial and industrial buildings. 12/24 VDC is for mobile equipment such as pressure washers.'],
+  std:['Std','The supply the burner ships with as standard. Other listed supplies are options, which may cost more or take longer.'],
+  footprint:['Footprint limit','The largest burner chassis that fits in front of the appliance: how much <b>height</b> and <b>width</b> there is around the burner opening (doors, floor, pipes and walls included). Measure on site in inches.'],
+  dims:['H × W × D','The burner chassis size in inches: height × width × depth, not counting the air tube. Use it to check the burner fits the space in front of the appliance.'],
+  flame:['Flame size','How long and how wide the flame is. It must fit inside the appliance’s combustion chamber without touching the back wall or sides; a flame that hits the walls causes soot, noise and damage. Compare with the chamber size from the appliance maker.'],
+  turndown:['Turndown','How far a Lo-Hi-Lo or modulating burner can turn itself down. <b>4:1</b> means the lowest rate is a quarter of the highest (a 4 GPH burner can run at 1 GPH). Higher turndown means fewer on/off cycles and better efficiency at light loads. On/off burners are 1:1.'],
+  overfire:['Overfire pressure','The pressure inside the combustion chamber while the burner is firing, in inches of water column (in. WC). Most residential appliances run slightly negative (around −0.02 in. WC). Pressure-fired boilers run positive, often +0.5 in. WC or more, and need a burner whose fan can push against that. The appliance maker lists it.'],
+  bio:['Biofuel ratings','<b>B20</b> = heating oil with up to 20% biodiesel blended in. <b>B100</b> = pure biodiesel. <b>R100</b> = renewable diesel. Only use a burner rated for the fuel the customer will burn.'],
+  parts:['Parts','How easy it is to get aftermarket and replacement parts for this burner locally: Best, Good or Bad.'],
+  service:['Service','How easy the burner is for a technician to service: Easy, Medium or Hard.'],
+  chamber:['Combustion chamber','The inside of the appliance where the flame burns: length × width × height in inches. The flame has to fit in it, so the appliance maker’s figures (or a measurement) help the factory confirm the burner and head.'],
+  tube:['Air tube length','The tube that carries air and the flame from the burner into the appliance. It must be long enough to reach the insertion depth the appliance maker asks for. Pick from this burner’s available lengths, or choose “Other” and explain in Notes.'],
+  ins:['Insertion depth','How far the end of the air tube must reach into the appliance, as the appliance maker specifies. Usually measured from the face of the burner mounting plate. Too short or too long can cause poor combustion, so ask for the maker’s figure.'],
+  mount:['Mounting','<b>Adjustable flange</b>: slides along the air tube and is tightened on site, so the insertion can be set on the job. <b>Welded flange</b>: fixed at the factory at a set insertion, for a known appliance.'],
+  oilsup:['Oil supply','How the oil gets from the tank to the burner. <b>One-pipe</b>: a single supply line, normal when the tank is level with or above the burner. <b>Two-pipe</b>: a supply and a return line, usually needed when the tank is below the burner (lift). A <b>deaerator</b> lets a one-pipe line work like two-pipe.'],
+  vent:['Venting / draft','How the appliance gets rid of exhaust. <b>Natural draft</b>: a chimney pulls it out. <b>Power vent / induced draft</b>: a fan pulls it out. <b>Direct vent</b>: sealed, with outside air in and exhaust out through the wall. <b>Positive pressure</b>: the burner fan pushes exhaust through, as on pressure-fired boilers.'],
+  alt:['Altitude','Site height above sea level. Above about 2,000 ft the air is thinner, so the burner may need adjusting or derating to burn cleanly. Give the altitude so the factory can set it up correctly.'],
+  gp:['Gas supply pressure','The gas pressure available at the burner, in inches of water column (in. WC) or psi. Typical: about 7 in. WC for natural gas and 11 in. WC for LP. Low or high pressure can change the gas train needed, so give the figure if known.'],
+  ctl:['Controls / Panel','Extra controls the job needs, for example the primary control (the burner’s safety control), a control panel, or <b>CSD-1</b> (a safety-controls code for automatically fired boilers that many states require on commercial boilers).']};
+const infoB=k=>GLOSS[k]?`<button type="button" class="infob" data-i="${k}" aria-label="What is ${esc(GLOSS[k][0].replace(/<[^>]+>/g,''))}?" aria-expanded="false"></button>`:'';
+function addInfo(el,k){if(el&&GLOSS[k]&&!el.querySelector(':scope>.infob'))el.insertAdjacentHTML('beforeend',infoB(k))}
+function infoRFQ(){const ids={'q-rate':'rate','q-of':'overfire','q-ch':'chamber','q-alt':'alt','q-ol':'oilsup','q-vent':'vent','q-gp':'gp','q-pwr':'power','q-v':'power','q-m':'mode','q-mount':'mount','q-tube':'tube','q-ins':'ins','q-ctl':'ctl'};
+  for(const[id,k]of Object.entries(ids))addInfo(document.querySelector(`#sheet label[for="${id}"]`),k);
+  const kt={'Firing modes':'mode','Turndown':'turndown','Max overfire':'overfire','Flame size':'flame','Fuel ratings':'bio','Chassis dimensions':'dims','Air tube lengths':'tube'};
+  document.querySelectorAll('#sheet .sh-burner .k').forEach(s=>addInfo(s,kt[s.textContent.trim()]))}
+function infoMatrix(){addInfo(document.querySelector('label[for="rate"]'),'rate');
+  const lt={'Firing mode':'mode','Power available':'power','Footprint limit (chassis face)':'footprint','Flame must fit (in)':'flame','Modulation turndown':'turndown','Overfire pressure needed':'overfire'};
+  document.querySelectorAll('.rail legend').forEach(l=>addInfo(l,lt[l.textContent.trim()]));addInfo($('bio').parentNode,'bio');
+  const ht={'Firing rate':'fit','Power':'power','Mode':'mode','Flame L×W (in)':'flame','Turndown':'turndown','Overfire (in. WC)':'overfire','Parts':'parts','Service':'service','H × W × D (in)':'dims'};
+  document.querySelectorAll('#tbl thead th').forEach(th=>{const t=th.textContent.trim();if(ht[t]){th.dataset.t=t;addInfo(th,ht[t])}})}
+let INFOB=null;
+function infoClose(){const p=$('infop');p.hidden=true;if(INFOB){INFOB.setAttribute('aria-expanded','false');INFOB=null}}
+document.addEventListener('click',e=>{const b=e.target.closest('.infob');
+  if(b){e.preventDefault();e.stopPropagation();if(INFOB===b){infoClose();return}infoClose();const g=GLOSS[b.dataset.i],p=$('infop');
+    p.innerHTML=`<button type="button" class="ix" aria-label="Close">×</button><b>${g[0]}</b><p>${g[1]}</p>`;p.hidden=false;
+    const r=b.getBoundingClientRect(),w=Math.min(340,innerWidth-16);p.style.width=w+'px';
+    p.style.left=Math.max(8,Math.min(r.left+scrollX-20,scrollX+innerWidth-w-8))+'px';
+    const below=r.bottom+8+p.offsetHeight<innerHeight;p.style.top=(below?r.bottom+scrollY+8:r.top+scrollY-p.offsetHeight-8)+'px';
+    INFOB=b;b.setAttribute('aria-expanded','true');p.querySelector('.ix').onclick=()=>{const k=INFOB;infoClose();if(k)k.focus()};return}
+  if(!e.target.closest('#infop'))infoClose()},true);
+addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('infop').hidden){const k=INFOB;infoClose();if(k)k.focus();e.stopPropagation()}},true);
+addEventListener('resize',infoClose);
+infoMatrix();
 const fmtD=iso=>new Date(iso).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
 const rawOf=x=>RAW.find(o=>(o.brand+'|'+o.name).toLowerCase()===(x.b+'|'+x.n).toLowerCase());
 let RFQ=null;
@@ -814,6 +914,8 @@ function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);$('sheet').cla
   // fields filled from the matrix filters are fixed; change the filter in the matrix to change them
   const locks=meta.locks||LOCKABLE.filter(id=>$(id).value.trim());RFQ.locks=locks;
   locks.forEach(id=>{const el=$(id);if(el&&el.value.trim()){if(el.tagName==='SELECT')el.disabled=true;else el.readOnly=true;el.dataset.lock='1';el.title='Set by your selections on the matrix page. Change the filter there to change this.'}});
+  infoRFQ();
+  if(!meta.fields&&meta.note)$('q-notes').value=meta.note;
   if(!meta.fields&&CONV&&x.f==='gas'&&String(CONV.mbh)===String(S.rate)&&S.unit==='mbh'){
     $('q-notes').value=`Oil-to-gas conversion. Replaces ${nzTxt(CONV)} at ${CONV.p} psi (≈ ${CONV.gph.toFixed(2)} GPH, ${CONV.mbh.toLocaleString()} MBH).`;}
   if(RFQ.ro)lockSheet();else{bookSetup();dupFor='';dupCheck()}
