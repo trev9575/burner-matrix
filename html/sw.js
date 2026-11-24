@@ -12,6 +12,21 @@ self.addEventListener('activate', e => {
     .then(ks => Promise.all(ks.filter(k => k.startsWith('bm-shell-') && k !== SHELL).map(k => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
+// phone notifications: show them, and open the RFQ when tapped
+self.addEventListener('push', e => {
+  let d = {}; try { d = e.data ? e.data.json() : {}; } catch { d = { body: e.data && e.data.text() }; }
+  e.waitUntil(self.registration.showNotification(d.title || 'Burner Matrix', { body: d.body || '', tag: d.tag, renotify: !!d.tag,
+    icon: '/icons/icon-192.png', badge: '/icons/icon-192.png', data: { url: d.url || '/' } }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = new URL((e.notification.data && e.notification.data.url) || '/', self.location.origin).href;
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
+    const c = cs.find(x => new URL(x.url).origin === self.location.origin);
+    if (c) return c.navigate(url).then(w => (w || c).focus()).catch(() => self.clients.openWindow(url));
+    return self.clients.openWindow(url);
+  }));
+});
 // signing out wipes everything cached on this device
 self.addEventListener('message', e => {
   if (e.data === 'logout') e.waitUntil(caches.keys().then(ks => Promise.all(ks.map(k => caches.delete(k)))));

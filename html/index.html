@@ -309,6 +309,7 @@ a.colink{color:inherit;text-decoration:underline dotted;text-underline-offset:3p
 .offl{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:70;background:#1c1c1c;color:#fff;font-size:13px;padding:9px 14px;border-radius:20px;box-shadow:0 6px 18px rgba(0,0,0,.25);max-width:92vw;text-align:center}
 .lout{margin:0 0 12px;padding:9px 12px;border-radius:4px;background:#eef4fb;border:1px solid #c9daf0;font-size:13px}.lout a{color:var(--gas);font-weight:600}
 @media(display-mode:standalone){.util{padding-top:env(safe-area-inset-top)}}
+.ttiles{display:flex;flex-wrap:wrap;gap:12px;margin:6px 0 12px}.ttiles .tile{border:1px solid var(--rule);border-radius:6px;padding:10px 16px;min-width:130px}.ttiles .tile b{display:block;font-size:24px;line-height:1.1}.ttiles .tile span{font-size:12.5px;color:var(--mute)}.ttiles .tile.warn b{color:#b35c00}
 .btable td{vertical-align:middle}.bmix{display:flex;align-items:center;gap:8px;min-width:220px}.bbar{display:flex;gap:1px;width:150px;height:12px;border-radius:2px;overflow:hidden;background:#ecece8;flex:none}.bbar span{display:block;height:100%}
 .bmix .sm{white-space:nowrap}.btable .bn{font-weight:700}.btable .bn.oil{color:var(--oil)}.btable .bn.gas{color:var(--gas)}
 .lostbox{border:1px solid var(--rule);border-radius:6px;padding:14px 16px;margin:14px 0 6px}
@@ -408,7 +409,7 @@ tr.fu td{background:#fffaf2 !important}
   <span class="sp"></span>
   <div class="ext"><a href="https://www.beckettcorp.com" target="_blank" rel="noopener">beckettcorp.com</a><a href="https://waynecombustion.com/products" target="_blank" rel="noopener">waynecombustion.com</a></div>
   <details class="um" id="um" hidden><summary aria-label="Account menu"><span class="av" id="av"></span><span class="nm" id="whoami"></span><span class="car" aria-hidden="true"></span></summary>
-    <div class="menu"><div class="who" id="whomenu"></div><button type="button" id="instb" hidden>Install app</button><button type="button" id="profb">My profile</button><button type="button" class="out" id="outb">Sign out</button></div></details>
+    <div class="menu"><div class="who" id="whomenu"></div><button type="button" id="instb" hidden>Install app</button><button type="button" id="pushb" hidden>Phone notifications</button><button type="button" id="profb">My profile</button><button type="button" class="out" id="outb">Sign out</button></div></details>
 </nav>
 <div class="brand" role="banner" id="home" title="Back to the burner matrix" tabindex="0">
   <img src="logos/beckett.png" alt="Beckett" onerror="this.outerHTML='<span class=bk>Beckett</span>'">
@@ -537,6 +538,12 @@ tr.fu td{background:#fffaf2 !important}
         <table class="ltable"><thead><tr><th>Reason</th><th class="n">Jobs</th><th class="n">Share</th><th class="n" id="lvalth" hidden>Quoted value</th></tr></thead><tbody id="ltbl"></tbody></table></div>
       <h4 id="llh" hidden style="margin:14px 0 6px;font-size:14px">Lost jobs</h4>
       <div style="overflow-x:auto"><table class="ltable" id="lltable" hidden><thead><tr><th>RFQ #</th><th>Lost on</th><th>Customer</th><th>Burner</th><th id="llrepth">Rep</th><th>Reason</th></tr></thead><tbody id="llist"></tbody></table></div>
+    </div>
+    <div class="lostbox" id="tabox">
+      <div class="lbar" style="margin:0 0 6px"><h3 style="margin:0;font-size:16px">Quote turnaround</h3><span class="sm" id="tsub" style="margin-left:6px">days from the RFQ being emailed to the office's first quote</span><span style="flex:1"></span>
+        <select id="tperiod" aria-label="Period"><option value="all">All time</option><option value="q">This quarter</option><option value="lq">Last quarter</option><option value="4q">Last 4 quarters</option></select></div>
+      <div class="tiles ttiles" id="ttiles"></div>
+      <div style="overflow-x:auto"><table class="ltable"><thead><tr><th>Quoted by</th><th class="n">Quotes</th><th class="n">Average</th><th class="n">Median</th><th class="n">Within 2 days</th><th class="n">Longest</th></tr></thead><tbody id="ttbl"></tbody></table></div>
     </div>
     <div class="lostbox" id="bybox">
       <div class="lbar" style="margin:0 0 6px"><h3 style="margin:0;font-size:16px">By burner</h3><span class="sm" id="bsub" style="margin-left:6px"></span><span style="flex:1"></span>
@@ -1299,7 +1306,7 @@ function renderWon(){const staff=ME&&ME.role!=='rep',pick=staff?$('wwho').value:
   $('wrepth').hidden=!staff||!!who||mine;
   const vw=base.filter(r=>r.status==='won').reduce((a,r)=>a+(r.value||0),0);
   $('wtiles').innerHTML=`<div class="tile"><b>${tw}</b><span>jobs won</span></div><div class="tile"><b>${money(vw)||'$0'}</b><span>value won</span></div><div class="tile"><b>${tw+tl?Math.round(tw/(tw+tl)*100)+'%':'—'}</b><span>win rate, all time</span></div><div class="tile"><b>${cur.rate!=null?Math.round(cur.rate*100)+'%':'—'}</b><span>win rate, ${qName(cur.q)}</span></div>`;
-  drawWon(Q);renderLost(base);renderBy(base);
+  drawWon(Q);renderLost(base);renderBy(base);renderTurn(base);
   $('wqtbl').innerHTML=Q.slice().reverse().map(o=>`<tr><td style="white-space:nowrap">${qName(o.q)}</td><td>${o.won}</td><td>${o.lost}</td><td>${o.open}</td><td>${o.rate!=null?Math.round(o.rate*100)+'%':'—'}</td></tr>`).join('');
   $('wlh').textContent=`Jobs won (${won.length})`;
   $('wbody').innerHTML=won.map(r=>`<tr data-id="${esc(r.id)}"><td class="no" style="font-weight:700;white-space:nowrap">${esc(r.no)}</td><td style="white-space:nowrap">${fmtD(r.statusAt||r.date)}</td><td>${r.company?`<a href="#" class="colink" data-co="${esc(r.company)}">${esc(r.company)}</a>`:''}${r.contact?`<div class="sm">${esc(r.contact)}</div>`:''}</td><td>${esc(r.job)}</td>
@@ -1326,6 +1333,20 @@ function drawWon(Q){const box=$('wsvg'),W=Math.max(320,box.clientWidth||700);
 // Each reason keeps one color everywhere. Order chosen so every pair of neighbouring slices
 // (including last→first) stays distinguishable with colour-blindness (validated, ΔE ≥ 15).
 // RFQs, quotes, wins and losses per burner, with each burner's lost-reason mix (same reason colors as the pie)
+// how fast the office quotes: first email -> first quote, in days (to one decimal)
+const dayFmt=d=>d==null?'—':d<1?Math.round(d*24)+' h':(Math.round(d*10)/10)+' day'+(Math.round(d*10)/10===1?'':'s');
+const med=a=>{if(!a.length)return null;const s=[...a].sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2};
+function renderTurn(base){const per=$('tperiod').value,now=qOf(new Date().toISOString());
+  const inP=t=>per==='all'?true:per==='q'?qOf(t)===now:per==='lq'?qOf(t)===now-1:qOf(t)>now-4;
+  const done=base.filter(r=>r.firstSent&&r.firstQuoted&&inP(r.firstQuoted)).map(r=>({by:r.quotedBy||'—',d:(Date.parse(r.firstQuoted)-Date.parse(r.firstSent))/864e5}));
+  const wait=base.filter(r=>waiting(r)).map(r=>daysSince(r.sent.at)),ds=done.map(x=>x.d),avg=ds.length?ds.reduce((a,b)=>a+b,0)/ds.length:null,w2=ds.filter(d=>d<=2).length;
+  $('ttiles').innerHTML=[[dayFmt(avg),'average'],[dayFmt(med(ds)),'median'],[ds.length?Math.round(w2/ds.length*100)+'%':'—','quoted within 2 days'],[ds.length,'quotes counted'],
+    [wait.length,'waiting now'+(wait.length?(Math.max(...wait)?` · oldest ${Math.max(...wait)} day${Math.max(...wait)===1?'':'s'}`:' · all since today'):''),wait.length&&Math.max(...wait)>2?'warn':'']]
+    .map(([v,l,c])=>`<div class="tile ${c||''}"><b>${v}</b><span>${l}</span></div>`).join('');
+  const by=new Map();done.forEach(x=>{const a=by.get(x.by)||[];a.push(x.d);by.set(x.by,a)});
+  $('ttbl').innerHTML=[...by.entries()].sort((a,b)=>b[1].length-a[1].length).map(([n,a])=>`<tr><td>${esc(n)}</td><td class="n">${a.length}</td><td class="n">${dayFmt(a.reduce((x,y)=>x+y,0)/a.length)}</td><td class="n">${dayFmt(med(a))}</td><td class="n">${Math.round(a.filter(d=>d<=2).length/a.length*100)}%</td><td class="n">${dayFmt(Math.max(...a))}</td></tr>`).join('')||
+    `<tr><td colspan="6" class="sm" style="padding:16px 8px">No quotes ${per==='all'?'yet':'in this period'}. This fills in once quoters attach quotes to emailed RFQs.</td></tr>`}
+$('tperiod').onchange=()=>renderWon();
 let BALL=false;
 function renderBy(base){const per=$('bperiod').value,now=qOf(new Date().toISOString());
   const inP=r=>per==='all'?true:per==='q'?qOf(r.date)===now:per==='lq'?qOf(r.date)===now-1:qOf(r.date)>now-4;
@@ -1546,7 +1567,7 @@ $('rfqsb').onclick=()=>{if(!$('rfqv').hidden&&RFQ&&RFQ.dirty){saveRFQ(true).then
 /* ---------- Load data ---------- */
 function showMe(){if(!ME)return;$('rfqsb').textContent=ME.role==='rep'?'My RFQs':'RFQs';$('acct').hidden=false;$('um').hidden=false;
   const nm=ME.full||ME.name,ini=(ME.full?ME.full.split(/\s+/).map(w=>w[0]).join(''):ME.name.replace(/@.*/,'').slice(0,2)).slice(0,2).toUpperCase();
-  $('navadm').hidden=ME.role!=='editor'&&ME.role!=='admin';$('av').textContent=ini;$('whoami').textContent=nm;$('whomenu').innerHTML=`<b>${esc(nm)}</b><small>${esc(ME.email||ME.name)} · ${{rep:'Rep',quoter:'Quoter',editor:'Editor',admin:'Admin'}[ME.role]||ME.role}</small>`;const a=$('adminl');if(a)a.hidden=ME.role==='rep'}
+  $('navadm').hidden=ME.role!=='editor'&&ME.role!=='admin';$('av').textContent=ini;$('whoami').textContent=nm;$('whomenu').innerHTML=`<b>${esc(nm)}</b><small>${esc(ME.email||ME.name)} · ${{rep:'Rep',quoter:'Quoter',editor:'Editor',admin:'Admin'}[ME.role]||ME.role}</small>`;const a=$('adminl');if(a)a.hidden=ME.role==='rep';pushLabel()}
 const ME_P=fetch('api/me',{credentials:'same-origin'}).then(r=>r.ok?r.json():null).then(j=>{if(j){ME=j;showMe();if(RFQ)rfqStatus();if(!PDFMODE){refreshFollow();netState()}}}).catch(()=>{});
 // ?rfq=<id> opens a saved RFQ; &pdf=1 is the server's PDF renderer
 const RFQ_Q=new URLSearchParams(location.search).get('rfq');
@@ -1554,6 +1575,29 @@ if(RFQ_Q)ME_P.then(()=>openSaved(RFQ_Q,'list')).then(async()=>{if(!PDFMODE)retur
     await document.fonts.ready;fitAll();await Promise.all([...document.querySelectorAll('#sheet img')].map(i=>i.complete?(i.naturalWidth||i.remove()):new Promise(r=>{i.addEventListener('load',r);i.addEventListener('error',()=>{i.remove();r()});setTimeout(()=>{if(!i.naturalWidth)i.remove();r()},8000)})));
     window.RFQ_READY=true}).catch(e=>{window.RFQ_ERROR=e.message||'Could not open RFQ';toast(window.RFQ_ERROR)});
 document.addEventListener('click',e=>{const u=$('um');if(u.open&&!u.contains(e.target))u.open=false});
+/* ---------- phone notifications on this device ---------- */
+const PUSH_OK='serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
+const isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const pushSub=async()=>{try{const r=await navigator.serviceWorker.ready;return await r.pushManager.getSubscription()}catch{return null}};
+async function pushLabel(){const b=$('pushb');if(PDFMODE||!ME)return;b.hidden=false;
+  if(!PUSH_OK){b.textContent='🔔 Phone notifications';return}
+  const on=!!(await pushSub())&&Notification.permission==='granted';b.textContent=on?'🔔 Notifications: On':'🔕 Turn on notifications';b.dataset.on=on?'1':''}
+const deviceName=()=>{const u=navigator.userAgent;return(/iPhone/.test(u)?'iPhone':/iPad/.test(u)||isIOS?'iPad':/Android/.test(u)?'Android':/Mac/.test(u)?'Mac':/Windows/.test(u)?'Windows PC':'Device')+' · '+(/Edg\//.test(u)?'Edge':/Firefox\//.test(u)?'Firefox':/Chrome\//.test(u)?'Chrome':/Safari\//.test(u)?'Safari':'browser')};
+$('pushb').onclick=async()=>{$('um').open=false;
+  if(!PUSH_OK){toast(isIOS&&!standalone?'On iPhone/iPad, first add the app to your Home Screen (Share → Add to Home Screen), open it from there, then turn on notifications.':'This browser can’t show notifications.');return}
+  const b=$('pushb');
+  if(b.dataset.on){const s=await pushSub();if(s){await J('POST','api/push/unsubscribe',{endpoint:s.endpoint}).catch(()=>{});await s.unsubscribe().catch(()=>{})}toast('Notifications turned off on this device');return pushLabel()}
+  try{const perm=await Notification.requestPermission();
+    if(perm!=='granted'){toast(perm==='denied'?'Notifications are blocked for this site. Allow them in your browser or phone settings, then try again.':'Notifications weren’t turned on.');return}
+    const reg=await navigator.serviceWorker.ready,{key}=await J('GET','api/push/key');
+    let s=await reg.pushManager.getSubscription();
+    if(s&&s.options&&s.options.applicationServerKey&&btoa(String.fromCharCode(...new Uint8Array(s.options.applicationServerKey))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')!==key){await s.unsubscribe();s=null}
+    if(!s)s=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:Uint8Array.from(atob(key.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0))});
+    await J('POST','api/push/subscribe',{sub:s.toJSON(),device:deviceName()});
+    await pushLabel();
+    try{await J('POST','api/push/test',{});toast('Notifications are on – a test one is on its way.')}catch(err){toast('Turned on, but the test didn’t go through: '+err.message)}}
+  catch(err){toast('Couldn’t turn on notifications: '+err.message)}};
 const setNav=()=>{const from=!$('rfqv').hidden&&RFQ?RFQ.from:'';const v=!$('listv').hidden||from==='list'?'list':!$('wonv').hidden||!$('repv').hidden||from==='won'?'won':!$('custv').hidden||!$('histv').hidden||from==='hist'?'cust':'matrix';
   $('navm').setAttribute('aria-current',v==='matrix'?'page':'false');$('rfqsb').setAttribute('aria-current',v==='list'?'page':'false');$('wonb').setAttribute('aria-current',v==='won'?'page':'false');$('custb').setAttribute('aria-current',v==='cust'?'page':'false')};
 new MutationObserver(setNav).observe($('wonv'),{attributes:true,attributeFilter:['hidden']});new MutationObserver(setNav).observe($('repv'),{attributes:true,attributeFilter:['hidden']});['custv','histv'].forEach(v=>new MutationObserver(setNav).observe($(v),{attributes:true,attributeFilter:['hidden']}));

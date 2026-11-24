@@ -9,6 +9,7 @@ const Schema = require('./html/schema.js');
 const Mail = require('./lib/mail.js');
 const { renderPDF } = require('./lib/pdf.js');
 const XLSX = require('./lib/xlsx.js');
+const Push = require('./lib/push.js');
 
 const PORT = +process.env.PORT || 8080;
 const DATA = process.env.DATA_DIR || '/data';
@@ -38,6 +39,8 @@ const F = {
   xref: path.join(DATA, 'xref.json'),
   xmiss: path.join(DATA, 'xref-misses.json'),
   quotes: path.join(DATA, 'quotes'),
+  vapid: path.join(DATA, '.vapid.json'),
+  push: path.join(DATA, 'push.json'),
 };
 
 // ---------- storage ----------
@@ -54,6 +57,19 @@ const writeJSON = (f, v, pretty) => {
 if (!fs.existsSync(F.burners)) fs.copyFileSync(path.join(HTML, 'burners.json'), F.burners);
 if (!fs.existsSync(F.secret)) fs.writeFileSync(F.secret, crypto.randomBytes(32).toString('hex'), { mode: 0o600 });
 const SECRET = fs.readFileSync(F.secret, 'utf8').trim();
+// ---------- phone notifications (web push) ----------
+const VAPID = Push.loadKeys(F.vapid);
+const pushContact = () => process.env.PUSH_CONTACT || (Mail.isEmail(Mail.config().from) ? 'mailto:' + Mail.config().from : 'mailto:burner-matrix@example.com');
+const getSubs = () => { const l = readJSON(F.push, []); return Array.isArray(l) ? l.filter(s => s && s.user && s.endpoint && s.keys) : []; };
+// tell these users on every device they turned notifications on; never blocks the request that caused it
+function notify(names, data) {
+  const want = new Set(names.filter(Boolean)), subs = getSubs().filter(s => want.has(s.user));
+  if (!subs.length) return;
+  Promise.all(subs.map(s => Push.send(VAPID, pushContact(), s, data).then(r => { if (!r.ok) console.warn(`Push to ${s.user} failed: HTTP ${r.status}`); return r.gone ? s.endpoint : null; },
+    e => { console.warn(`Push to ${s.user} failed: ${e.message}`); return null; })))
+    .then(gone => { const g = new Set(gone.filter(Boolean)); if (g.size) writeJSON(F.push, getSubs().filter(s => !g.has(s.endpoint))); });
+}
+const quoters = () => users.filter(u => u.role === 'quoter').map(u => u.name);
 
 // ---------- users ----------
 const hashPw = (pw, salt = crypto.randomBytes(16).toString('hex')) =>
@@ -267,7 +283,21 @@ const rfqFile = id => path.join(F.rfqs, id + '.json');
 const reloadRfq = r => { const cur = readJSON(rfqFile(r.id), null); if (!cur) throw Object.assign(new Error('RFQ not found'), { code: 404 });
   for (const k of Object.keys(r)) delete r[k]; return Object.assign(r, cur); };
 const getRfq = id => /^[a-f0-9]{12}$/.test(id) ? readJSON(rfqFile(id), null) : null;
-const allRfqs = () => fs.readdirSync(F.rfqs).filter(f => f.endsWith('.json')).map(f => readJSON(path.join(F.rfqs, f), null)).filter(r => r && r.burner && r.fields);
+// Parsed RFQs are kept in memory and only re-read when a file's size or time changes (or it's new), so lists,
+// Jobs and Customers stay fast with thousands of RFQs even on slow array disks. Treat the results as read-only:
+// anything that changes an RFQ reads its own fresh copy with getRfq().
+const RFQ_CACHE = new Map(); // file name -> { m: mtimeMs, s: size, r: record }
+const allRfqs = () => {
+  const names = fs.readdirSync(F.rfqs).filter(f => f.endsWith('.json')), live = new Set(names), out = [];
+  for (const f of names) {
+    let st; try { st = fs.statSync(path.join(F.rfqs, f)); } catch { continue; }
+    let c = RFQ_CACHE.get(f);
+    if (!c || c.m !== st.mtimeMs || c.s !== st.size) { c = { m: st.mtimeMs, s: st.size, r: readJSON(path.join(F.rfqs, f), null) }; RFQ_CACHE.set(f, c); }
+    if (c.r && c.r.burner && c.r.fields) out.push(c.r);
+  }
+  for (const f of RFQ_CACHE.keys()) if (!live.has(f)) RFQ_CACHE.delete(f);
+  return out;
+};
 // cross-reference: another maker's (or an old) burner model -> the Beckett/Wayne burner(s) to replace it with
 const getXref = () => { const l = readJSON(F.xref, []); return Array.isArray(l) ? l.filter(x => x && x.id && x.brand && x.model && Array.isArray(x.to)) : []; };
 const cleanXref = b => {
@@ -314,13 +344,18 @@ const isDraft = r => !(r.sends || []).length && !r.status && !r.quote;
 const canSee = (me, r) => !!r && (r.by === me.name || (me.role !== 'rep' && !(me.role === 'quoter' && isDraft(r))));
 const hiddenDraft = (me, r) => me.role === 'quoter' && r.by !== me.name && isDraft(r);
 const quoteInfo = q => q ? { no: q.no || '', value: typeof q.value === 'number' ? q.value : null, note: q.note || '', at: q.at, by: q.by, byFull: q.byFull || q.by, file: !!q.file, fname: q.fname || '' } : null;
+// quote turnaround: first time the RFQ was emailed -> first quote the office attached (later replacements don't count)
+const turnaround = r => { const s = ((r.sends || [])[0] || {}).at || ''; if (!s) return { firstSent: '', firstQuoted: '', quotedBy: '' };
+  const q = (r.quoteLog || []).find(x => !x.removed && x.at >= s) || (r.quote && r.quote.at >= s ? { at: r.quote.at, by: r.quote.by } : null);
+  const u = q && users.find(x => x.name === q.by);
+  return { firstSent: s, firstQuoted: q ? q.at : '', quotedBy: q ? (u && u.full) || q.by : '' }; };
 const unreadFor = (r, me) => me ? (r.comments || []).filter(c => c.by !== me.name && c.at > ((r.seen || {})[me.name] || '')).length : 0;
 const rfqSummary = (r, me) => ({ id: r.id, no: r.no, date: r.date, by: r.by, byFull: r.byFull, updated: r.updated,
   burner: `${r.burner.brand} ${r.burner.name}`, fuel: r.burner.fuel,
   company: r.fields['q-co'] || '', contact: r.fields['q-ct'] || '', job: r.fields['q-job'] || '',
   sent: (r.sends || []).slice(-1)[0] || null, status: r.status || '', statusAt: r.statusAt || '',
   value: typeof r.value === 'number' ? r.value : null, lostReason: r.status === 'lost' ? r.lostReason || '' : '', lostNote: r.status === 'lost' ? r.lostNote || '' : '',
-  quote: quoteInfo(r.quote), comments: (r.comments || []).length, unread: unreadFor(r, me),
+  quote: quoteInfo(r.quote), comments: (r.comments || []).length, unread: unreadFor(r, me), ...turnaround(r),
   newQuote: !!(me && r.quote && r.by === me.name && r.quote.at > ((r.seen || {})[me.name] || '')), // the rep hasn't opened it since it was quoted
   ...followUp(r) });
 // Emailed or Quoted RFQs with no activity for N days need a follow-up. Activity = last email, status change or "followed up".
@@ -377,6 +412,27 @@ async function api(req, res, url) {
   if (p === '/api/me') return me ? send(res, 200, meInfo(me)) : send(res, 401, { error: 'Not signed in', setup: users.length > 0 });
   if (!me) return send(res, 401, { error: 'Not signed in' });
 
+  if (p === '/api/push/key' && m === 'GET') return send(res, 200, { key: Push.b64u(Push.publicKey(VAPID)) });
+  if (p === '/api/push/subscribe' && m === 'POST') {
+    const b = await readBody(req, 8192), s = b.sub || {};
+    if (!Push.okEndpoint(s.endpoint) || !s.keys || typeof s.keys.p256dh !== 'string' || typeof s.keys.auth !== 'string') return send(res, 422, { error: 'Bad subscription' });
+    const list = getSubs().filter(x => x.endpoint !== s.endpoint);
+    list.push({ user: me.name, endpoint: String(s.endpoint).slice(0, 1000), keys: { p256dh: s.keys.p256dh.slice(0, 200), auth: s.keys.auth.slice(0, 100) },
+      device: String(b.device || '').slice(0, 80), added: new Date().toISOString() });
+    writeJSON(F.push, list.slice(-500)); return send(res, 200, { ok: true, devices: list.filter(x => x.user === me.name).length });
+  }
+  if (p === '/api/push/unsubscribe' && m === 'POST') {
+    const b = await readBody(req, 4096), list = getSubs();
+    writeJSON(F.push, list.filter(x => !(x.endpoint === b.endpoint && x.user === me.name))); return send(res, 200, { ok: true });
+  }
+  if (p === '/api/push/test' && m === 'POST') {
+    const mine = getSubs().filter(s => s.user === me.name);
+    if (!mine.length) return send(res, 404, { error: 'Notifications aren’t turned on for any of your devices yet' });
+    const rs = await Promise.all(mine.map(s => Push.send(VAPID, pushContact(), s, { title: 'Burner Matrix', body: 'Notifications are working on this device.', url: '/' }).catch(e => ({ ok: false, error: e.message }))));
+    const gone = new Set(mine.filter((s, i) => rs[i].gone).map(s => s.endpoint)); if (gone.size) writeJSON(F.push, getSubs().filter(s => !gone.has(s.endpoint)));
+    const ok = rs.filter(r => r.ok).length;
+    return ok ? send(res, 200, { ok, of: mine.length }) : send(res, 502, { error: 'The push service didn’t accept it' + (rs[0] && (rs[0].status ? ` (HTTP ${rs[0].status})` : rs[0].error ? ` (${rs[0].error})` : '')) });
+  }
   // next RFQ sequence number for the day (shared by every rep using this server)
   if (p === '/api/rfq-seq' && m === 'POST') {
     const { date = '' } = await readBody(req, 256);
@@ -598,6 +654,8 @@ async function api(req, res, url) {
         (r.statusLog = r.statusLog || []).push({ at: now, by: me.name, status: 'quoted', value: r.value });
       }
       writeJSON(rfqFile(r.id), r);
+      if (r.by !== me.name) notify([r.by], { title: 'Quote ready', tag: 'q-' + r.id, url: '/?rfq=' + r.id,
+        body: `RFQ ${r.no}${r.fields['q-co'] ? ' – ' + r.fields['q-co'] : ''}${value !== null ? ': $' + value.toLocaleString('en-US') : ''}${qno ? ' (' + qno + ')' : ''}` });
       let mailed = null, mailError = null;
       if (b.emailRep && Mail.configured()) { // let the rep know, with the quote attached
         const owner = users.find(u => u.name === r.by), to = [owner && owner.email, r.fields['q-repe']].filter(Mail.isEmail).slice(0, 1);
@@ -621,6 +679,12 @@ async function api(req, res, url) {
       const now = new Date().toISOString(), c = { id: crypto.randomBytes(4).toString('hex'), by: me.name, byFull: me.full || me.name, at: now, text };
       (r.comments = r.comments || []).push(c); if (r.comments.length > 300) r.comments = r.comments.slice(-300);
       r.seen = { ...(r.seen || {}), [me.name]: now }; writeJSON(rfqFile(r.id), r);
+      { // phone notification to the other side: the rep, or the office people on this RFQ (or every quoter if none yet)
+        let who = me.name !== r.by ? [r.by] : [...new Set([r.quote && r.quote.by, ...(r.comments || []).map(x => x.by)].filter(n => n && n !== r.by))];
+        if (!who.length) who = quoters();
+        notify(who.filter(n => n !== me.name), { title: `${me.full || me.name} commented`, tag: 'c-' + r.id, url: '/?rfq=' + r.id,
+          body: `RFQ ${r.no}${r.fields['q-co'] ? ' – ' + r.fields['q-co'] : ''}: ${text.length > 120 ? text.slice(0, 117) + '…' : text}` });
+      }
       let mailed = null, mailError = null;
       if (b.notify !== false && Mail.configured()) { // tell the other side: the rep, or the office people on this RFQ
         const emailOf = n => { const u = users.find(x => x.name === n); return u && Mail.isEmail(u.email) ? u.email : null; };
@@ -659,8 +723,11 @@ async function api(req, res, url) {
         attachments: [{ filename: pdfName(r), type: 'application/pdf', content: pdf }] }); }
       catch (e) { console.error('Mail:', e.message); return send(res, 502, { error: 'Email failed: ' + e.message }); }
       reloadRfq(r); // building the PDF and sending take a few seconds
+      const firstSend = !(r.sends || []).length;
       (r.sends = r.sends || []).push({ at: new Date().toISOString(), by: me.name, to: out.to, cc: out.cc });
       writeJSON(rfqFile(r.id), r);
+      if (firstSend) notify(quoters().filter(n => n !== me.name), { title: 'New RFQ to quote', tag: 'n-' + r.id, url: '/?rfq=' + r.id,
+        body: `${r.no} – ${r.burner.brand} ${r.burner.name}${r.fields['q-co'] ? ' for ' + r.fields['q-co'] : ''} (from ${me.full || me.name})` });
       return send(res, 200, { ok: true, ...out });
     }
     if (!rm[2] && m === 'DELETE') { // admins can delete any RFQ; anyone else only their own drafts that were never emailed
@@ -843,7 +910,7 @@ async function api(req, res, url) {
     if (m === 'DELETE') {
       if (u.name === me.name) return send(res, 422, { error: "You can't remove yourself" });
       if (u.role === 'admin' && users.filter(x => x.role === 'admin').length < 2) return send(res, 422, { error: 'Keep at least one admin' });
-      users = users.filter(x => x !== u); saveUsers(); return send(res, 200, { ok: true });
+      users = users.filter(x => x !== u); saveUsers(); writeJSON(F.push, getSubs().filter(s => s.user !== u.name)); return send(res, 200, { ok: true });
     }
   }
   return send(res, 404, { error: 'Not found' });

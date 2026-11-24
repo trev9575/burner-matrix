@@ -128,6 +128,16 @@ hides one, and they drop off automatically once a cross-reference matches.
 **By burner (Jobs tab).** RFQs, quoted, won, lost and win rate per burner, most requested first, with a bar showing
 each burner's mix of lost reasons (same colors as the Lost Jobs pie). Follows the rep picker; has its own period.
 
+**Phone notifications.** Account menu → *Turn on notifications* (once per phone or computer). Reps get one when an RFQ
+is quoted or the office comments; quoters get one when an RFQ is emailed in and when a rep comments. Tapping it opens
+the RFQ. Turning it on sends a test notification. Works on Android (Chrome, Edge, Firefox), desktop browsers, and on
+iPhone/iPad (iOS 16.4+) **only after adding the app to the Home Screen** and opening it from there. The server needs
+outbound internet to reach Apple's/Google's push services; its keys are made once in `.vapid.json` in the data folder
+(keep it: replacing it turns everyone's notifications off). Optional variable: `PUSH_CONTACT` (mailto: or https:).
+
+**Quote turnaround (Jobs tab).** Average and median time from an RFQ first being emailed to the office's first quote,
+share quoted within 2 days, how many are waiting now (and the oldest), and the same per quoter. Has its own period.
+
 **Incompatible filters are grayed out.** Any fuel, brand, firing mode, power supply, application, turndown, biofuel
 option that would leave no burners together with what's already chosen (including the firing rate) is
 grayed out and can't be picked. 120 VAC is always selectable, since it records that the site has 120 V (which

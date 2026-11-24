@@ -23,6 +23,7 @@
   <Config Name="SMTP username" Target="SMTP_USER" Default="" Mode="" Description="Usually the full email address of the sending account" Type="Variable" Display="always" Required="false" Mask="false"></Config>
   <Config Name="SMTP password" Target="SMTP_PASS" Default="" Mode="" Description="For Gmail, an App Password (Google account, Security, App passwords), not your normal password" Type="Variable" Display="always" Required="false" Mask="true"></Config>
   <Config Name="Send from address" Target="SMTP_FROM" Default="" Mode="" Description="Leave blank to use the SMTP username. Gmail only allows your own address." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Notification contact" Target="PUSH_CONTACT" Default="" Mode="" Description="Optional. A mailto: or https: contact sent to Apple/Google with phone notifications. Defaults to the Send from address." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
   <Config Name="HTTPS-only cookies" Target="COOKIE_SECURE" Default="false" Mode="" Description="Set true if you only open it over https://" Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
   <Config Name="Behind reverse proxy" Target="TRUST_PROXY" Default="false" Mode="" Description="Set true behind Nginx Proxy Manager, SWAG or a Cloudflare tunnel." Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
 </Container>
