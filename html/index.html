@@ -73,14 +73,37 @@ th .infob{border-color:#cfcfc9;background:transparent;color:#fff;width:16px;heig
 .infop{position:absolute;z-index:60;background:#fff;border:1px solid #b9b9b2;border-radius:5px;box-shadow:0 10px 28px rgba(0,0,0,.18);padding:12px 34px 12px 14px;font-size:13.5px;line-height:1.5;color:var(--ink)}
 .infop b:first-of-type{font-size:14px}.infop p{margin:4px 0 0}.infop .ix{position:absolute;top:4px;right:6px;border:0;background:none;font-size:20px;line-height:1;color:var(--mute);cursor:pointer;padding:4px}
 @media print{.infob,.infop{display:none !important}}
-.rx{max-width:8.5in;margin:16px auto 0;display:grid;gap:14px}.rxp{background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:16px 18px}
-.rxp h3{margin:0 0 10px;font-size:16px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}.rxp h3 .sm{font-weight:500}
-.qcard{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px}.qcard .qv{font-size:22px;font-weight:800}.qcard .qn{font-weight:700}.qnote{margin-top:8px;font-size:14px;white-space:pre-wrap;background:#f6f6f3;border-left:3px solid var(--rule);padding:6px 10px}
-.qwait{display:flex;align-items:center;gap:10px;font-size:14px}.qwait b{color:#b35c00}
-.qform{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 14px;margin-top:12px;padding-top:12px;border-top:1px solid var(--rule)}.qform label{display:grid;gap:4px;font-size:13px;font-weight:700}
-.qform input[type=text],.qform textarea{font:500 14px Montserrat,sans-serif;padding:8px 10px;border:1px solid #b9b9b2;border-radius:3px;width:100%;box-sizing:border-box;background:#fff}.qform textarea{resize:vertical;min-height:40px}.qform .w{grid-column:1/-1}
-.qform label.chk{display:flex;align-items:center;gap:8px;font-weight:600}.qform label>.sm{font-weight:500}.rxp a.btn{text-decoration:none;display:inline-flex;align-items:center}
-.qform .row{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.rfqwrap{display:block}.rx{max-width:8.5in;margin:16px auto 0;display:grid;gap:14px;align-content:start}
+.rxp{background:#fff;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:16px 18px}
+.rxp h3{margin:0 0 10px;font-size:16px;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px}.rxp h3 .sm{font-weight:500;font-size:12px}#rfqv.side #cbox h3 .sm{flex-basis:100%}
+/* side by side: the page on the left, quote + comments in a column that stays in view on the right */
+#rfqv.side .rfqwrap{display:grid;grid-template-columns:auto 340px;gap:20px;justify-content:center;align-items:start}
+#rfqv.side .rx{margin:0;max-width:none;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;padding-bottom:2px}
+#rfqv.side .rfqbar{max-width:calc(8.5in * var(--sz,1) + 360px)}
+#rfqv.side .clist{max-height:none}
+.qhead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}.qhead h3{margin:0}
+.qpill{font-size:12px;font-weight:700;border-radius:20px;padding:3px 10px;background:#ecece8;color:#55554f;white-space:nowrap}.qpill.ok{background:#e2f3e7;color:#1d6b35}.qpill.wait{background:#fff3e0;color:#9a4b00}
+.qmsg{margin:0 0 12px;font-size:14px;line-height:1.5;color:#3d3d39}
+.qbig{width:100%;min-height:44px;font-size:15px}
+.qcard{display:grid;gap:10px}.qtop{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px}
+.qcard .qv{font-size:30px;font-weight:800;letter-spacing:-.01em;line-height:1.1}.qcard .qv0{font-size:16px;color:var(--mute);font-weight:600}.qcard .qn{font-size:13px;font-weight:700;color:var(--mute)}
+.qby{font-size:13px;color:var(--mute)}.qby b{color:var(--ink);font-weight:600}
+.qnote{font-size:14px;line-height:1.5;white-space:pre-wrap;background:#f6f6f3;border-left:3px solid #c9c9c2;padding:8px 12px;border-radius:0 4px 4px 0}
+.qfile{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--rule);border-radius:6px;text-decoration:none;color:var(--ink);background:#fff;transition:border-color .15s,background .15s}
+.qfile:hover{border-color:var(--red);background:#fff7f8}.qfile>svg{color:var(--red);flex:none}.qfn{flex:1;min-width:0;font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qdl{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;color:var(--red);white-space:nowrap}
+.qacts{display:flex;gap:16px;padding-top:2px}.qlink{border:0;background:none;padding:0;font:600 13px Montserrat,sans-serif;color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}.qlink.danger{color:#b3141f}
+.qform{display:grid;gap:12px}.qf{display:grid;gap:5px;font-size:13px;font-weight:700}.qf small{font-weight:500;color:var(--mute)}
+.qform input[type=text],.qform textarea{font:500 14px Montserrat,sans-serif;padding:9px 11px;border:1px solid #b9b9b2;border-radius:4px;width:100%;box-sizing:border-box;background:#fff;color:var(--ink)}
+.qform input[type=text]:focus,.qform textarea:focus{border-color:var(--ink);outline:2px solid var(--ink);outline-offset:-1px}.qform textarea{resize:vertical;min-height:64px}
+.qmoney{display:flex;align-items:stretch}.qmoney i{font-style:normal;font-weight:700;display:flex;align-items:center;padding:0 10px;background:#f1f1ed;border:1px solid #b9b9b2;border-right:0;border-radius:4px 0 0 4px;color:#55554f}
+.qmoney input[type=text]{border-radius:0 4px 4px 0;font-size:18px !important;font-weight:700 !important}.qform ::placeholder{color:#a3a39c;font-weight:500}
+.qdrop{display:flex;align-items:center;gap:12px;padding:14px;border:2px dashed #c3c3bc;border-radius:6px;background:#fafaf8;cursor:pointer;font-weight:500;transition:border-color .15s,background .15s}
+.qdrop:hover,.qdrop.over{border-color:var(--red);background:#fff7f8}.qdrop>svg{color:var(--red);flex:none}.qdrop.has{border-style:solid;border-color:#9fd3b2;background:#eaf6ee}.qdrop.has>svg{color:#1d6b35}
+.qdt{font-size:13.5px;line-height:1.35;min-width:0;overflow-wrap:anywhere}.qdt small{color:var(--mute);font-size:12px}
+.qdrop:focus-within{outline:2px solid var(--ink);outline-offset:2px}
+.qchk{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600}
+.qbtns{display:flex;gap:8px;justify-content:flex-end}.qbtns .btn{min-height:42px}
 .clist{display:grid;gap:10px;margin-bottom:12px}.cm{display:grid;gap:3px;max-width:85%;padding:8px 12px;border-radius:6px;background:#f1f1ed;font-size:14px;justify-self:start}.cm.me{justify-self:end;background:#fde3e5}
 .cm .ch{font-size:12px;color:var(--mute);display:flex;gap:8px;align-items:baseline}.cm .ch b{color:var(--ink)}.cm .ct{white-space:pre-wrap;word-break:break-word}.cm .cdel{border:0;background:none;color:var(--mute);font-size:12px;cursor:pointer;padding:0;margin-left:auto;text-decoration:underline}
 .cform textarea{font:500 14px Montserrat,sans-serif;width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #b9b9b2;border-radius:3px;resize:vertical;min-height:44px}.crow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px}
@@ -507,8 +530,8 @@ tr.fu td{background:#fffaf2 !important}
     <button class="btn" id="rfqprint">Print</button>
     <button class="btn pri" id="rfqsend" hidden>Email PDF…</button>
   </div>
-  <div class="sheet" id="sheet"></div>
-  <div class="rx noprint" id="rfqx" hidden>
+  <div class="rfqwrap" id="rfqwrap"><div class="sheet" id="sheet"></div>
+  <aside class="rx noprint" id="rfqx" hidden aria-label="Quote and comments">
     <div class="rxp" id="qbox"></div>
     <div class="rxp" id="cbox">
       <h3>Comments <span class="sm">between the rep and the office; never on the PDF</span></h3>
@@ -517,7 +540,7 @@ tr.fu td{background:#fffaf2 !important}
         <div class="crow"><label class="chk" id="cnotl"><input type="checkbox" id="cnot" checked> <span id="cnott">Email them</span></label><span style="flex:1"></span><button class="btn pri" type="submit" id="cpost">Post comment</button></div></form>
       <div class="sm" id="cnote" hidden>Save the RFQ to start a conversation about it.</div>
     </div>
-  </div>
+  </aside></div>
 </section>
 <section id="wonv" hidden class="wv">
   <div class="panel">
@@ -890,8 +913,12 @@ const DD={
   mount:['Adjustable flange','Welded flange'],
 };
 // on screen the letter-size sheet is enlarged to fill the available width (up to 1.5x); print/PDF are unaffected
-function sizeSheet(){const v=$('rfqv');if(!v||v.hidden||innerWidth<880)return;const cs=getComputedStyle(v),w=v.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);
-  document.documentElement.style.setProperty('--sz',Math.min(1.5,Math.max(1,w/816)).toFixed(3))}
+// The quote + comments column sits beside the page when there's room for both (page at full size + 340px column),
+// otherwise it drops below the page.
+function sizeSheet(){const v=$('rfqv');if(!v||v.hidden)return;
+  const cs=getComputedStyle(v),w=v.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight),col=!$('rfqx').hidden;
+  const side=col&&innerWidth>=880&&w>=816+360;v.classList.toggle('side',side);if(innerWidth<880)return;
+  document.documentElement.style.setProperty('--sz',Math.min(1.5,Math.max(1,(side?w-360:w)/816)).toFixed(3))}
 addEventListener('resize',()=>requestAnimationFrame(sizeSheet));
 const ro=(label,val)=>`<div><span class="k">${label}</span><span class="v">${val}</span></div>`;
 /* ---------- info buttons: plain-English help for technical terms ---------- */
@@ -946,7 +973,7 @@ const fmtD=iso=>new Date(iso).toLocaleDateString(undefined,{year:'numeric',month
 const rawOf=x=>RAW.find(o=>(o.brand+'|'+o.name).toLowerCase()===(x.b+'|'+x.n).toLowerCase());
 let RFQ=null;
 // meta: {no, date?, id?, raw?, fit?, fields?, sends?, by?, from?}
-function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);$('sheet').classList.remove('ro');
+function openRFQ(x,meta){rfqB=x;const mineSheet=!meta.by||!ME||meta.by===ME.name;const r=reqMBH();const[a,b]=mb(x);$('sheet').classList.remove('ro');
   RFQ={offline:!!meta.offline,oid:meta.oid||'',ymd:meta.ymd||'',ro:!!meta.ro,id:meta.id||null,no:meta.offline?'Offline draft':meta.no,date:meta.date||new Date().toISOString(),raw:meta.raw||rawOf(x),sends:meta.sends||[],by:meta.by||'',byFull:meta.byFull||'',from:meta.from||'matrix',xfmr:typeof meta.xfmr==='string'?meta.xfmr.replace(/\s*This will increase the cost of the burner\.?/,''):'',dirty:false};
   const fz0=fit(x,r);RFQ.fit=meta.fit!==undefined?meta.fit:(fz0==='edge'?where(x,r):fz0||'');
   const rateTxt=r==null?'':(S.unit==='gph'?`${S.rate} GPH (≈ ${Math.round(r).toLocaleString()} MBH)`:`${Number(S.rate).toLocaleString()} MBH${x.f==='oil'?` (≈ ${(r/G).toFixed(2)} GPH)`:''}`);
@@ -996,7 +1023,7 @@ function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);$('sheet').cla
   ${RFQ.xfmr?`<div class="xfmr" id="q-xfmr" title="Added automatically because of the power selected on the matrix page. It can’t be edited or removed."><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 1 21h22L12 2z" fill="#f2b705"/><path d="M12 9v5m0 3v.5" stroke="#1c1c1c" stroke-width="2.4" stroke-linecap="round"/></svg><div><b>Step-down transformer required</b><br>${esc(RFQ.xfmr)}</div></div>`:''}
   <h3>Notes</h3>
   <textarea id="q-notes" aria-label="Notes" placeholder="Anything else the quote needs to cover"></textarea>
-  <div class="kv" style="margin-top:12px">${inp('q-rep','Prepared by',repName())}${inp('q-repp','Rep phone',repPhone())}${inp('q-repe','Rep email',repEmail(),'','w')}</div>
+  <div class="kv" style="margin-top:12px">${inp('q-rep','Prepared by',mineSheet?repName():(meta.byFull||meta.by||''))}${inp('q-repp','Rep phone',mineSheet?repPhone():'')}${inp('q-repe','Rep email',mineSheet?repEmail():'','','w')}</div>
   <div class="sh-foot">Specifications from the Burner Selection Matrix (${fmtD(RFQ.date)}). Confirm against the current manufacturer spec sheet and the appliance maker's burner specification before quoting.</div>`;
   if(meta.fields)for(const[k,v]of Object.entries(meta.fields)){const el=$(k);if(!el||!/^q-/.test(k))continue;
     if(el.tagName==='SELECT'&&v&&![...el.options].some(o=>o.value===v))el.add(new Option(v,v));el.value=v}
@@ -1236,21 +1263,32 @@ const canQuoteMe=()=>!!ME&&(ME.role==='quoter'||ME.role==='admin');
 const daysSince=t=>Math.max(0,Math.floor((Date.now()-Date.parse(t))/864e5));
 const agoTxt=t=>{const d=daysSince(t);return d===0?'today':d===1?'1 day ago':d+' days ago'};
 let QEDIT=false;
-function rxRender(){const box=$('rfqx');if(!RFQ||PDFMODE||!ME||RFQ.offline){box.hidden=true;return}box.hidden=false;
+function rxRender(){const box=$('rfqx');if(!RFQ||PDFMODE||!ME||RFQ.offline){box.hidden=true;sizeSheet();return}if(box.hidden){box.hidden=false;sizeSheet()}
   const q=RFQ.quote,sent=(RFQ.sends||[]).slice(-1)[0],qb=$('qbox'),cq=canQuoteMe();
-  let h='<h3>Quote</h3>';
-  if(q)h+=`<div class="qcard">${q.value!=null?`<span class="qv">${money(q.value)}</span>`:''}${q.no?`<span>Quote <span class="qn">${esc(q.no)}</span></span>`:''}<span class="sm">by ${esc(q.byFull||q.by)}, ${fmtD(q.at)}</span><span style="flex:1"></span>
-    ${q.file?`<a class="btn pri" href="api/rfqs/${esc(RFQ.id)}/quote" download>Download quote PDF</a>`:''}${cq&&!QEDIT?'<button type="button" class="btn" id="qedit">Replace quote</button><button type="button" class="btn" id="qdel" style="color:#b3141f">Remove</button>':''}</div>${q.note?`<div class="qnote">${esc(q.note)}</div>`:''}`;
-  else if(!RFQ.id)h+='<div class="sm">Save and email the RFQ; the office’s quote will show up here.</div>';
-  else if(sent)h+=`<div class="qwait">⏳ <span>Waiting for a quote from the office: emailed ${fmtD(sent.at)} (<b>${agoTxt(sent.at)}</b>).</span>${cq&&!QEDIT?'<span style="flex:1"></span><button type="button" class="btn pri" id="qedit">Add quote</button>':''}</div>`;
-  else h+=`<div class="sm">This RFQ hasn’t been emailed yet. Once it is, the office’s quote will show up here.</div>${cq&&!QEDIT?'<div style="margin-top:8px"><button type="button" class="btn" id="qedit">Add quote anyway</button></div>':''}`;
-  if(cq&&QEDIT){const repName=esc(RFQ.byFull||RFQ.by||'the rep');h+=`<form class="qform" id="qform">
-    <label>Quote number<input type="text" name="no" maxlength="40" value="${esc(q&&q.no||'')}" autocomplete="off" placeholder="e.g. Q-2041"></label>
-    <label>Price ($)<input type="text" name="value" inputmode="decimal" value="${q&&q.value!=null?q.value:''}" autocomplete="off" placeholder="e.g. 12,500"></label>
-    <label>Quote PDF <span class="sm" style="font-weight:500">${q&&q.file?'leave empty to keep '+esc(q.fname||'the current file'):'up to 10 MB'}</span><input type="file" name="file" accept="application/pdf,.pdf"></label>
-    <label class="w">Note for the rep <span class="sm" style="font-weight:500">optional</span><textarea name="note" maxlength="1000" rows="2">${esc(q&&q.note||'')}</textarea></label>
-    <div class="row">${ME.mail?`<label class="chk"><input type="checkbox" name="email" checked> Email the quote to ${repName}</label>`:''}<span style="flex:1"></span><button type="button" class="btn" id="qcancel">Cancel</button><button class="btn pri" type="submit" id="qsave">${q?'Save quote':'Add quote'}</button></div>
-    <div class="msg err w" id="qerr" hidden></div></form>`}
+  const ICO={doc:'<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 2h8l6 6v14H6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 2v6h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+    dl:'<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 20h16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    up:'<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M12 16V4m0 0-5 5m5-5 5 5M4 20h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'};
+  const pill=q?'<span class="qpill ok">Quoted</span>':!RFQ.id?'<span class="qpill">Not saved</span>':sent?`<span class="qpill wait">Waiting · ${daysSince(sent.at)?daysSince(sent.at)+' day'+(daysSince(sent.at)===1?'':'s'):'today'}</span>`:'<span class="qpill">Not emailed</span>';
+  let h=`<div class="qhead"><h3>Quote</h3>${pill}</div>`;
+  if(q&&!QEDIT){h+=`<div class="qcard"><div class="qtop">${q.value!=null?`<div class="qv">${money(q.value)}</div>`:'<div class="qv qv0">No price given</div>'}${q.no?`<div class="qn">Quote #${esc(q.no)}</div>`:''}</div>
+    <div class="qby">Quoted by <b>${esc(q.byFull||q.by)}</b> · ${fmtD(q.at)}</div>
+    ${q.note?`<div class="qnote">${esc(q.note)}</div>`:''}
+    ${q.file?`<a class="qfile" href="api/rfqs/${esc(RFQ.id)}/quote" download>${ICO.doc}<span class="qfn">${esc(q.fname||'Quote.pdf')}</span><span class="qdl">${ICO.dl} Download</span></a>`:''}
+    ${cq?'<div class="qacts"><button type="button" class="qlink" id="qedit">Replace quote</button><button type="button" class="qlink danger" id="qdel">Remove</button></div>':''}</div>`}
+  else if(!q&&!QEDIT){
+    if(!RFQ.id)h+='<p class="qmsg">Save and email the RFQ. The office’s quote will show up here.</p>';
+    else if(sent)h+=`<p class="qmsg">Emailed to the office ${fmtD(sent.at)} (${agoTxt(sent.at)}). ${cq?'':'The quote will show up here as soon as it’s ready.'}</p>${cq?'<button type="button" class="btn pri qbig" id="qedit">+ Add quote</button>':''}`;
+    else h+=`<p class="qmsg">This RFQ hasn’t been emailed yet. Once it is, the office’s quote will show up here.</p>${cq?'<button type="button" class="qlink" id="qedit">Add a quote anyway</button>':''}`}
+  if(cq&&QEDIT){const repName=esc(RFQ.byFull||RFQ.by||'the rep');h+=`<form class="qform" id="qform" novalidate>
+    <label class="qf"><span>Price</span><span class="qmoney"><i>$</i><input type="text" name="value" inputmode="decimal" value="${q&&q.value!=null?q.value:''}" autocomplete="off" placeholder="12,500"></span></label>
+    <label class="qf"><span>Quote number</span><input type="text" name="no" maxlength="40" value="${esc(q&&q.no||'')}" autocomplete="off" placeholder="e.g. Q-2041"></label>
+    <div class="qf"><span>Quote PDF</span>
+      <label class="qdrop" id="qdrop"><input type="file" name="file" accept="application/pdf,.pdf" class="vh">${ICO.up}
+        <span class="qdt" id="qdt">${q&&q.file?`Keeping <b>${esc(q.fname||'the current PDF')}</b><br><small>Drop a new PDF here or click to replace it</small>`:'<b>Drop the quote PDF here</b><br><small>or click to choose a file · up to 10 MB</small>'}</span></label></div>
+    <label class="qf"><span>Note for the rep <small>optional</small></span><textarea name="note" maxlength="1000" rows="3" placeholder="Lead time, what's included, anything to tell the customer…">${esc(q&&q.note||'')}</textarea></label>
+    ${ME.mail?`<label class="chk qchk"><input type="checkbox" name="email" checked> <span>Email the quote to ${repName}</span></label>`:''}
+    <div class="msg err" id="qerr" hidden></div>
+    <div class="qbtns"><button type="button" class="btn" id="qcancel">Cancel</button><button class="btn pri" type="submit" id="qsave">${q?'Save quote':'Add quote'}</button></div></form>`}
   qb.innerHTML=h;
   // comments
   const cs=RFQ.comments||[],mineRFQ=RFQ.by===ME.name;
@@ -1262,6 +1300,12 @@ $('qbox').addEventListener('click',async e=>{const t=e.target;
   if(t.id==='qcancel'){QEDIT=false;rxRender();return}
   if(t.id==='qdel'){if(!t.dataset.sure){t.dataset.sure=1;t.textContent='Click again to remove';setTimeout(()=>{if(t.isConnected){delete t.dataset.sure;t.textContent='Remove'}},3000);return}
     try{await J('DELETE','api/rfqs/'+RFQ.id+'/quote',{});RFQ.quote=null;rxRender();toast('Quote removed')}catch(err){toast(err.message)}}});
+// quote PDF drop zone: drag a file on, or click to pick one; shows the chosen file
+const qShowFile=f=>{const t=$('qdt');if(!t)return;t.innerHTML=f?`<b>${esc(f.name)}</b><br><small>${(f.size/1048576).toFixed(f.size<1048576?2:1)} MB · click to change</small>`:'<b>Drop the quote PDF here</b><br><small>or click to choose a file · up to 10 MB</small>';$('qdrop').classList.toggle('has',!!f)};
+$('qbox').addEventListener('change',e=>{if(e.target.name==='file')qShowFile(e.target.files[0])});
+['dragenter','dragover'].forEach(ev=>$('qbox').addEventListener(ev,e=>{const d=e.target.closest&&e.target.closest('#qdrop');if(!d)return;e.preventDefault();d.classList.add('over')}));
+['dragleave','drop'].forEach(ev=>$('qbox').addEventListener(ev,e=>{const d=e.target.closest&&e.target.closest('#qdrop');if(!d)return;e.preventDefault();d.classList.remove('over');
+  if(ev==='drop'&&e.dataTransfer.files[0]){const f=e.dataTransfer.files[0];if(!/\.pdf$/i.test(f.name)&&f.type!=='application/pdf'){toast('The quote file must be a PDF');return}const dt=new DataTransfer();dt.items.add(f);d.querySelector('input').files=dt.files;qShowFile(f)}}));
 $('qbox').addEventListener('submit',async e=>{e.preventDefault();const f=e.target,err=$('qerr');err.hidden=true;const file=f.elements.file.files[0];
   if(file&&file.size>10*1024*1024){err.textContent='The quote PDF must be 10 MB or smaller.';err.hidden=false;return}
   const body={no:f.elements.no.value,value:f.elements.value.value,note:f.elements.note.value,emailRep:!!(f.elements.email&&f.elements.email.checked),keepFile:!file};
