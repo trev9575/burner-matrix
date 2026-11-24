@@ -101,7 +101,7 @@ default inside the installed app. Signing out clears everything the app saved on
 model, e.g. *Carlin 301CRD*, and see the Beckett/Wayne burner(s) to sell instead, plus any note. *Show all in the matrix*
 narrows the chart and table to just that entry's replacements (other filters cleared; a banner offers *Show all burners*); *Create RFQ* starts an RFQ with "Replaces Carlin 301CRD."
 in Notes. Editors and admins keep the list in **Admin → Cross-reference** (the brand box suggests brands already used): add, edit or delete entries one at a time,
-or paste many rows from a spreadsheet (Brand, Model, Replacement(s) separated by `;`, Note). Stored in `xref.json`
+or paste many rows from a spreadsheet (Brand, Model, Replacement(s) separated by `;`, Note). The table filters by brand, model and fuel (oil/gas, from the replacement burners). Stored in `xref.json`
 (included in backups); renaming a burner keeps its cross-references pointing at it.
 
 **Info buttons.** A small **?** next to technical terms (firing rate, firing mode, power, turndown, overfire pressure,
