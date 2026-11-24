@@ -87,6 +87,7 @@ th .infob{border-color:#cfcfc9;background:transparent;color:#fff;width:16px;heig
 .xr .showall{font:600 12.5px Montserrat,sans-serif;min-height:30px;padding:3px 10px;border-radius:3px;border:1px solid var(--ink);background:#fff;color:var(--ink);cursor:pointer}.xr .showall:hover{background:var(--ink);color:#fff}
 .xonly{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:#fde3e5;border-left:4px solid var(--red);padding:8px 12px;border-radius:3px;font-size:14px}
 .xonly button{font:600 13px Montserrat,sans-serif;min-height:32px;padding:4px 12px;border-radius:3px;border:1px solid var(--red);background:#fff;color:var(--red);cursor:pointer}.xonly button:hover{background:var(--red);color:#fff}
+.xnone{margin-top:6px;font-size:13.5px;background:#f0f0ec;border-left:3px solid #8c8c86;padding:6px 10px;border-radius:2px}
 .xr.none{color:var(--mute);font-size:13.5px}
 .rail .f-last{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 24px;border-top:1px solid var(--rule);padding-top:12px}
 .rail .opts{display:flex;flex-wrap:wrap;gap:4px 24px}
@@ -764,9 +765,9 @@ function xFind(q){const toks=q.toLowerCase().split(/\s+/).map(xnorm).filter(Bool
 const bOf=k=>D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===k);
 function xShow(){const q=$('xq').value.trim(),box=$('xres');if(!q){box.hidden=true;$('xq').setAttribute('aria-expanded','false');return}
   const m=xFind(q);
-  box.innerHTML=m.length?m.map(x=>{const bs=x.to.map(bOf).filter(Boolean);return`<div class="xr" role="option"><div class="from"><span>Replaces <b>${esc(x.brand)} ${esc(x.model)}</b> with:</span>${bs.length?`<button type="button" class="showall" data-a="showall" data-id="${esc(x.id)}">${bs.length>1?`Show all ${bs.length} in the matrix`:'Show in the matrix'}</button>`:''}</div>
+  box.innerHTML=m.length?m.map(x=>{const bs=x.to.map(bOf).filter(Boolean);return`<div class="xr" role="option"><div class="from"><span>Replaces <b>${esc(x.brand)} ${esc(x.model)}</b>${x.none?'':' with:'}</span>${bs.length?`<button type="button" class="showall" data-a="showall" data-id="${esc(x.id)}">${bs.length>1?`Show all ${bs.length} in the matrix`:'Show in the matrix'}</button>`:''}</div>
     ${bs.map(b=>`<div class="to"><div class="tline"><span class="nm ${b.f}">${esc(b.b+' '+b.n)}</span><span class="sm" style="color:var(--mute)">${esc(fmt(b))}</span><span style="flex:1"></span>
-      <button type="button" class="pri" data-a="rfq" data-k="${esc((b.b+'|'+b.n).toLowerCase())}" data-from="${esc(x.brand+' '+x.model)}">Create RFQ</button></div></div>`).join('')||'<div class="sm">The replacement burner is no longer in the list. Ask an admin to update this entry.</div>'}
+      <button type="button" class="pri" data-a="rfq" data-k="${esc((b.b+'|'+b.n).toLowerCase())}" data-from="${esc(x.brand+' '+x.model)}">Create RFQ</button></div></div>`).join('')||(x.none?'<div class="xnone"><b>No current Beckett or Wayne replacement.</b> Nothing in the line replaces this model yet.</div>':'<div class="sm">The replacement burner is no longer in the list. Ask an admin to update this entry.</div>')}
     ${x.note?`<div class="xn">${esc(x.note)}</div>`:''}</div>`}).join('')
     :`<div class="xr none">No match for “${esc(q)}”. ${XREF.length?'Try just the model number, or':'The cross-reference list is empty, so'} ask an editor or admin to add it. You can still use the filters below.</div>`;
   box.hidden=false;$('xq').setAttribute('aria-expanded','true')}

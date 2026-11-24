@@ -259,9 +259,11 @@ const cleanXref = b => {
   if (!model) return { error: 'Enter the model being replaced.' };
   const keys = new Set(getBurners().map(keyOf));
   const to = [...new Set((Array.isArray(b.to) ? b.to : []).map(k => String(k).toLowerCase()))].slice(0, 6);
-  if (!to.length) return { error: 'Pick at least one replacement burner.' };
+  const none = b.none === true; // "we don't currently make anything that replaces this"
+  if (none) return { brand, model, note, to: [], none: true };
+  if (!to.length) return { error: 'Pick at least one replacement burner, or tick “No current replacement”.' };
   if (to.some(k => !keys.has(k))) return { error: 'One of the replacement burners isn’t in the burner list any more.' };
-  return { brand, model, note, to };
+  return { brand, model, note, to, none: false };
 };
 const xrefKey = x => (x.brand + '|' + x.model).toLowerCase().replace(/[\s-]+/g, '');
 

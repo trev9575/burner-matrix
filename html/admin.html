@@ -75,6 +75,8 @@ input.xbq:focus{border-color:var(--ink);outline:2px solid var(--ink);outline-off
 .xfil label{display:grid;gap:3px;font-size:12.5px;font-weight:700;color:var(--mute)}.xfil select{min-width:170px}.xfil label input{width:150px}
 .xsegw{display:grid;gap:3px}.xsegw>span{font-size:12.5px;font-weight:700;color:var(--mute)}.xseg{display:flex;gap:4px}
 .xseg button{font:600 14px Montserrat,sans-serif;min-height:42px;padding:6px 14px;border:0;border-radius:3px;background:var(--btn,#d6d4cc);color:var(--red);cursor:pointer}.xseg button[aria-pressed=true]{background:var(--red);color:#fff}
+#xlist .bt.no{background:#f0f0ec;color:#55554f}
+#xms.off summary{background:#f0f0ec;color:#8c8c86;cursor:not-allowed}
 .xform{display:grid;gap:12px;background:#f6f6f3;border:1px solid var(--rule);border-radius:4px;padding:14px}.xopts{max-height:260px;overflow:auto}.xopts .bh{font-size:12px;font-weight:700;color:var(--mute);margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em}
 #xlist td{vertical-align:top}#xlist .bt{display:inline-block;background:#eef3fb;color:var(--gas);font-weight:700;font-size:12.5px;border-radius:3px;padding:1px 7px;margin:0 4px 4px 0}#xlist .bt.oil{background:#fdecee;color:var(--red)}#xlist .bt.gone{background:#eee;color:#888;text-decoration:line-through}
 .ximp summary{cursor:pointer;font-weight:700;font-size:14px}
@@ -224,7 +226,8 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
             <div class="f" style="display:flex;flex-direction:column;gap:4px"><span style="font-weight:700;font-size:13.5px">Replace with <span class="u">pick 1 or more</span></span>
               <details class="ms" id="xms"><summary id="xsum">None</summary><div><input type="text" id="xbq" class="xbq" placeholder="Search burners, e.g. CF or Wayne" aria-label="Search burners" autocomplete="off"><div id="xopts" class="xopts"></div></div></details></div>
           </div>
-          <label class="f"><span>Note for reps <span class="u">optional, e.g. which air tube or head to quote</span></span><input type="text" name="note" maxlength="400" autocomplete="off"></label>
+          <label class="chk"><input type="checkbox" name="none" id="xnone"> <span><b>No current replacement</b> <span class="u">– nothing in the Beckett or Wayne line replaces this model yet</span></span></label>
+          <label class="f"><span>Note for reps <span class="u">optional, e.g. which air tube or head to quote, or who to call when there's no replacement</span></span><input type="text" name="note" maxlength="400" autocomplete="off"></label>
           <div class="row"><button class="btn pri" type="submit" id="xgo">Add</button><button class="btn" type="button" id="xcancel" hidden>Cancel</button></div>
           <div id="xmsg" class="msg" hidden></div>
         </form>
@@ -232,12 +235,12 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
           <input type="text" id="xq" class="xbq" placeholder="Search everything" aria-label="Search cross-references" autocomplete="off">
           <label>Brand<select id="xfb"><option value="">All brands</option></select></label>
           <label>Model<input type="text" id="xfm" placeholder="e.g. F10" autocomplete="off"></label>
-          <div class="xsegw"><span>Fuel</span><div class="xseg" role="group" aria-label="Fuel"><button type="button" data-f="" aria-pressed="true">All</button><button type="button" data-f="oil" aria-pressed="false">Oil</button><button type="button" data-f="gas" aria-pressed="false">Gas</button></div></div>
+          <div class="xsegw"><span>Fuel</span><div class="xseg" role="group" aria-label="Fuel"><button type="button" data-f="" aria-pressed="true">All</button><button type="button" data-f="oil" aria-pressed="false">Oil</button><button type="button" data-f="gas" aria-pressed="false">Gas</button><button type="button" data-f="none" aria-pressed="false">No replacement</button></div></div>
           <button type="button" class="btn" id="xfclr" hidden>Clear filters</button>
         </div>
         <div class="scroll"><table><thead><tr><th>Replaces</th><th>Use instead</th><th>Note</th><th></th></tr></thead><tbody id="xlist"></tbody></table></div>
         <details class="ximp"><summary>Add many at once (paste from a spreadsheet)</summary>
-          <p class="u">One per line: <b>Brand, Model, Replacement(s), Note</b>. Separate several replacements with <b>;</b> and use the burner names as they appear in the Burners tab, e.g. <code>Carlin, 301CRD, AF/AFG, Use a 7 in tube</code> or <code>Riello, 40F5, AF/AFG; NX</code>. Tabs work too, so you can copy straight from Excel.</p>
+          <p class="u">One per line: <b>Brand, Model, Replacement(s), Note</b>. Separate several replacements with <b>;</b> and use the burner names as they appear in the Burners tab (or <b>none</b> when nothing replaces it), e.g. <code>Carlin, 301CRD, AF/AFG, Use a 7 in tube</code> or <code>Riello, 40F5, AF/AFG; NX</code>. Tabs work too, so you can copy straight from Excel.</p>
           <textarea id="ximp" rows="6" style="width:100%;font:13px ui-monospace,monospace"></textarea>
           <div class="row" style="margin-top:8px"><button class="btn" type="button" id="ximpgo">Import</button></div>
           <div id="ximpmsg" class="msg" hidden></div>
@@ -464,11 +467,11 @@ function xRender(){const q=$('xq').value.trim().toLowerCase(),fb=$('xfb').value,
   const brands=[...new Set(XR.map(x=>x.brand))].sort((a,b)=>a.localeCompare(b));
   $('xfb').innerHTML='<option value="">All brands</option>'+brands.map(b=>`<option${b===fb?' selected':''}>${esc(b)}</option>`).join('');
   $('xfclr').hidden=!(q||fb||fm||XF);
-  const rows=XR.filter(x=>(!fb||x.brand===fb)&&(!fm||x.model.toLowerCase().replace(/[\s-]+/g,'').includes(fm))&&(!XF||xFuel(x).has(XF)))
+  const rows=XR.filter(x=>(!fb||x.brand===fb)&&(!fm||x.model.toLowerCase().replace(/[\s-]+/g,'').includes(fm))&&(!XF||(XF==='none'?x.none:xFuel(x).has(XF))))
     .filter(x=>!q||[x.brand,x.model,x.note,...x.to.map(k=>{const b=bByKey(k);return b?b.brand+' '+b.name:k})].join(' ').toLowerCase().includes(q))
     .sort((a,b)=>a.brand.localeCompare(b.brand)||a.model.localeCompare(b.model,undefined,{numeric:true}));
   $('xcnt').textContent=rows.length===XR.length?`${XR.length} entr${XR.length===1?'y':'ies'}`:`${rows.length} of ${XR.length} entries`;
-  $('xlist').innerHTML=rows.map(x=>`<tr data-id="${x.id}"><td><b>${esc(x.brand)}</b> ${esc(x.model)}</td><td>${x.to.map(k=>{const b=bByKey(k);return b?`<span class="bt ${b.fuel}">${esc(b.brand+' '+b.name)}</span>`:`<span class="bt gone" title="No longer in the burner list">${esc(k.replace('|',' '))}</span>`}).join('')}</td>
+  $('xlist').innerHTML=rows.map(x=>`<tr data-id="${x.id}"><td><b>${esc(x.brand)}</b> ${esc(x.model)}</td><td>${x.none?'<span class="bt no">No current replacement</span>':''}${x.to.map(k=>{const b=bByKey(k);return b?`<span class="bt ${b.fuel}">${esc(b.brand+' '+b.name)}</span>`:`<span class="bt gone" title="No longer in the burner list">${esc(k.replace('|',' '))}</span>`}).join('')}</td>
     <td class="u" style="max-width:340px">${esc(x.note||'')}</td><td style="white-space:nowrap;text-align:right"><button class="btn" data-a="edit">Edit</button> <button class="btn dan" data-a="del">Delete</button></td></tr>`).join('')||
     `<tr><td colspan="4" class="empty">${XR.length?'No matches.':'Nothing yet. Add the first cross-reference above.'}</td></tr>`}
 function xOpts(sel){const q=$('xbq').value.trim().toLowerCase();const bs=[...list].sort((a,b)=>a.brand.localeCompare(b.brand)||a.name.localeCompare(b.name,undefined,{numeric:true}));let last='';
@@ -479,6 +482,7 @@ let XSEL=[];
 const xSum=()=>{XSEL=xSel();$('xsum').textContent=XSEL.length?XSEL.map(k=>{const b=bByKey(k);return b?b.brand+' '+b.name:k}).join(', '):'None'};
 function xReset(x){XED=x||null;const f=$('xf');f.reset();$('xmsg').hidden=true;XSEL=x?[...x.to]:[];$('xbq').value='';xOpts(XSEL);
   if(x){f.elements.brand.value=x.brand;f.elements.model.value=x.model;f.elements.note.value=x.note||''}
+  $('xnone').checked=!!(x&&x.none);xNoneUI();
   $('xfh').textContent=x?`Edit ${x.brand} ${x.model}`:'Add a cross-reference';$('xgo').textContent=x?'Save':'Add';$('xcancel').hidden=!x}
 // brand box: suggests brands already used in the list (site-styled, not the browser's own)
 let ACI=-1;
@@ -500,11 +504,15 @@ $('xbl').addEventListener('mousedown',e=>{const d=e.target.closest('[data-v]');i
 document.addEventListener('mousedown',e=>{if(!e.target.closest('.acw'))acHide()});
 // a brand typed with different capitals than an existing one is saved with the existing spelling
 $('xbrand').addEventListener('change',()=>{const v=$('xbrand').value.trim(),b=xBrands().find(o=>o.name.toLowerCase()===v.toLowerCase());if(b)$('xbrand').value=b.name});
-$('xopts').addEventListener('change',xSum);$('xbq').oninput=()=>xOpts(XSEL);$('xq').oninput=xRender;$('xfb').onchange=xRender;$('xfm').oninput=xRender;
+$('xopts').addEventListener('change',xSum);
+// "No current replacement" switches off the burner picker
+function xNoneUI(){const n=$('xnone').checked,d=$('xms');d.classList.toggle('off',n);if(n){d.open=false;$('xsum').textContent='None – no current replacement'}else xSum()}
+$('xnone').addEventListener('change',xNoneUI);
+$('xms').addEventListener('toggle',()=>{if($('xnone').checked&&$('xms').open)$('xms').open=false});$('xbq').oninput=()=>xOpts(XSEL);$('xq').oninput=xRender;$('xfb').onchange=xRender;$('xfm').oninput=xRender;
 document.querySelector('.xseg').onclick=e=>{const b=e.target.closest('button[data-f]');if(!b)return;XF=b.dataset.f;document.querySelectorAll('.xseg button').forEach(o=>o.setAttribute('aria-pressed',o===b));xRender()};
 $('xfclr').onclick=()=>{$('xq').value='';$('xfb').value='';$('xfm').value='';XF='';document.querySelectorAll('.xseg button').forEach(o=>o.setAttribute('aria-pressed',o.dataset.f===''));xRender()};$('xcancel').onclick=()=>xReset();
 $('xf').onsubmit=async e=>{e.preventDefault();const f=e.target;$('xmsg').hidden=true;
-  const body={brand:f.elements.brand.value,model:f.elements.model.value,note:f.elements.note.value,to:XSEL};
+  const none=$('xnone').checked,body={brand:f.elements.brand.value,model:f.elements.model.value,note:f.elements.note.value,to:none?[]:XSEL,none};
   try{if(XED)await call('PUT','/api/xref/'+XED.id,body);else await call('POST','/api/xref',body);toast(XED?'Saved':'Added '+body.brand.trim()+' '+body.model.trim());XR=await call('GET','/api/xref');xRender();xReset();$('xms').open=false}
   catch(err){showMsg($('xmsg'),'err',esc(err.message))}};
 $('xlist').onclick=async e=>{const b=e.target.closest('button[data-a]');if(!b)return;const x=XR.find(o=>o.id===b.closest('tr').dataset.id);if(!x)return;
@@ -517,6 +525,7 @@ $('ximpgo').onclick=async()=>{const lines=$('ximp').value.split(/\r?\n/).map(l=>
   let ok=0;const bad=[];$('ximpgo').disabled=true;
   for(const [i,l] of lines.entries()){const c=l.includes('\t')?l.split('\t'):l.split(',');const [brand='',model='',reps='',...rest]=c.map(s=>s.trim());
     if(i===0&&/^brand$/i.test(brand))continue; // header row
+    if(/^(none|no replacement|n\/a|-)$/i.test(reps.trim())){try{await call('POST','/api/xref',{brand,model,note:rest.join(', '),to:[],none:true});ok++}catch(err){bad.push(`Line ${i+1}: ${err.message}`)}continue}
     const names=reps.split(';').map(s=>s.trim()).filter(Boolean),to=names.map(find);
     const miss=names.filter((n,j)=>!to[j]);if(miss.length){bad.push(`Line ${i+1}: no burner called “${miss.join('”, “')}”`);continue}
     try{await call('POST','/api/xref',{brand,model,note:rest.join(', '),to:to.map(bKey)});ok++}catch(err){bad.push(`Line ${i+1}: ${err.message}`)}}
