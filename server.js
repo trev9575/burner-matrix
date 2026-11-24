@@ -356,7 +356,8 @@ const rfqSummary = (r, me) => ({ id: r.id, no: r.no, date: r.date, by: r.by, byF
   sent: (r.sends || []).slice(-1)[0] || null, status: r.status || '', statusAt: r.statusAt || '',
   value: typeof r.value === 'number' ? r.value : null, lostReason: r.status === 'lost' ? r.lostReason || '' : '', lostNote: r.status === 'lost' ? r.lostNote || '' : '',
   quote: quoteInfo(r.quote), comments: (r.comments || []).length, unread: unreadFor(r, me), ...turnaround(r),
-  newQuote: !!(me && r.quote && r.by === me.name && r.quote.at > ((r.seen || {})[me.name] || '')), // the rep hasn't opened it since it was quoted
+  // the rep hasn't opened or acted on it since it was quoted (marking it Won or Lost settles it)
+  newQuote: !!(me && r.quote && r.by === me.name && r.status !== 'won' && r.status !== 'lost' && r.quote.at > ((r.seen || {})[me.name] || '')),
   ...followUp(r) });
 // Emailed or Quoted RFQs with no activity for N days need a follow-up. Activity = last email, status change or "followed up".
 function followUp(r) {
@@ -596,6 +597,7 @@ async function api(req, res, url) {
         if (b.lostNote !== undefined) r.lostNote = String(b.lostNote || '').trim().slice(0, 500);
       } else { delete r.lostReason; delete r.lostNote; }
       r.status = status; r.statusAt = new Date().toISOString(); r.statusBy = me.name;
+      if (r.by === me.name) r.seen = { ...(r.seen || {}), [me.name]: r.statusAt }; // the rep has dealt with it
       (r.statusLog = r.statusLog || []).push({ at: r.statusAt, by: me.name, status, value: r.value, lostReason: r.lostReason });
       writeJSON(rfqFile(r.id), r);
       return send(res, 200, rfqSummary(r, me));
@@ -603,6 +605,7 @@ async function api(req, res, url) {
     if (rm[2] === '/followup' && m === 'POST') { // "I followed up": restarts the follow-up clock
       if (r.by !== me.name && me.role === 'rep') return send(res, 403, { error: 'Only the rep who made it can do this' });
       r.followedUpAt = new Date().toISOString();
+      if (r.by === me.name) r.seen = { ...(r.seen || {}), [me.name]: r.followedUpAt };
       (r.followLog = r.followLog || []).push({ at: r.followedUpAt, by: me.name });
       writeJSON(rfqFile(r.id), r);
       return send(res, 200, rfqSummary(r, me));
