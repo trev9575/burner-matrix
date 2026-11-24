@@ -97,7 +97,7 @@ still shows the matrix, photos and your RFQ list, and new RFQs are saved on the 
 the signal is back. *Keep me signed in* on the sign-in page keeps a session for 30 days (`REMEMBER_DAYS`); it's ticked by
 default inside the installed app. Signing out clears everything the app saved on that device.
 
-**Replacing a burner? (cross-reference).** At the top of the matrix filters, reps type another maker's (or an older)
+**Replacing a burner? (cross-reference).** Next to *Biofuel rated* in the matrix filters, reps type another maker's (or an older)
 model, e.g. *Carlin 301CRD*, and see the Beckett/Wayne burner(s) to sell instead, plus any note. *Show all in the matrix*
 narrows the chart and table to just that entry's replacements (other filters cleared; a banner offers *Show all burners*); *Create RFQ* starts an RFQ with "Replaces Carlin 301CRD."
 in Notes. Editors and admins keep the list in **Admin → Cross-reference** (the brand box suggests brands already used): add, edit or delete entries one at a time,
