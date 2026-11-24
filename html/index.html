@@ -316,7 +316,7 @@ tr.fu td{background:#fffaf2 !important}
 .sheet.ro select{-webkit-appearance:none;appearance:none}.sheet.ro textarea{border-style:solid;resize:none}.sheet.ro ::placeholder{color:transparent}
 .kv input[data-lock],.kv select[data-lock]{background:#f0f0ec;border-bottom:1px solid #d6d6d0;cursor:not-allowed;color:#1d1d1d;opacity:1;-webkit-text-fill-color:#1d1d1d}
 @media print{.kv input[data-lock],.kv select[data-lock]{background:transparent}}
-.xfmr{display:flex;gap:10px;align-items:flex-start;margin:14px 0 0;padding:10px 12px;border:1.5px solid #e0a800;background:#fff8e1;border-radius:4px;font-size:13px;line-height:1.45;-webkit-print-color-adjust:exact;print-color-adjust:exact}.xfmr svg{flex:none;margin-top:1px}.xfmr b{font-size:13.5px}.xlk{margin-left:8px;font-size:11px;font-weight:600;color:#8a6d00}
+.xfmr{display:flex;gap:10px;align-items:flex-start;margin:14px 0 0;padding:10px 12px;border:1.5px solid #e0a800;background:#fff8e1;border-radius:4px;font-size:13px;line-height:1.45;-webkit-print-color-adjust:exact;print-color-adjust:exact}.xfmr svg{flex:none;margin-top:1px}.xfmr b{font-size:13.5px}
 @media print{.xfmr{margin:6px 0 0;padding:4px 8px;font-size:10px;line-height:1.3;gap:6px}.xfmr b{font-size:10.5px}.xfmr svg{width:13px;height:13px}.xfmr br{display:none}.xfmr b::after{content:' – '}}
 .rqm{color:#c8102e;font-weight:700}.rqnote{font-size:12px;color:var(--mute);margin-top:6px}
 .sheet.ro .rqm,.sheet.ro .rqnote{display:none}@media print{.rqm,.rqnote{display:none !important}}
@@ -758,7 +758,7 @@ const rawOf=x=>RAW.find(o=>(o.brand+'|'+o.name).toLowerCase()===(x.b+'|'+x.n).to
 let RFQ=null;
 // meta: {no, date?, id?, raw?, fit?, fields?, sends?, by?, from?}
 function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);$('sheet').classList.remove('ro');
-  RFQ={offline:!!meta.offline,oid:meta.oid||'',ymd:meta.ymd||'',ro:!!meta.ro,id:meta.id||null,no:meta.offline?'Offline draft':meta.no,date:meta.date||new Date().toISOString(),raw:meta.raw||rawOf(x),sends:meta.sends||[],by:meta.by||'',byFull:meta.byFull||'',from:meta.from||'matrix',xfmr:typeof meta.xfmr==='string'?meta.xfmr:'',dirty:false};
+  RFQ={offline:!!meta.offline,oid:meta.oid||'',ymd:meta.ymd||'',ro:!!meta.ro,id:meta.id||null,no:meta.offline?'Offline draft':meta.no,date:meta.date||new Date().toISOString(),raw:meta.raw||rawOf(x),sends:meta.sends||[],by:meta.by||'',byFull:meta.byFull||'',from:meta.from||'matrix',xfmr:typeof meta.xfmr==='string'?meta.xfmr.replace(/\s*This will increase the cost of the burner\.?/,''):'',dirty:false};
   const fz0=fit(x,r);RFQ.fit=meta.fit!==undefined?meta.fit:(fz0==='edge'?where(x,r):fz0||'');
   const rateTxt=r==null?'':(S.unit==='gph'?`${S.rate} GPH (≈ ${Math.round(r).toLocaleString()} MBH)`:`${Number(S.rate).toLocaleString()} MBH${x.f==='oil'?` (≈ ${(r/G).toFixed(2)} GPH)`:''}`);
   const siteKeys=S.volt.filter(v=>x.v.includes(v));const site=siteKeys.map(vlabel).join(', ');
@@ -804,7 +804,7 @@ function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);$('sheet').cla
     ${inp('q-ins','Insertion Depth','','inches')}${inp('q-ctl','Controls / Panel','','Primary control, panel, CSD-1…')}
     ${inp('q-opt','Other Options','','Nozzle, head, solenoid…','w')}</div>
   <div class="noprint rqnote" id="rqnote"><span class="rqm">*</span> Required before the RFQ can be emailed</div>
-  ${RFQ.xfmr?`<div class="xfmr" id="q-xfmr" title="Added automatically because of the power selected on the matrix page. It can’t be edited or removed."><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 1 21h22L12 2z" fill="#f2b705"/><path d="M12 9v5m0 3v.5" stroke="#1c1c1c" stroke-width="2.4" stroke-linecap="round"/></svg><div><b>Step-down transformer required</b><span class="xlk noprint">🔒 Locked</span><br>${esc(RFQ.xfmr)}</div></div>`:''}
+  ${RFQ.xfmr?`<div class="xfmr" id="q-xfmr" title="Added automatically because of the power selected on the matrix page. It can’t be edited or removed."><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 1 21h22L12 2z" fill="#f2b705"/><path d="M12 9v5m0 3v.5" stroke="#1c1c1c" stroke-width="2.4" stroke-linecap="round"/></svg><div><b>Step-down transformer required</b><br>${esc(RFQ.xfmr)}</div></div>`:''}
   <h3>Notes</h3>
   <textarea id="q-notes" aria-label="Notes" placeholder="Anything else the quote needs to cover"></textarea>
   <div class="kv" style="margin-top:12px">${inp('q-rep','Prepared by',repName())}${inp('q-repp','Rep phone',repPhone())}${inp('q-repe','Rep email',repEmail(),'','w')}</div>
@@ -902,7 +902,7 @@ const HIV=['240','3p240','3p480'];
 // the locked note that goes on the RFQ sheet when the warning applies ('' when it doesn't)
 function stepDownNote(x){const hi=S.volt.filter(v=>HIV.includes(v));
   if(!x.sd||(ME&&ME.stepDownWarn===false)||!hi.length||S.volt.includes('120'))return '';
-  return `Site power selected: ${hi.map(v=>VOLTS[v]).join(', ')} (no 120 VAC). A step-down transformer is required if 120 VAC is not available at the install site. This will increase the cost of the burner.`}
+  return `Site power selected: ${hi.map(v=>VOLTS[v]).join(', ')} (no 120 VAC). A step-down transformer is required if 120 VAC is not available at the install site.`}
 function stepDownOK(x){const hi=S.volt.filter(v=>HIV.includes(v));
   if(!stepDownNote(x))return Promise.resolve(true);
   $('sdtxt').innerHTML=`You selected <b>${esc(hi.map(v=>VOLTS[v]).join(', '))}</b> without 120 VAC. The <b>${esc(x.b+' '+x.n)}</b> needs a <b>step-down transformer</b> if 120 VAC is not available at the install site. This will increase the cost of the burner.`;
