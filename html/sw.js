@@ -50,6 +50,6 @@ self.addEventListener('fetch', e => {
     else if (p === '/login') e.respondWith(networkFirst(req, SHELL, '/login'));
     return; // admin and everything else: online only
   }
-  if (p === '/burners.json' || p === '/api/me' || p === '/api/rfqs' || p === '/api/customers') return e.respondWith(networkFirst(req, DATA));
+  if (p === '/burners.json' || p === '/api/me' || p === '/api/rfqs' || p === '/api/customers' || p === '/api/xref') return e.respondWith(networkFirst(req, DATA));
   if (p.startsWith('/photos/') || p.startsWith('/logos/') || p.startsWith('/icons/') || p === '/schema.js' || p === '/favicon.svg') return e.respondWith(cacheFirst(req, IMG));
 });

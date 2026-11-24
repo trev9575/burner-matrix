@@ -144,7 +144,7 @@ const sendFile = (res, file, cache) => {
 const readBody = (req, limit = 8 * 1024 * 1024) => new Promise((ok, bad) => {
   let n = 0; const chunks = [];
   req.on('data', c => { n += c.length; if (n > limit) { bad(Object.assign(new Error('Too large'), { code: 413 })); req.destroy(); } else chunks.push(c); });
-  req.on('end', () => { try { ok(n ? JSON.parse(Buffer.concat(chunks).toString()) : {}); } catch { bad(Object.assign(new Error('Bad JSON'), { code: 400 })); } });
+  req.on('end', () => { try { const v = n ? JSON.parse(Buffer.concat(chunks).toString()) : {}; ok(v && typeof v === 'object' && !Array.isArray(v) ? v : {}); } catch { bad(Object.assign(new Error('Bad JSON'), { code: 400 })); } });
   req.on('error', bad);
 });
 const ROLES = ['rep', 'quoter', 'editor', 'admin'];
@@ -235,6 +235,15 @@ function runBackup(why) {
   fs.mkdirSync(tmp, { recursive: true });
   for (const e of fs.readdirSync(DATA)) { // everything except the backups folder itself (and half-written .tmp files)
     if (e === 'backups' || e.endsWith('.tmp')) continue;
+    if (e === 'photos' || e === 'quotes') { // these files are never changed in place, so hard-link them instead of copying 14 times
+      fs.mkdirSync(path.join(tmp, e), { recursive: true });
+      for (const f of fs.readdirSync(path.join(DATA, e))) {
+        const src = path.join(DATA, e, f), dst = path.join(tmp, e, f);
+        if (f.endsWith('.tmp') || !fs.statSync(src).isFile()) continue;
+        try { fs.linkSync(src, dst); } catch { fs.copyFileSync(src, dst); }
+      }
+      continue;
+    }
     fs.cpSync(path.join(DATA, e), path.join(tmp, e), { recursive: true, filter: src => !src.endsWith('.tmp') });
   }
   fs.rmSync(dest, { recursive: true, force: true });
@@ -253,6 +262,10 @@ function scheduleBackup() {
 
 // ---------- RFQs ----------
 const rfqFile = id => path.join(F.rfqs, id + '.json');
+// After any await (reading an upload, building a PDF, sending mail) re-read the RFQ before changing it, so a change
+// someone else saved in the meantime (a comment, a status, a quote) isn't overwritten by our older copy.
+const reloadRfq = r => { const cur = readJSON(rfqFile(r.id), null); if (!cur) throw Object.assign(new Error('RFQ not found'), { code: 404 });
+  for (const k of Object.keys(r)) delete r[k]; return Object.assign(r, cur); };
 const getRfq = id => /^[a-f0-9]{12}$/.test(id) ? readJSON(rfqFile(id), null) : null;
 const allRfqs = () => fs.readdirSync(F.rfqs).filter(f => f.endsWith('.json')).map(f => readJSON(path.join(F.rfqs, f), null)).filter(r => r && r.burner && r.fields);
 // cross-reference: another maker's (or an old) burner model -> the Beckett/Wayne burner(s) to replace it with
@@ -392,6 +405,7 @@ async function api(req, res, url) {
       ['Company', 28], ['Contact', 20], ['Phone', 15], ['Email', 26], ['Project / job', 28], ['Site address', 34], ['Quantity', 9], ['Required by', 13], ['Customer ref / PO', 16],
       ['Burner brand', 12], ['Burner model', 16], ['Fuel', 6], ['Appliance make / model', 24], ['Appliance type', 20], ['Required input', 20], ['Fuel type', 18], ['Power on site', 18],
       ['Voltage', 16], ['Firing mode', 12], ['Mounting', 16], ['Air tube length', 14], ['Insertion depth', 14], ['Controls / panel', 20], ['Other options', 20], ['Notes', 40],
+      ['Quote #', 14], ['Quoted by', 18], ['Quoted on', 11, 'date'], ['Comments', 10, 'number'],
     ].map(([header, width, type]) => ({ header, width, type }));
     const rows = all.map(r => { const s = rfqSummary(r), last = (r.sends || []).slice(-1)[0];
       const st = r.status || (last ? 'sent' : '');
@@ -399,7 +413,8 @@ async function api(req, res, url) {
         s.followUp ? 'Yes' : '', st === 'sent' || st === 'quoted' ? s.idleDays : '', last ? last.at : '', last ? last.to.join(', ') : '',
         F_(r, 'q-co'), F_(r, 'q-ct'), F_(r, 'q-ph'), F_(r, 'q-em'), F_(r, 'q-job'), F_(r, 'q-addr'), F_(r, 'q-qty'), F_(r, 'q-need'), F_(r, 'q-po'),
         r.burner.brand, r.burner.name, r.burner.fuel, F_(r, 'q-app'), F_(r, 'q-type'), F_(r, 'q-rate'), F_(r, 'q-fuel'), F_(r, 'q-pwr'),
-        F_(r, 'q-v'), F_(r, 'q-m'), F_(r, 'q-mount'), F_(r, 'q-tube'), F_(r, 'q-ins'), F_(r, 'q-ctl'), F_(r, 'q-opt'), F_(r, 'q-notes')]; });
+        F_(r, 'q-v'), F_(r, 'q-m'), F_(r, 'q-mount'), F_(r, 'q-tube'), F_(r, 'q-ins'), F_(r, 'q-ctl'), F_(r, 'q-opt'), F_(r, 'q-notes'),
+        r.quote ? r.quote.no || '' : '', r.quote ? r.quote.byFull || r.quote.by : '', r.quote ? r.quote.at : '', (r.comments || []).length]; });
     const name = `RFQs-${new Date().toISOString().slice(0, 10)}.xlsx`;
     return send(res, 200, XLSX.build({ sheet: 'RFQs', cols, rows }), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       { 'Content-Disposition': `attachment; filename="${name}"` });
@@ -503,14 +518,15 @@ async function api(req, res, url) {
       // it opens read-only, and "Copy to new RFQ" starts a revision.
       if ((r.sends || []).length) return send(res, 409, { error: 'This RFQ was emailed, so it can’t be changed. Use “Copy to new RFQ” to make a revised one.' });
       if (r.by !== me.name) return send(res, 403, { error: 'Only the rep who made this RFQ can change it.' });
-      const b = await readBody(req, 512 * 1024);
+      const b = await readBody(req, 512 * 1024); reloadRfq(r);
+      if ((r.sends || []).length) return send(res, 409, { error: 'This RFQ was emailed, so it can’t be changed. Use “Copy to new RFQ” to make a revised one.' });
       r.fields = cleanFields(b.fields); r.updated = new Date().toISOString(); r.editedBy = me.name;
       writeJSON(rfqFile(r.id), r);
       return send(res, 200, r);
     }
     if (rm[2] === '/status' && m === 'POST') { // quoted / won / lost tracking; '' = automatic (draft or emailed)
       if (r.by !== me.name && me.role === 'rep') return send(res, 403, { error: 'Only the rep who made it can change its status' });
-      const b = await readBody(req, 4096), status = b.status || '';
+      const b = await readBody(req, 4096), status = b.status || ''; reloadRfq(r);
       if (!['', 'quoted', 'won', 'lost'].includes(status)) return send(res, 422, { error: 'Unknown status' });
       if (b.value !== undefined && b.value !== null && b.value !== '') {
         const n = Number(String(b.value).replace(/[$,\s]/g, ''));
@@ -554,7 +570,7 @@ async function api(req, res, url) {
         (r.quoteLog = r.quoteLog || []).push({ at: new Date().toISOString(), by: me.name, removed: true });
         delete r.quote; writeJSON(rfqFile(r.id), r); return send(res, 200, rfqSummary(r, me));
       }
-      const b = (await readBody(req, 16 * 1024 * 1024)) || {}, now = new Date().toISOString();
+      const b = (await readBody(req, 16 * 1024 * 1024)) || {}, now = new Date().toISOString(); reloadRfq(r);
       const qno = String(b.no || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 40), note = String(b.note || '').replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, ' ').trim().slice(0, 1000);
       let value = null;
       if (b.value !== undefined && b.value !== null && String(b.value).trim() !== '') {
@@ -571,7 +587,8 @@ async function api(req, res, url) {
         fs.writeFileSync(path.join(F.quotes, file), buf);
       } else if (b.keepFile && r.quote && r.quote.file) { file = r.quote.file; fname = r.quote.fname; }
       if (!file && value === null && !qno) return send(res, 422, { error: 'Add the quote PDF, a quote number or the price.' });
-      if (old && file !== r.quote.file) fs.rmSync(old, { force: true });
+      const prev = r.quote && r.quote.file ? path.join(F.quotes, path.basename(r.quote.file)) : null; // current file, after reload
+      if (prev && (!file || path.basename(prev) !== file)) fs.rmSync(prev, { force: true });
       r.quote = { no: qno, value, note, file, fname, by: me.name, byFull: me.full || me.name, at: now };
       (r.quoteLog = r.quoteLog || []).push({ at: now, by: me.name, no: qno, value });
       if (value !== null) r.value = value;
@@ -598,7 +615,7 @@ async function api(req, res, url) {
     if (rm[2] === '/seen' && m === 'POST') { r.seen = { ...(r.seen || {}), [me.name]: new Date().toISOString() }; writeJSON(rfqFile(r.id), r); return send(res, 200, { ok: true }); }
     if (rm[2] === '/comments' && m === 'GET') return send(res, 200, r.comments || []);
     if (rm[2] === '/comments' && m === 'POST') {
-      const b = (await readBody(req, 16 * 1024)) || {}, text = String(b.text || '').replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, ' ').trim().slice(0, 2000);
+      const b = (await readBody(req, 16 * 1024)) || {}; reloadRfq(r); const text = String(b.text || '').replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, ' ').trim().slice(0, 2000);
       if (!text) return send(res, 422, { error: 'Write a comment first' });
       const now = new Date().toISOString(), c = { id: crypto.randomBytes(4).toString('hex'), by: me.name, byFull: me.full || me.name, at: now, text };
       (r.comments = r.comments || []).push(c); if (r.comments.length > 300) r.comments = r.comments.slice(-300);
@@ -620,7 +637,7 @@ async function api(req, res, url) {
       return send(res, 200, { comments: r.comments, mailed, mailError });
     }
     if (rm[2] === '/comments' && m === 'DELETE') {
-      const b = (await readBody(req, 1024)) || {}, i = (r.comments || []).findIndex(c => c.id === b.id);
+      const b = (await readBody(req, 1024)) || {}; reloadRfq(r); const i = (r.comments || []).findIndex(c => c.id === b.id);
       if (i < 0) return send(res, 404, { error: 'Comment not found' });
       if (r.comments[i].by !== me.name && me.role !== 'admin') return send(res, 403, { error: 'You can only delete your own comments' });
       r.comments.splice(i, 1); writeJSON(rfqFile(r.id), r); return send(res, 200, { comments: r.comments });
@@ -640,6 +657,7 @@ async function api(req, res, url) {
       try { out = await Mail.sendMail({ to, cc, replyTo: r.fields['q-repe'] || me.email, subject: subj, text: rfqText(r),
         attachments: [{ filename: pdfName(r), type: 'application/pdf', content: pdf }] }); }
       catch (e) { console.error('Mail:', e.message); return send(res, 502, { error: 'Email failed: ' + e.message }); }
+      reloadRfq(r); // building the PDF and sending take a few seconds
       (r.sends = r.sends || []).push({ at: new Date().toISOString(), by: me.name, to: out.to, cc: out.cc });
       writeJSON(rfqFile(r.id), r);
       return send(res, 200, { ok: true, ...out });
@@ -683,9 +701,9 @@ async function api(req, res, url) {
   }
   const xm = /^\/api\/xref(?:\/([a-f0-9]{10}))?$/.exec(p);
   if (xm && m !== 'GET') { // editors and admins keep the cross-reference list
-    const list = getXref(), now = new Date().toISOString();
+    const body = m === 'DELETE' ? {} : (await readBody(req, 16 * 1024)) || {}, list = getXref(), now = new Date().toISOString();
     if (m === 'POST' && !xm[1]) {
-      const v = cleanXref((await readBody(req, 16 * 1024)) || {}); if (v.error) return send(res, 422, v);
+      const v = cleanXref(body); if (v.error) return send(res, 422, v);
       const ex = list.find(x => xrefKey(x) === xrefKey(v));
       if (ex) return send(res, 409, { error: `${ex.brand} ${ex.model} is already in the list.` });
       const x = { id: crypto.randomBytes(5).toString('hex'), ...v, by: me.name, added: now, updated: now };
@@ -694,7 +712,7 @@ async function api(req, res, url) {
     const i = xm[1] ? list.findIndex(x => x.id === xm[1]) : -1;
     if (i < 0) return send(res, 404, { error: 'Not found' });
     if (m === 'PUT') {
-      const v = cleanXref((await readBody(req, 16 * 1024)) || {}); if (v.error) return send(res, 422, v);
+      const v = cleanXref(body); if (v.error) return send(res, 422, v);
       const ex = list.find((x, j) => j !== i && xrefKey(x) === xrefKey(v));
       if (ex) return send(res, 409, { error: `${ex.brand} ${ex.model} is already in the list.` });
       list[i] = { ...list[i], ...v, updated: now, updatedBy: me.name }; writeJSON(F.xref, list, true); return send(res, 200, list[i]);
