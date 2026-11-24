@@ -67,6 +67,10 @@ fieldset{border:0;padding:0;margin:0}legend{font-weight:700;font-size:13.5px;mar
 .pic{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .pic img{width:120px;height:120px;object-fit:contain;background:#fff;border:1px solid var(--rule);border-radius:4px}
 .empty{color:var(--mute);padding:30px 0;text-align:center}
+.xbq,input.xbq{display:block;width:100%;min-height:40px;margin:2px 0 8px;padding:8px 10px 8px 34px !important;border:1px solid #b9b9b2;border-radius:3px;font:500 14px Montserrat,sans-serif;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2355554f' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-4-4'/%3E%3C/svg%3E") no-repeat 10px 50%}
+input.xbq:focus{border-color:var(--ink);outline:2px solid var(--ink);outline-offset:-1px}
+.acw{position:relative;display:block}.acl{position:absolute;z-index:6;left:0;right:0;top:100%;margin-top:2px;background:#fff;border:1px solid #b9b9b2;border-radius:3px;box-shadow:0 6px 18px rgba(0,0,0,.12);max-height:240px;overflow:auto;font-weight:500}
+.acl div{padding:9px 12px;font-size:14px;cursor:pointer;display:flex;justify-content:space-between;gap:10px}.acl div small{color:var(--mute);font-size:12px}.acl div[aria-selected=true],.acl div:hover{background:#fde3e5}
 .xform{display:grid;gap:12px;background:#f6f6f3;border:1px solid var(--rule);border-radius:4px;padding:14px}.xopts{max-height:260px;overflow:auto}.xopts .bh{font-size:12px;font-weight:700;color:var(--mute);margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em}
 #xlist td{vertical-align:top}#xlist .bt{display:inline-block;background:#eef3fb;color:var(--gas);font-weight:700;font-size:12.5px;border-radius:3px;padding:1px 7px;margin:0 4px 4px 0}#xlist .bt.oil{background:#fdecee;color:var(--red)}#xlist .bt.gone{background:#eee;color:#888;text-decoration:line-through}
 .ximp summary{cursor:pointer;font-weight:700;font-size:14px}
@@ -211,17 +215,16 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
         <form id="xf" class="xform">
           <h3 id="xfh" style="margin:0;font-size:15px">Add a cross-reference</h3>
           <div class="grid">
-            <label class="f">Brand being replaced<input type="text" name="brand" list="xbrands" maxlength="60" autocomplete="off" placeholder="e.g. Carlin"></label>
+            <label class="f">Brand being replaced<span class="acw"><input type="text" name="brand" id="xbrand" maxlength="60" autocomplete="off" placeholder="e.g. Carlin" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="xbl"><div class="acl" id="xbl" role="listbox" hidden></div></span></label>
             <label class="f">Model being replaced<input type="text" name="model" maxlength="80" autocomplete="off" placeholder="e.g. 301CRD"></label>
             <div class="f" style="display:flex;flex-direction:column;gap:4px"><span style="font-weight:700;font-size:13.5px">Replace with <span class="u">pick 1 or more</span></span>
-              <details class="ms" id="xms"><summary id="xsum">None</summary><div><input type="search" id="xbq" placeholder="Filter burners" aria-label="Filter burners" style="margin-bottom:6px"><div id="xopts" class="xopts"></div></div></details></div>
+              <details class="ms" id="xms"><summary id="xsum">None</summary><div><input type="text" id="xbq" class="xbq" placeholder="Search burners, e.g. CF or Wayne" aria-label="Search burners" autocomplete="off"><div id="xopts" class="xopts"></div></div></details></div>
           </div>
           <label class="f"><span>Note for reps <span class="u">optional, e.g. which air tube or head to quote</span></span><input type="text" name="note" maxlength="400" autocomplete="off"></label>
-          <datalist id="xbrands"></datalist>
           <div class="row"><button class="btn pri" type="submit" id="xgo">Add</button><button class="btn" type="button" id="xcancel" hidden>Cancel</button></div>
           <div id="xmsg" class="msg" hidden></div>
         </form>
-        <div class="row"><input type="search" id="xq" placeholder="Search the list" aria-label="Search cross-references" style="flex:1;max-width:360px"></div>
+        <div class="row"><input type="text" id="xq" class="xbq" placeholder="Search the list, e.g. Carlin" aria-label="Search cross-references" autocomplete="off" style="flex:1;max-width:360px;margin:0"></div>
         <div class="scroll"><table><thead><tr><th>Replaces</th><th>Use instead</th><th>Note</th><th></th></tr></thead><tbody id="xlist"></tbody></table></div>
         <details class="ximp"><summary>Add many at once (paste from a spreadsheet)</summary>
           <p class="u">One per line: <b>Brand, Model, Replacement(s), Note</b>. Separate several replacements with <b>;</b> and use the burner names as they appear in the Burners tab, e.g. <code>Carlin, 301CRD, AF/AFG, Use a 7 in tube</code> or <code>Riello, 40F5, AF/AFG; NX</code>. Tabs work too, so you can copy straight from Excel.</p>
@@ -449,7 +452,6 @@ function xRender(){const q=$('xq').value.trim().toLowerCase();
   const rows=XR.filter(x=>!q||[x.brand,x.model,x.note,...x.to.map(k=>{const b=bByKey(k);return b?b.brand+' '+b.name:k})].join(' ').toLowerCase().includes(q))
     .sort((a,b)=>a.brand.localeCompare(b.brand)||a.model.localeCompare(b.model,undefined,{numeric:true}));
   $('xcnt').textContent=`${XR.length} entr${XR.length===1?'y':'ies'}`;
-  $('xbrands').innerHTML=[...new Set(XR.map(x=>x.brand))].sort().map(b=>`<option value="${esc(b)}">`).join('');
   $('xlist').innerHTML=rows.map(x=>`<tr data-id="${x.id}"><td><b>${esc(x.brand)}</b> ${esc(x.model)}</td><td>${x.to.map(k=>{const b=bByKey(k);return b?`<span class="bt ${b.fuel}">${esc(b.brand+' '+b.name)}</span>`:`<span class="bt gone" title="No longer in the burner list">${esc(k.replace('|',' '))}</span>`}).join('')}</td>
     <td class="u" style="max-width:340px">${esc(x.note||'')}</td><td style="white-space:nowrap;text-align:right"><button class="btn" data-a="edit">Edit</button> <button class="btn dan" data-a="del">Delete</button></td></tr>`).join('')||
     `<tr><td colspan="4" class="empty">${XR.length?'No matches.':'Nothing yet. Add the first cross-reference above.'}</td></tr>`}
@@ -462,6 +464,26 @@ const xSum=()=>{XSEL=xSel();$('xsum').textContent=XSEL.length?XSEL.map(k=>{const
 function xReset(x){XED=x||null;const f=$('xf');f.reset();$('xmsg').hidden=true;XSEL=x?[...x.to]:[];$('xbq').value='';xOpts(XSEL);
   if(x){f.elements.brand.value=x.brand;f.elements.model.value=x.model;f.elements.note.value=x.note||''}
   $('xfh').textContent=x?`Edit ${x.brand} ${x.model}`:'Add a cross-reference';$('xgo').textContent=x?'Save':'Add';$('xcancel').hidden=!x}
+// brand box: suggests brands already used in the list (site-styled, not the browser's own)
+let ACI=-1;
+const xBrands=()=>{const m=new Map();XR.forEach(x=>{const k=x.brand.toLowerCase();const o=m.get(k)||{name:x.brand,n:0};o.n++;m.set(k,o)});return[...m.values()].sort((a,b)=>a.name.localeCompare(b.name))};
+function acShow(){const i=$('xbrand'),q=i.value.trim().toLowerCase(),l=$('xbl');
+  const m=xBrands().filter(b=>!q||b.name.toLowerCase().includes(q)).filter(b=>b.name.toLowerCase()!==q);ACI=-1;
+  if(!m.length){l.hidden=true;i.setAttribute('aria-expanded','false');return}
+  l.innerHTML=m.map((b,j)=>`<div role="option" id="xbo${j}" data-v="${esc(b.name)}" aria-selected="false">${esc(b.name)}<small>${b.n} model${b.n>1?'s':''}</small></div>`).join('');l.hidden=false;i.setAttribute('aria-expanded','true')}
+const acHide=()=>{$('xbl').hidden=true;$('xbrand').setAttribute('aria-expanded','false');$('xbrand').removeAttribute('aria-activedescendant');ACI=-1};
+const acPick=v=>{$('xbrand').value=v;acHide();$('xf').elements.model.focus()};
+$('xbrand').addEventListener('input',acShow);$('xbrand').addEventListener('mousedown',()=>setTimeout(acShow));
+$('xbrand').addEventListener('keydown',e=>{const l=$('xbl'),o=[...l.querySelectorAll('[role=option]')];
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(l.hidden){acShow();return}if(!o.length)return;ACI=(ACI+(e.key==='ArrowDown'?1:-1)+o.length)%o.length;
+    o.forEach((x,j)=>x.setAttribute('aria-selected',j===ACI));o[ACI].scrollIntoView({block:'nearest'});$('xbrand').setAttribute('aria-activedescendant',o[ACI].id)}
+  else if(e.key==='Enter'&&!l.hidden&&ACI>=0){e.preventDefault();acPick(o[ACI].dataset.v)}
+  else if(e.key==='Escape'&&!l.hidden){e.preventDefault();acHide()}
+  else if(e.key==='Tab')acHide()});
+$('xbl').addEventListener('mousedown',e=>{const d=e.target.closest('[data-v]');if(d){e.preventDefault();acPick(d.dataset.v)}});
+document.addEventListener('mousedown',e=>{if(!e.target.closest('.acw'))acHide()});
+// a brand typed with different capitals than an existing one is saved with the existing spelling
+$('xbrand').addEventListener('change',()=>{const v=$('xbrand').value.trim(),b=xBrands().find(o=>o.name.toLowerCase()===v.toLowerCase());if(b)$('xbrand').value=b.name});
 $('xopts').addEventListener('change',xSum);$('xbq').oninput=()=>xOpts(XSEL);$('xq').oninput=xRender;$('xcancel').onclick=()=>xReset();
 $('xf').onsubmit=async e=>{e.preventDefault();const f=e.target;$('xmsg').hidden=true;
   const body={brand:f.elements.brand.value,model:f.elements.model.value,note:f.elements.note.value,to:XSEL};
