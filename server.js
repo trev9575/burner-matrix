@@ -53,6 +53,7 @@ const writeJSON = (f, v, pretty) => {
   const tmp = f + '.tmp';
   fs.writeFileSync(tmp, pretty ? '[\n' + v.map(o => '  ' + JSON.stringify(o)).join(',\n') + '\n]\n' : JSON.stringify(v, null, 2));
   fs.renameSync(tmp, f);
+  if (path.dirname(f) === F.rfqs && typeof RFQ_CACHE !== 'undefined') RFQ_CACHE.delete(path.basename(f)); // never serve an older copy
 };
 if (!fs.existsSync(F.burners)) fs.copyFileSync(path.join(HTML, 'burners.json'), F.burners);
 if (!fs.existsSync(F.secret)) fs.writeFileSync(F.secret, crypto.randomBytes(32).toString('hex'), { mode: 0o600 });
@@ -286,13 +287,13 @@ const getRfq = id => /^[a-f0-9]{12}$/.test(id) ? readJSON(rfqFile(id), null) : n
 // Parsed RFQs are kept in memory and only re-read when a file's size or time changes (or it's new), so lists,
 // Jobs and Customers stay fast with thousands of RFQs even on slow array disks. Treat the results as read-only:
 // anything that changes an RFQ reads its own fresh copy with getRfq().
-const RFQ_CACHE = new Map(); // file name -> { m: mtimeMs, s: size, r: record }
+var RFQ_CACHE = new Map(); // file name -> { m: mtimeMs, s: size, i: inode, r: record }
 const allRfqs = () => {
   const names = fs.readdirSync(F.rfqs).filter(f => f.endsWith('.json')), live = new Set(names), out = [];
   for (const f of names) {
     let st; try { st = fs.statSync(path.join(F.rfqs, f)); } catch { continue; }
     let c = RFQ_CACHE.get(f);
-    if (!c || c.m !== st.mtimeMs || c.s !== st.size) { c = { m: st.mtimeMs, s: st.size, r: readJSON(path.join(F.rfqs, f), null) }; RFQ_CACHE.set(f, c); }
+    if (!c || c.m !== st.mtimeMs || c.s !== st.size || c.i !== st.ino) { c = { m: st.mtimeMs, s: st.size, i: st.ino, r: readJSON(path.join(F.rfqs, f), null) }; RFQ_CACHE.set(f, c); }
     if (c.r && c.r.burner && c.r.fields) out.push(c.r);
   }
   for (const f of RFQ_CACHE.keys()) if (!live.has(f)) RFQ_CACHE.delete(f);
