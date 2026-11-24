@@ -36,7 +36,7 @@ sign in at `/admin`, change your password, and add other people under **Users**.
 the password variable.
 
 **Everyone needs an account.** The whole site (matrix, photos, data) is behind sign-in. Give each rep
-a **Rep** account (matrix + RFQs only); **Editors** can also change burners; **Admins** also manage people.
+a **Rep** account (matrix + RFQs only); **Quoters** (inside sales) see every rep's RFQs, customers and jobs, attach quotes and comment, but can't change burners or open Admin; **Editors** can also change burners and cross-references; **Admins** also manage people and settings.
 Each person's full name, phone and email fill in *Prepared by* on their RFQs. Admins set these under
 **Users**; anyone can change their own from **My profile** at the top of the main page.
 **Photos are stored on the server.** Any burner photo that points at a website (the Wayne/Comet
@@ -107,6 +107,25 @@ or paste many rows from a spreadsheet (Brand, Model, Replacement(s) separated by
 **Info buttons.** A small **?** next to technical terms (firing rate, firing mode, power, turndown, overfire pressure,
 flame size, footprint, biofuel, air tube, insertion depth, mounting, oil supply, venting, altitude, gas pressure,
 controls, and the table's fit tags) opens a plain-English explanation. They're hidden on printouts and PDFs.
+
+**Quotes from the office.** Under every saved RFQ there's a **Quote** panel. Quoters and admins click *Add quote*
+and enter the quote number, price and the quote PDF (up to 10 MB), plus an optional note; the RFQ moves to **Quoted**
+with that value, and (if email is set up) the rep gets an email with the PDF attached. The rep sees the price, note and
+a *Download quote PDF* button. Quote PDFs are stored in `quotes/` in the data folder (included in backups).
+
+**Waiting for quote.** In RFQs, staff get a *Waiting for quote* filter: emailed RFQs with no quote yet, oldest first,
+each showing how long it has waited. Quoters land on it by default and their RFQs tab badge counts them.
+
+**Comments.** Each saved RFQ has a comment thread between the rep and the office (never on the PDF or copied text).
+Posting can email the other side: a rep's comment goes to the office people on that RFQ (or the default "Send to"
+address); an office comment goes to the rep. New comments show as 💬 in the RFQ list until opened.
+
+**Searched for but not in the list.** Searches in *Replacing a burner?* that find nothing are logged (once the typing
+settles). Admin → Cross-reference lists them, most asked first, with who searched; *Add* fills the form, *Dismiss*
+hides one, and they drop off automatically once a cross-reference matches.
+
+**By burner (Jobs tab).** RFQs, quoted, won, lost and win rate per burner, most requested first, with a bar showing
+each burner's mix of lost reasons (same colors as the Lost Jobs pie). Follows the rep picker; has its own period.
 
 **Incompatible filters are grayed out.** Any fuel, brand, firing mode, power supply, application, turndown, biofuel
 option that would leave no burners together with what's already chosen (including the firing rate) is

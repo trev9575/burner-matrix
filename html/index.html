@@ -73,6 +73,19 @@ th .infob{border-color:#cfcfc9;background:transparent;color:#fff;width:16px;heig
 .infop{position:absolute;z-index:60;background:#fff;border:1px solid #b9b9b2;border-radius:5px;box-shadow:0 10px 28px rgba(0,0,0,.18);padding:12px 34px 12px 14px;font-size:13.5px;line-height:1.5;color:var(--ink)}
 .infop b:first-of-type{font-size:14px}.infop p{margin:4px 0 0}.infop .ix{position:absolute;top:4px;right:6px;border:0;background:none;font-size:20px;line-height:1;color:var(--mute);cursor:pointer;padding:4px}
 @media print{.infob,.infop{display:none !important}}
+.rx{max-width:8.5in;margin:16px auto 0;display:grid;gap:14px}.rxp{background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:16px 18px}
+.rxp h3{margin:0 0 10px;font-size:16px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}.rxp h3 .sm{font-weight:500}
+.qcard{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px}.qcard .qv{font-size:22px;font-weight:800}.qcard .qn{font-weight:700}.qnote{margin-top:8px;font-size:14px;white-space:pre-wrap;background:#f6f6f3;border-left:3px solid var(--rule);padding:6px 10px}
+.qwait{display:flex;align-items:center;gap:10px;font-size:14px}.qwait b{color:#b35c00}
+.qform{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 14px;margin-top:12px;padding-top:12px;border-top:1px solid var(--rule)}.qform label{display:grid;gap:4px;font-size:13px;font-weight:700}
+.qform input[type=text],.qform textarea{font:500 14px Montserrat,sans-serif;padding:8px 10px;border:1px solid #b9b9b2;border-radius:3px;width:100%;box-sizing:border-box;background:#fff}.qform textarea{resize:vertical;min-height:40px}.qform .w{grid-column:1/-1}
+.qform label.chk{display:flex;align-items:center;gap:8px;font-weight:600}.qform label>.sm{font-weight:500}.rxp a.btn{text-decoration:none;display:inline-flex;align-items:center}
+.qform .row{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.clist{display:grid;gap:10px;margin-bottom:12px}.cm{display:grid;gap:3px;max-width:85%;padding:8px 12px;border-radius:6px;background:#f1f1ed;font-size:14px;justify-self:start}.cm.me{justify-self:end;background:#fde3e5}
+.cm .ch{font-size:12px;color:var(--mute);display:flex;gap:8px;align-items:baseline}.cm .ch b{color:var(--ink)}.cm .ct{white-space:pre-wrap;word-break:break-word}.cm .cdel{border:0;background:none;color:var(--mute);font-size:12px;cursor:pointer;padding:0;margin-left:auto;text-decoration:underline}
+.cform textarea{font:500 14px Montserrat,sans-serif;width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #b9b9b2;border-radius:3px;resize:vertical;min-height:44px}.crow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px}
+.cnew{display:inline-block;background:var(--red);color:#fff;font-size:11px;font-weight:700;border-radius:10px;padding:1px 7px;margin-left:6px;vertical-align:1px}
+.lq{display:block;font-size:12px;color:var(--mute);margin-top:3px}.wait{display:inline-block;margin-top:3px;font-size:11.5px;font-weight:700;color:#b35c00;background:#fff3e8;border-radius:3px;padding:1px 6px}
 .xbar{flex:1 1 420px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;min-width:0}.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .xbar label{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;white-space:nowrap}.xbar label svg{color:var(--red)}
 .xwrap{position:relative;flex:1 1 320px;max-width:560px}.xwrap input{width:100%;font:500 15px Montserrat,Helvetica,Arial,sans-serif;height:44px;padding:0 12px;border-radius:3px;border:1px solid #b9b9b2;background:#fff;color:var(--ink);box-sizing:border-box}.xwrap input:focus{border-color:var(--ink);outline:2px solid var(--ink);outline-offset:-1px}
@@ -294,6 +307,8 @@ a.colink{color:inherit;text-decoration:underline dotted;text-underline-offset:3p
 .offl{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:70;background:#1c1c1c;color:#fff;font-size:13px;padding:9px 14px;border-radius:20px;box-shadow:0 6px 18px rgba(0,0,0,.25);max-width:92vw;text-align:center}
 .lout{margin:0 0 12px;padding:9px 12px;border-radius:4px;background:#eef4fb;border:1px solid #c9daf0;font-size:13px}.lout a{color:var(--gas);font-weight:600}
 @media(display-mode:standalone){.util{padding-top:env(safe-area-inset-top)}}
+.btable td{vertical-align:middle}.bmix{display:flex;align-items:center;gap:8px;min-width:220px}.bbar{display:flex;gap:1px;width:150px;height:12px;border-radius:2px;overflow:hidden;background:#ecece8;flex:none}.bbar span{display:block;height:100%}
+.bmix .sm{white-space:nowrap}.btable .bn{font-weight:700}.btable .bn.oil{color:var(--oil)}.btable .bn.gas{color:var(--gas)}
 .lostbox{border:1px solid var(--rule);border-radius:6px;padding:14px 16px;margin:14px 0 6px}
 .lostbox .lbar select{width:auto;min-height:0;font:inherit;padding:6px 10px;border:1px solid #b9b9b2;border-radius:3px;background:#fff}
 .lgrid{display:grid;grid-template-columns:240px minmax(0,1fr);gap:24px;align-items:center}
@@ -310,6 +325,7 @@ a.colink{color:inherit;text-decoration:underline dotted;text-underline-offset:3p
 tr.fu td{background:#fffaf2 !important}
 .lmini{min-height:28px !important;padding:2px 9px !important;font-size:12.5px !important}
 .lval{font:600 13px Montserrat,sans-serif;background:none;border:0;padding:0;cursor:pointer;color:var(--ink);text-decoration:underline dotted;white-space:nowrap}.lval.add{color:var(--mute);font-weight:500}
+.stat.wq{border-color:#b9cbe8;background:#eef3fb;color:#1f4f99}.stat.wq[aria-pressed="true"]{background:#1f4f99;border-color:#1f4f99;color:#fff}
 .stat.fu{border-color:#f3c98b;background:#fff3e0;color:#9a4b00}.stat.fu[aria-pressed="true"]{background:#9a4b00;border-color:#9a4b00;color:#fff}
 .util .nav .nb{display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:#e8a23a;color:#1c1c1c;font-size:11px;font-weight:700;text-align:center;padding:0 5px;margin-left:6px;vertical-align:1px}
 .rpt .kpis{grid-template-columns:repeat(7,minmax(0,1fr)) !important}.rpt .kpi b{font-size:19px !important}
@@ -352,7 +368,7 @@ tr.fu td{background:#fffaf2 !important}
 .sh-fit.ok{background:#e2f3e7;color:#1d6b35}.sh-fit.edge{background:#fff3e8;color:#b35c00}.sh-fit.out{background:#fde3e5;color:#b3141f}
 /* On screens wide enough, the sheet is a real US Letter page laid out exactly like the PDF (same margins and sizes) */
 @media screen and (min-width:880px){
-#rfqv .rfqbar{max-width:calc(8.5in * var(--sz,1))}
+#rfqv .rfqbar,#rfqv .rx{max-width:calc(8.5in * var(--sz,1))}
 #rfqv .sheet{zoom:var(--sz,1);width:8.5in;max-width:none;min-height:11in;box-sizing:border-box;padding:.4in;font-size:10.5px;line-height:1.3;margin:0 auto;box-shadow:0 2px 14px rgba(0,0,0,.16);
   background:#fff linear-gradient(to bottom,transparent calc(11in - 1px),#d0d0ca calc(11in - 1px),#d0d0ca 11in,transparent 11in) no-repeat}
 #rfqv .sheet h3{margin:9px 0 3px;padding:3px 7px;font-size:11px}
@@ -485,6 +501,16 @@ tr.fu td{background:#fffaf2 !important}
     <button class="btn pri" id="rfqsend" hidden>Email PDF…</button>
   </div>
   <div class="sheet" id="sheet"></div>
+  <div class="rx noprint" id="rfqx" hidden>
+    <div class="rxp" id="qbox"></div>
+    <div class="rxp" id="cbox">
+      <h3>Comments <span class="sm">between the rep and the office; never on the PDF</span></h3>
+      <div id="clist" class="clist"></div>
+      <form id="cform" class="cform"><textarea id="ctext" rows="2" maxlength="2000" placeholder="Ask the office or reply to the rep…" aria-label="New comment"></textarea>
+        <div class="crow"><label class="chk" id="cnotl"><input type="checkbox" id="cnot" checked> <span id="cnott">Email them</span></label><span style="flex:1"></span><button class="btn pri" type="submit" id="cpost">Post comment</button></div></form>
+      <div class="sm" id="cnote" hidden>Save the RFQ to start a conversation about it.</div>
+    </div>
+  </div>
 </section>
 <section id="wonv" hidden class="wv">
   <div class="panel">
@@ -505,6 +531,12 @@ tr.fu td{background:#fffaf2 !important}
         <table class="ltable"><thead><tr><th>Reason</th><th class="n">Jobs</th><th class="n">Share</th><th class="n" id="lvalth" hidden>Quoted value</th></tr></thead><tbody id="ltbl"></tbody></table></div>
       <h4 id="llh" hidden style="margin:14px 0 6px;font-size:14px">Lost jobs</h4>
       <div style="overflow-x:auto"><table class="ltable" id="lltable" hidden><thead><tr><th>RFQ #</th><th>Lost on</th><th>Customer</th><th>Burner</th><th id="llrepth">Rep</th><th>Reason</th></tr></thead><tbody id="llist"></tbody></table></div>
+    </div>
+    <div class="lostbox" id="bybox">
+      <div class="lbar" style="margin:0 0 6px"><h3 style="margin:0;font-size:16px">By burner</h3><span class="sm" id="bsub" style="margin-left:6px"></span><span style="flex:1"></span>
+        <select id="bperiod" aria-label="Period"><option value="all">All time</option><option value="q">This quarter</option><option value="lq">Last quarter</option><option value="4q">Last 4 quarters</option></select></div>
+      <div style="overflow-x:auto"><table class="ltable btable"><thead><tr><th>Burner</th><th class="n">RFQs</th><th class="n">Quoted</th><th class="n">Won</th><th class="n">Lost</th><th class="n">Win rate</th><th>Why lost <span class="sm" style="font-weight:500">(colors as in Lost Jobs)</span></th></tr></thead><tbody id="btbl"></tbody></table></div>
+      <button type="button" class="btn" id="bmore" hidden style="margin-top:8px">Show all burners</button>
     </div>
     <h3 id="wlh" style="margin:18px 0 8px;font-size:17px">Jobs won</h3>
     <div style="overflow-x:auto"><table><thead><tr><th>RFQ #</th><th>Won on</th><th>Customer</th><th>Job</th><th>Burner</th><th id="wrepth" hidden>Rep</th><th style="text-align:right">Value</th></tr></thead><tbody id="wbody"></tbody></table></div>
@@ -755,17 +787,20 @@ $('o-go').onclick=()=>{const c=o2gCalc();if(!c)return;o2gApply(c);
 
 $('lad').onclick=e=>{const row=e.target.closest('.lr');if(row)hiBurner(row.dataset.n)};
 // ---------- cross-reference lookup ("Replacing a burner?") ----------
-let XREF=[];
+let XREF=[],XREF_OK=false;
 const xnorm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
-const loadXref=()=>J('GET','api/xref').then(l=>{XREF=Array.isArray(l)?l:[]}).catch(()=>{});
+const loadXref=()=>J('GET','api/xref').then(l=>{XREF=Array.isArray(l)?l:[];XREF_OK=true}).catch(()=>{});
 function xFind(q){const toks=q.toLowerCase().split(/\s+/).map(xnorm).filter(Boolean),all=xnorm(q);if(!toks.length)return[];
   return XREF.map(x=>{const hay=xnorm(x.brand+' '+x.model),mod=xnorm(x.model);
     const hit=toks.every(t=>hay.includes(t))||hay.includes(all);if(!hit)return null;
     const score=(mod===all||xnorm(x.brand+x.model)===all?0:mod.startsWith(toks[toks.length-1])?1:2);return{x,score}}).filter(Boolean)
     .sort((a,b)=>a.score-b.score||a.x.brand.localeCompare(b.x.brand)||a.x.model.localeCompare(b.x.model,undefined,{numeric:true})).slice(0,8).map(o=>o.x)}
 const bOf=k=>D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===k);
-function xShow(){const q=$('xq').value.trim(),box=$('xres');if(!q){box.hidden=true;$('xq').setAttribute('aria-expanded','false');return}
-  const m=xFind(q);
+// a search that finds nothing is reported once it settles, so editors can see what reps look for
+const XLOGGED=new Set();let xMissT=0;
+const xMiss=q=>{clearTimeout(xMissT);const k=xnorm(q);if(k.length<2||XLOGGED.has(k)||xFind(q).length)return;XLOGGED.add(k);J('POST','api/xref/miss',{q}).catch(()=>{})};
+function xShow(){const q=$('xq').value.trim(),box=$('xres');clearTimeout(xMissT);if(!q){box.hidden=true;$('xq').setAttribute('aria-expanded','false');return}
+  const m=xFind(q);if(!m.length&&XREF_OK)xMissT=setTimeout(()=>xMiss(q),2500);
   box.innerHTML=m.length?m.map(x=>{const bs=x.to.map(bOf).filter(Boolean);return`<div class="xr" role="option"><div class="from"><span>Replaces <b>${esc(x.brand)} ${esc(x.model)}</b>${x.none?'':' with:'}</span>${bs.length?`<button type="button" class="showall" data-a="showall" data-id="${esc(x.id)}">${bs.length>1?`Show all ${bs.length} in the matrix`:'Show in the matrix'}</button>`:''}</div>
     ${bs.map(b=>`<div class="to"><div class="tline"><span class="nm ${b.f}">${esc(b.b+' '+b.n)}</span><span class="sm" style="color:var(--mute)">${esc(fmt(b))}</span><span style="flex:1"></span>
       <button type="button" class="pri" data-a="rfq" data-k="${esc((b.b+'|'+b.n).toLowerCase())}" data-from="${esc(x.brand+' '+x.model)}">Create RFQ</button></div></div>`).join('')||(x.none?'<div class="xnone"><b>No current Beckett or Wayne replacement.</b> Nothing in the line replaces this model yet.</div>':'<div class="sm">The replacement burner is no longer in the list. Ask an admin to update this entry.</div>')}
@@ -774,7 +809,8 @@ function xShow(){const q=$('xq').value.trim(),box=$('xres');if(!q){box.hidden=tr
   box.hidden=false;$('xq').setAttribute('aria-expanded','true')}
 $('xonly').addEventListener('click',e=>{if(e.target.closest('#xonlyx')){S.only=null;S.onlyLbl='';render()}});
 $('xq').addEventListener('input',xShow);$('xq').addEventListener('focus',()=>{if(!XREF.length)loadXref().then(xShow);else xShow()});
-$('xq').addEventListener('keydown',e=>{if(e.key==='Escape'){$('xres').hidden=true;$('xq').setAttribute('aria-expanded','false')}});
+$('xq').addEventListener('blur',()=>{const q=$('xq').value.trim();if(q&&XREF_OK&&!xFind(q).length)xMiss(q)});
+$('xq').addEventListener('keydown',e=>{if(e.key==='Enter'){const q=$('xq').value.trim();if(q&&XREF_OK&&!xFind(q).length)xMiss(q)}if(e.key==='Escape'){$('xres').hidden=true;$('xq').setAttribute('aria-expanded','false')}});
 document.addEventListener('click',e=>{if(!e.target.closest('.xwrap')){$('xres').hidden=true;$('xq').setAttribute('aria-expanded','false')}});
 $('xres').addEventListener('click',async e=>{const b=e.target.closest('button[data-a]');if(!b)return;
   if(b.dataset.a==='showall'){const xr=XREF.find(o=>o.id===b.dataset.id);if(!xr)return;$('xres').hidden=true;
@@ -960,6 +996,7 @@ function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);$('sheet').cla
     $('q-notes').value=`Oil-to-gas conversion. Replaces ${nzTxt(CONV)} at ${CONV.p} psi (≈ ${CONV.gph.toFixed(2)} GPH, ${CONV.mbh.toLocaleString()} MBH).`;}
   if(RFQ.ro)lockSheet();else{bookSetup();dupFor='';dupCheck()}
   requestAnimationFrame(fitAll);
+  RFQ.quote=null;RFQ.comments=[];QEDIT=false;rxRender();
   hideMain();$('rfqv').hidden=false;sizeSheet();rfqStatus();scrollTo(0,0);if(!PDFMODE)$('q-co').focus({preventScroll:true})}
 const canDel=r=>!!(r&&ME&&(ME.role==='admin'||(!r.sent&&r.by===ME.name)));
 async function delRFQ(id,btn,sent){if(!btn.dataset.armed){btn.dataset.armed=1;const t=btn.textContent;btn.textContent=sent?'Emailed – click again to delete':'Click again to delete';setTimeout(()=>{delete btn.dataset.armed;btn.textContent=t},4000);return false}
@@ -1033,7 +1070,7 @@ const J=async(method,url,body)=>{const r=await fetch(url,{method,credentials:'sa
   if(r.status===401){location.replace('login');throw new Error('Signed out')}let j={};try{j=await r.json()}catch(e){}if(!r.ok)throw new Error(j.error||'HTTP '+r.status);return j};
 async function saveRFQ(quiet){if(!ME||!RFQ)return null;if(RFQ.offline){if(RFQ.dirty||!RFQ.saved)saveOffline(quiet);return null}if(RFQ.id&&(!RFQ.dirty||RFQ.ro))return RFQ.id;
   const rec=RFQ.id?await J('PUT','api/rfqs/'+RFQ.id,{fields:rfqFields()}):await J('POST','api/rfqs',{no:RFQ.no,burner:RFQ.raw,fit:RFQ.fit,locks:RFQ.locks||[],xfmr:RFQ.xfmr||'',fields:rfqFields()});
-  RFQ.id=rec.id;RFQ.dirty=false;RFQ.date=rec.date;rfqStatus();if(!quiet)toast('RFQ saved');return RFQ.id}
+  const first=!RFQ.id;RFQ.id=rec.id;RFQ.dirty=false;RFQ.date=rec.date;rfqStatus();if(first)rxRender();if(!quiet)toast('RFQ saved');return RFQ.id}
 async function closeRFQ(){if(RFQ&&RFQ.dirty&&ME){try{await saveRFQ(true);toast('RFQ saved')}catch(e){toast('Could not save: '+e.message);return}}
   $('rfqv').hidden=true;if(RFQ&&RFQ.from==='list'){RFQ=null;return openList()}if(RFQ&&RFQ.from==='won'){RFQ=null;return openWon()}if(RFQ&&RFQ.from==='hist'&&HIST){RFQ=null;return openHistory(HIST.company)}RFQ=null;$('matrixv').hidden=false;if(rfqB){const t=$('r-'+rfqB.n.replace(/\W/g,''));if(t)t.scrollIntoView({block:'center'})}}
 $('tb').addEventListener('click',async e=>{const b=e.target.closest('.rfqb');if(!b)return;const x=D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===b.dataset.k);if(!x)return;
@@ -1096,7 +1133,7 @@ $('sendother').onclick=()=>{sendMode(true);$('sendto').focus()};
 $('senddef').onclick=()=>{sendMode(false);$('sendgo').focus()};
 $('sendf').onsubmit=async e=>{e.preventDefault();const g=$('sendgo');g.disabled=true;g.textContent='Sending…';$('senderr').hidden=true;
   try{const id=await saveRFQ(true);const r=await J('POST','api/rfqs/'+id+'/send',{to:SENDOTHER?$('sendto').value:(ME.rfqTo||''),ccMe:$('sendcc').checked});
-    RFQ.sends.push({at:new Date().toISOString(),to:r.to,cc:r.cc});lockSheet();$('sendd').close();toast('Emailed to '+r.to.join(', '))}
+    RFQ.sends.push({at:new Date().toISOString(),to:r.to,cc:r.cc});lockSheet();rxRender();$('sendd').close();toast('Emailed to '+r.to.join(', '))}
   catch(err){$('senderr').textContent=err.message;$('senderr').hidden=false}finally{g.disabled=false;g.textContent='Send'}};
 
 /* ---------- Saved RFQs ---------- */
@@ -1104,15 +1141,17 @@ let LIST=[];
 async function openList(){hideMain();$('listv').hidden=false;scrollTo(0,0);
   const staff=ME&&ME.role!=='rep';$('lwho').hidden=!staff;$('lrepth').hidden=!staff;
   $('lbody').innerHTML='<tr><td colspan="9" class="sm">Loading…</td></tr>';
+  if(ME&&ME.role==='quoter'&&!openList.seen){openList.seen=1;LST='wait'}
   try{LIST=await J('GET','api/rfqs');renderList()}catch(e){$('lbody').innerHTML=`<tr><td colspan="9">${esc(e.message)}</td></tr>`}}
 const STL={draft:'Draft',sent:'Emailed',quoted:'Quoted',won:'Won',lost:'Lost'};
 const stOf=r=>r.status||(r.sent?'sent':'draft');
 let LST='';
 // money, follow-ups and the status dialog (quote value / lost reason)
 const money=v=>typeof v==='number'?v.toLocaleString(undefined,{style:'currency',currency:'USD',minimumFractionDigits:v%1?2:0,maximumFractionDigits:2}):'';
+const waiting=r=>!!r.sent&&!r.status&&!r.quote; // emailed to the office, no quote yet
 async function refreshFollow(){if(!ME)return;try{LIST=await J('GET','api/rfqs');followBadge()}catch(e){}}
-function followBadge(){const n=LIST.filter(r=>r.followUp&&r.by===ME.name).length,b=$('rfqsb');let nb=b.querySelector('.nb');
-  if(!n){if(nb)nb.remove();b.removeAttribute('title');return}if(!nb){nb=document.createElement('span');nb.className='nb';b.appendChild(nb)}nb.textContent=n;b.title=`${n} RFQ${n>1?'s need':' needs'} a follow-up`}
+function followBadge(){const qt=ME.role==='quoter',n=qt?LIST.filter(waiting).length:LIST.filter(r=>r.followUp&&r.by===ME.name).length,b=$('rfqsb');let nb=b.querySelector('.nb');
+  if(!n){if(nb)nb.remove();b.removeAttribute('title');return}if(!nb){nb=document.createElement('span');nb.className='nb';b.appendChild(nb)}nb.textContent=n;b.title=qt?`${n} RFQ${n>1?'s are':' is'} waiting for a quote`:`${n} RFQ${n>1?'s need':' needs'} a follow-up`}
 let STR=null;
 function openStatus(r,status){STR={r,status};const L={quoted:'Mark as Quoted',won:'Mark as Won',lost:'Mark as Lost'};
   $('sth').textContent=L[status];$('stsub').textContent=`${r.no}${r.company?' – '+r.company:''}`;
@@ -1132,15 +1171,16 @@ function renderList(){const staff=ME&&ME.role!=='rep',mine=!staff||$('lwho').val
   $('ltitle').textContent=mine?'My RFQs':'All RFQs';
   const q=$('lq').value.trim().toLowerCase();
   const base=LIST.filter(r=>!mine||r.by===ME.name);
-  const cnt={};base.forEach(r=>cnt[stOf(r)]=(cnt[stOf(r)]||0)+1);const dec=(cnt.won||0)+(cnt.lost||0),nfu=base.filter(r=>r.followUp).length;
-  $('lstats').innerHTML=`<button class="stat" data-s="" aria-pressed="${!LST}"><b>${base.length}</b>All</button>`+(ME&&ME.followUpDays?`<button class="stat fu" data-s="follow" aria-pressed="${LST==='follow'}" title="Emailed or Quoted with no activity for ${ME.followUpDays}+ days"><b>${nfu}</b>Follow up</button>`:'')+Object.entries(STL).map(([k,l])=>`<button class="stat" data-s="${k}" aria-pressed="${LST===k}"><b>${cnt[k]||0}</b>${l}</button>`).join('')+
+  const cnt={};base.forEach(r=>cnt[stOf(r)]=(cnt[stOf(r)]||0)+1);const dec=(cnt.won||0)+(cnt.lost||0),nfu=base.filter(r=>r.followUp).length,nw=base.filter(waiting).length;
+  $('lstats').innerHTML=`<button class="stat" data-s="" aria-pressed="${!LST}"><b>${base.length}</b>All</button>`+(staff?`<button class="stat wq" data-s="wait" aria-pressed="${LST==='wait'}" title="Emailed and not quoted yet, oldest first"><b>${nw}</b>Waiting for quote</button>`:'')+(ME&&ME.followUpDays?`<button class="stat fu" data-s="follow" aria-pressed="${LST==='follow'}" title="Emailed or Quoted with no activity for ${ME.followUpDays}+ days"><b>${nfu}</b>Follow up</button>`:'')+Object.entries(STL).map(([k,l])=>`<button class="stat" data-s="${k}" aria-pressed="${LST===k}"><b>${cnt[k]||0}</b>${l}</button>`).join('')+
     `<span class="stat wr" title="Won ÷ (won + lost)"><b>${dec?Math.round((cnt.won||0)/dec*100)+'%':'—'}</b>win rate</span>`;
-  const rows=base.filter(r=>(!LST||(LST==='follow'?r.followUp:stOf(r)===LST))&&(!q||[r.no,r.company,r.contact,r.job,r.burner,r.by,r.byFull].join(' ').toLowerCase().includes(q)));
+  let rows=base.filter(r=>(!LST||(LST==='follow'?r.followUp:LST==='wait'?waiting(r):stOf(r)===LST))&&(!q||[r.no,r.company,r.contact,r.job,r.burner,r.by,r.byFull].join(' ').toLowerCase().includes(q)));
+  if(LST==='wait')rows=rows.sort((a,b)=>String(a.sent.at).localeCompare(String(b.sent.at)));
   $('lbody').innerHTML=rows.map(r=>{const st=stOf(r),can=ME&&(r.by===ME.name||ME.role!=='rep');
-    return`<tr data-id="${esc(r.id)}"${r.followUp?' class="fu"':''}><td class="no">${esc(r.no)}${r.followUp?`<br><span class="fub" title="No activity for ${r.idleDays} days">Follow up · ${r.idleDays} days</span>`:''}</td><td style="white-space:nowrap">${fmtD(r.date)}</td><td>${r.company?`<a href="#" class="colink" data-co="${esc(r.company)}">${esc(r.company)}</a>`:''}${r.contact?`<div class="sm">${esc(r.contact)}</div>`:''}</td><td>${esc(r.job)}</td>
+    return`<tr data-id="${esc(r.id)}"${r.followUp?' class="fu"':''}><td class="no">${esc(r.no)}${r.unread?`<span class="cnew" title="${r.unread} new comment${r.unread>1?'s':''}">💬 ${r.unread}</span>`:r.comments?`<span class="sm" title="${r.comments} comment${r.comments>1?'s':''}" style="margin-left:6px">💬 ${r.comments}</span>`:''}${waiting(r)?`<br><span class="wait" title="Emailed ${fmtD(r.sent.at)}, no quote yet">Waiting for quote · ${daysSince(r.sent.at)?daysSince(r.sent.at)+' day'+(daysSince(r.sent.at)===1?'':'s'):'since today'}</span>`:''}${r.followUp?`<br><span class="fub" title="No activity for ${r.idleDays} days">Follow up · ${r.idleDays} days</span>`:''}</td><td style="white-space:nowrap">${fmtD(r.date)}</td><td>${r.company?`<a href="#" class="colink" data-co="${esc(r.company)}">${esc(r.company)}</a>`:''}${r.contact?`<div class="sm">${esc(r.contact)}</div>`:''}</td><td>${esc(r.job)}</td>
     <td><span style="color:${r.fuel==='gas'?'var(--gas)':'var(--oil)'};font-weight:600">${esc(r.burner)}</span></td>${staff?`<td${$('lrepth').hidden?' hidden':''}>${esc(r.byFull||r.by)}</td>`:''}
     <td class="sm">${r.sent?`${fmtD(r.sent.at)}<br>${esc(r.sent.to.join(', '))}`:'—'}</td>
-    <td>${can?`<select class="st st-${st}" aria-label="Status of ${esc(r.no)}">${['','quoted','won','lost'].map(v=>`<option value="${v}"${(r.status||'')===v?' selected':''}>${v?STL[v]:(r.sent?'Emailed':'Draft')}</option>`).join('')}</select>`:`<span class="st st-${st}">${STL[st]}</span>`}${r.status==='lost'&&r.lostReason?`<div class="sm" style="margin-top:3px">${esc(r.lostReason)}</div>`:''}</td>
+    <td>${can?`<select class="st st-${st}" aria-label="Status of ${esc(r.no)}">${['','quoted','won','lost'].map(v=>`<option value="${v}"${(r.status||'')===v?' selected':''}>${v?STL[v]:(r.sent?'Emailed':'Draft')}</option>`).join('')}</select>`:`<span class="st st-${st}">${STL[st]}</span>`}${r.status==='lost'&&r.lostReason?`<div class="sm" style="margin-top:3px">${esc(r.lostReason)}</div>`:''}${r.quote?`<span class="lq">Quote ${esc(r.quote.no||'')}${r.quote.file?' · PDF':''}</span>`:''}</td>
     <td>${(r.status==='quoted'||r.status==='won')&&can?`<button type="button" class="lval${r.value==null?' add':''}" title="Change the quote value">${money(r.value)||'+ Add value'}</button>`:money(r.value)||'—'}</td>
     <td style="white-space:nowrap">${r.followUp&&can?'<button class="btn lmini lfu" title="Restart the follow-up clock">Followed up</button> ':''}${canDel({by:r.by,sent:r.sent})?'<button class="btn ldel lmini" style="color:#b3141f">Delete</button>':''}</td></tr>`}).join('')||`<tr><td colspan="10" class="sm" style="padding:24px 8px">${LIST.length?'No RFQs match.':'No saved RFQs yet. Use “Create RFQ” in the matrix, then Save or Email PDF.'}</td></tr>`;
   followBadge()}
@@ -1157,9 +1197,56 @@ $('lxls').onclick=async e=>{const b=e.currentTarget;b.disabled=true;const t=b.te
     const url=URL.createObjectURL(await r.blob()),a=document.createElement('a');a.href=url;a.download=`RFQs-${new Date().toISOString().slice(0,10)}.xlsx`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000)}
   catch(err){toast('Export failed: '+err.message)}finally{b.disabled=false;b.textContent=t}};
 $('lback').onclick=()=>{$('listv').hidden=true;$('matrixv').hidden=false};
+/* ---------- quote from the office + comments, under the sheet ---------- */
+const canQuoteMe=()=>!!ME&&(ME.role==='quoter'||ME.role==='admin');
+const daysSince=t=>Math.max(0,Math.floor((Date.now()-Date.parse(t))/864e5));
+const agoTxt=t=>{const d=daysSince(t);return d===0?'today':d===1?'1 day ago':d+' days ago'};
+let QEDIT=false;
+function rxRender(){const box=$('rfqx');if(!RFQ||PDFMODE||!ME||RFQ.offline){box.hidden=true;return}box.hidden=false;
+  const q=RFQ.quote,sent=(RFQ.sends||[]).slice(-1)[0],qb=$('qbox'),cq=canQuoteMe();
+  let h='<h3>Quote</h3>';
+  if(q)h+=`<div class="qcard">${q.value!=null?`<span class="qv">${money(q.value)}</span>`:''}${q.no?`<span>Quote <span class="qn">${esc(q.no)}</span></span>`:''}<span class="sm">by ${esc(q.byFull||q.by)}, ${fmtD(q.at)}</span><span style="flex:1"></span>
+    ${q.file?`<a class="btn pri" href="api/rfqs/${esc(RFQ.id)}/quote" download>Download quote PDF</a>`:''}${cq&&!QEDIT?'<button type="button" class="btn" id="qedit">Replace quote</button><button type="button" class="btn" id="qdel" style="color:#b3141f">Remove</button>':''}</div>${q.note?`<div class="qnote">${esc(q.note)}</div>`:''}`;
+  else if(!RFQ.id)h+='<div class="sm">Save and email the RFQ; the office’s quote will show up here.</div>';
+  else if(sent)h+=`<div class="qwait">⏳ <span>Waiting for a quote from the office: emailed ${fmtD(sent.at)} (<b>${agoTxt(sent.at)}</b>).</span>${cq&&!QEDIT?'<span style="flex:1"></span><button type="button" class="btn pri" id="qedit">Add quote</button>':''}</div>`;
+  else h+=`<div class="sm">This RFQ hasn’t been emailed yet. Once it is, the office’s quote will show up here.</div>${cq&&!QEDIT?'<div style="margin-top:8px"><button type="button" class="btn" id="qedit">Add quote anyway</button></div>':''}`;
+  if(cq&&QEDIT){const repName=esc(RFQ.byFull||RFQ.by||'the rep');h+=`<form class="qform" id="qform">
+    <label>Quote number<input type="text" name="no" maxlength="40" value="${esc(q&&q.no||'')}" autocomplete="off" placeholder="e.g. Q-2041"></label>
+    <label>Price ($)<input type="text" name="value" inputmode="decimal" value="${q&&q.value!=null?q.value:''}" autocomplete="off" placeholder="e.g. 12,500"></label>
+    <label>Quote PDF <span class="sm" style="font-weight:500">${q&&q.file?'leave empty to keep '+esc(q.fname||'the current file'):'up to 10 MB'}</span><input type="file" name="file" accept="application/pdf,.pdf"></label>
+    <label class="w">Note for the rep <span class="sm" style="font-weight:500">optional</span><textarea name="note" maxlength="1000" rows="2">${esc(q&&q.note||'')}</textarea></label>
+    <div class="row">${ME.mail?`<label class="chk"><input type="checkbox" name="email" checked> Email the quote to ${repName}</label>`:''}<span style="flex:1"></span><button type="button" class="btn" id="qcancel">Cancel</button><button class="btn pri" type="submit" id="qsave">${q?'Save quote':'Add quote'}</button></div>
+    <div class="msg err w" id="qerr" hidden></div></form>`}
+  qb.innerHTML=h;
+  // comments
+  const cs=RFQ.comments||[],mineRFQ=RFQ.by===ME.name;
+  $('clist').innerHTML=cs.map(c=>`<div class="cm${c.by===ME.name?' me':''}" data-id="${esc(c.id)}"><div class="ch"><b>${esc(c.byFull||c.by)}</b><span>${fmtD(c.at)} ${new Date(c.at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</span>${c.by===ME.name||ME.role==='admin'?'<button type="button" class="cdel">Delete</button>':''}</div><div class="ct">${esc(c.text)}</div></div>`).join('')||'<div class="sm">No comments yet.</div>';
+  const can=!!RFQ.id;$('cform').hidden=!can;$('cnote').hidden=can;
+  $('cnotl').hidden=!ME.mail;$('cnott').textContent=mineRFQ?'Email the office':`Email ${RFQ.byFull||RFQ.by||'the rep'}`}
+$('qbox').addEventListener('click',async e=>{const t=e.target;
+  if(t.id==='qedit'){QEDIT=true;rxRender();const f=$('qform');if(f)f.elements.no.focus();return}
+  if(t.id==='qcancel'){QEDIT=false;rxRender();return}
+  if(t.id==='qdel'){if(!t.dataset.sure){t.dataset.sure=1;t.textContent='Click again to remove';setTimeout(()=>{if(t.isConnected){delete t.dataset.sure;t.textContent='Remove'}},3000);return}
+    try{await J('DELETE','api/rfqs/'+RFQ.id+'/quote',{});RFQ.quote=null;rxRender();toast('Quote removed')}catch(err){toast(err.message)}}});
+$('qbox').addEventListener('submit',async e=>{e.preventDefault();const f=e.target,err=$('qerr');err.hidden=true;const file=f.elements.file.files[0];
+  if(file&&file.size>10*1024*1024){err.textContent='The quote PDF must be 10 MB or smaller.';err.hidden=false;return}
+  const body={no:f.elements.no.value,value:f.elements.value.value,note:f.elements.note.value,emailRep:!!(f.elements.email&&f.elements.email.checked),keepFile:!file};
+  $('qsave').disabled=true;$('qsave').textContent='Saving…';
+  try{if(file)body.file={name:file.name,data:await new Promise((ok,bad)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.onerror=bad;r.readAsDataURL(file)})};
+    const s=await J('POST','api/rfqs/'+RFQ.id+'/quote',body);RFQ.quote=s.quote;QEDIT=false;rxRender();
+    toast(s.mailError?'Quote saved, but the email failed: '+s.mailError:s.mailed?'Quote saved and emailed to '+s.mailed.join(', '):'Quote saved – RFQ marked Quoted')}
+  catch(x){err.textContent=x.message;err.hidden=false;$('qsave').disabled=false;$('qsave').textContent='Save quote'}});
+$('cform').addEventListener('submit',async e=>{e.preventDefault();const t=$('ctext').value.trim();if(!t||!RFQ||!RFQ.id)return;$('cpost').disabled=true;
+  try{const s=await J('POST','api/rfqs/'+RFQ.id+'/comments',{text:t,notify:$('cnot').checked&&!$('cnotl').hidden});RFQ.comments=s.comments;$('ctext').value='';rxRender();
+    toast(s.mailError?'Posted, but the email failed: '+s.mailError:s.mailed?'Posted and emailed to '+s.mailed.join(', '):'Comment posted')}catch(x){toast(x.message)}finally{$('cpost').disabled=false}});
+$('ctext').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();$('cform').requestSubmit()}});
+$('clist').addEventListener('click',async e=>{const b=e.target.closest('.cdel');if(!b)return;if(!b.dataset.sure){b.dataset.sure=1;b.textContent='Click again to delete';setTimeout(()=>{if(b.isConnected){delete b.dataset.sure;b.textContent='Delete'}},3000);return}
+  try{const s=await J('DELETE','api/rfqs/'+RFQ.id+'/comments',{id:b.closest('.cm').dataset.id});RFQ.comments=s.comments;rxRender()}catch(x){toast(x.message)}});
 async function openSaved(id,from){const rec=await J('GET','api/rfqs/'+id);
   openRFQ(toRec(rec.burner),{id:rec.id,no:rec.no,date:rec.date,raw:rec.burner,fit:rec.fit||'',fields:rec.fields,sends:rec.sends||[],by:rec.by,byFull:rec.byFull,from,locks:rec.locks||[],xfmr:rec.xfmr||'',
-    ro:PDFMODE||(rec.sends||[]).length>0||!ME||rec.by!==ME.name})} // drafts stay editable for the rep who made them until emailed
+    ro:PDFMODE||(rec.sends||[]).length>0||!ME||rec.by!==ME.name});
+  RFQ.quote=rec.quote?{...rec.quote,file:!!rec.quote.file}:null;RFQ.comments=rec.comments||[];QEDIT=false;rxRender();
+  if(ME&&!PDFMODE&&(rec.comments||[]).length)J('POST','api/rfqs/'+id+'/seen',{}).then(()=>{const l=LIST.find(x=>x.id===id);if(l)l.unread=0}).catch(()=>{})} // drafts stay editable for the rep who made them until emailed
 $('lbody').onclick=async e=>{if(e.target.closest('select.st'))return;const tr=e.target.closest('tr[data-id]');const d=e.target.closest('.ldel');
   const fu=e.target.closest('.lfu'),lv=e.target.closest('.lval');
   if(fu&&tr){try{const r=await J('POST','api/rfqs/'+tr.dataset.id+'/followup',{});LIST=LIST.map(x=>x.id===r.id?r:x);renderList();toast(`${r.no}: follow-up logged`)}catch(err){toast(err.message)}return}
@@ -1194,7 +1281,7 @@ function renderWon(){const staff=ME&&ME.role!=='rep',pick=staff?$('wwho').value:
   $('wrepth').hidden=!staff||!!who||mine;
   const vw=base.filter(r=>r.status==='won').reduce((a,r)=>a+(r.value||0),0);
   $('wtiles').innerHTML=`<div class="tile"><b>${tw}</b><span>jobs won</span></div><div class="tile"><b>${money(vw)||'$0'}</b><span>value won</span></div><div class="tile"><b>${tw+tl?Math.round(tw/(tw+tl)*100)+'%':'—'}</b><span>win rate, all time</span></div><div class="tile"><b>${cur.rate!=null?Math.round(cur.rate*100)+'%':'—'}</b><span>win rate, ${qName(cur.q)}</span></div>`;
-  drawWon(Q);renderLost(base);
+  drawWon(Q);renderLost(base);renderBy(base);
   $('wqtbl').innerHTML=Q.slice().reverse().map(o=>`<tr><td style="white-space:nowrap">${qName(o.q)}</td><td>${o.won}</td><td>${o.lost}</td><td>${o.open}</td><td>${o.rate!=null?Math.round(o.rate*100)+'%':'—'}</td></tr>`).join('');
   $('wlh').textContent=`Jobs won (${won.length})`;
   $('wbody').innerHTML=won.map(r=>`<tr data-id="${esc(r.id)}"><td class="no" style="font-weight:700;white-space:nowrap">${esc(r.no)}</td><td style="white-space:nowrap">${fmtD(r.statusAt||r.date)}</td><td>${r.company?`<a href="#" class="colink" data-co="${esc(r.company)}">${esc(r.company)}</a>`:''}${r.contact?`<div class="sm">${esc(r.contact)}</div>`:''}</td><td>${esc(r.job)}</td>
@@ -1220,6 +1307,22 @@ function drawWon(Q){const box=$('wsvg'),W=Math.max(320,box.clientWidth||700);
 /* ---------- Jobs tab: why jobs were lost (pie + table + list) ---------- */
 // Each reason keeps one color everywhere. Order chosen so every pair of neighbouring slices
 // (including last→first) stays distinguishable with colour-blindness (validated, ΔE ≥ 15).
+// RFQs, quotes, wins and losses per burner, with each burner's lost-reason mix (same reason colors as the pie)
+let BALL=false;
+function renderBy(base){const per=$('bperiod').value,now=qOf(new Date().toISOString());
+  const inP=r=>per==='all'?true:per==='q'?qOf(r.date)===now:per==='lq'?qOf(r.date)===now-1:qOf(r.date)>now-4;
+  const m=new Map();base.filter(inP).forEach(r=>{const o=m.get(r.burner)||{b:r.burner,f:r.fuel,n:0,q:0,w:0,l:0,why:{}};o.n++;
+    if(r.status==='quoted'||r.status==='won'||r.status==='lost'||r.quote)o.q++;if(r.status==='won')o.w++;if(r.status==='lost'){o.l++;const k=r.lostReason||'Not given';o.why[k]=(o.why[k]||0)+1}m.set(r.burner,o)});
+  const rows=[...m.values()].sort((a,b)=>b.n-a.n||b.l-a.l||a.b.localeCompare(b.b)),show=BALL?rows:rows.slice(0,12);
+  $('bsub').textContent=rows.length?`${rows.length} burner${rows.length>1?'s':''} · most requested first`:'';
+  $('bmore').hidden=rows.length<=12;$('bmore').textContent=BALL?'Show top 12':`Show all ${rows.length} burners`;
+  $('btbl').innerHTML=show.map(o=>{const d=o.w+o.l,mix=LOSTC.filter(([k])=>o.why[k]);
+    const top=mix.slice().sort((a,b)=>o.why[b[0]]-o.why[a[0]])[0];
+    const label=mix.map(([k])=>`${k}: ${o.why[k]}`).join(', ');
+    return`<tr><td><span class="bn ${o.f}">${esc(o.b)}</span></td><td class="n">${o.n}</td><td class="n">${o.q}</td><td class="n">${o.w}</td><td class="n">${o.l}</td><td class="n">${d?Math.round(o.w/d*100)+'%':'—'}</td>
+      <td>${o.l?`<div class="bmix"><div class="bbar" role="img" aria-label="${esc(label)}">${mix.map(([k,c])=>`<span style="width:${o.why[k]/o.l*100}%;background:${c}" title="${esc(k)}: ${o.why[k]} of ${o.l}"></span>`).join('')}</div><span class="sm">${mix.length>1&&mix.filter(([k])=>o.why[k]===o.why[top[0]]).length>1?'Mixed reasons':esc(top[0])+(mix.length>1?` ${Math.round(o.why[top[0]]/o.l*100)}%`:'')}</span></div>`:'<span class="sm">—</span>'}</td></tr>`}).join('')||
+    `<tr><td colspan="7" class="sm" style="padding:16px 8px">No RFQs ${per==='all'?'yet':'in this period'}.</td></tr>`}
+$('bperiod').onchange=()=>renderWon();$('bmore').onclick=()=>{BALL=!BALL;renderWon()};
 const LOSTC=[['Price','#2a78d6'],['Lead time','#eb6834'],['Went with a competitor','#6250d6'],['Job cancelled / on hold','#1baf7a'],
   ['Technical fit','#008300'],['No response','#e87ba4'],['Other','#eda100'],['Not given','#9a9a92']];
 function renderLost(base){const per=$('lperiod').value,now=qOf(new Date().toISOString());
@@ -1425,7 +1528,7 @@ $('rfqsb').onclick=()=>{if(!$('rfqv').hidden&&RFQ&&RFQ.dirty){saveRFQ(true).then
 /* ---------- Load data ---------- */
 function showMe(){if(!ME)return;$('rfqsb').textContent=ME.role==='rep'?'My RFQs':'RFQs';$('acct').hidden=false;$('um').hidden=false;
   const nm=ME.full||ME.name,ini=(ME.full?ME.full.split(/\s+/).map(w=>w[0]).join(''):ME.name.replace(/@.*/,'').slice(0,2)).slice(0,2).toUpperCase();
-  $('navadm').hidden=ME.role==='rep';$('av').textContent=ini;$('whoami').textContent=nm;$('whomenu').innerHTML=`<b>${esc(nm)}</b><small>${esc(ME.email||ME.name)} · ${{rep:'Rep',editor:'Editor',admin:'Admin'}[ME.role]||ME.role}</small>`;const a=$('adminl');if(a)a.hidden=ME.role==='rep'}
+  $('navadm').hidden=ME.role!=='editor'&&ME.role!=='admin';$('av').textContent=ini;$('whoami').textContent=nm;$('whomenu').innerHTML=`<b>${esc(nm)}</b><small>${esc(ME.email||ME.name)} · ${{rep:'Rep',quoter:'Quoter',editor:'Editor',admin:'Admin'}[ME.role]||ME.role}</small>`;const a=$('adminl');if(a)a.hidden=ME.role==='rep'}
 const ME_P=fetch('api/me',{credentials:'same-origin'}).then(r=>r.ok?r.json():null).then(j=>{if(j){ME=j;showMe();if(RFQ)rfqStatus();if(!PDFMODE){refreshFollow();netState()}}}).catch(()=>{});
 // ?rfq=<id> opens a saved RFQ; &pdf=1 is the server's PDF renderer
 const RFQ_Q=new URLSearchParams(location.search).get('rfq');

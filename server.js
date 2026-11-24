@@ -36,10 +36,13 @@ const F = {
   settings: path.join(DATA, 'settings.json'),
   customers: path.join(DATA, 'customers.json'),
   xref: path.join(DATA, 'xref.json'),
+  xmiss: path.join(DATA, 'xref-misses.json'),
+  quotes: path.join(DATA, 'quotes'),
 };
 
 // ---------- storage ----------
 fs.mkdirSync(F.history, { recursive: true });
+fs.mkdirSync(F.quotes, { recursive: true });
 fs.mkdirSync(F.photos, { recursive: true });
 fs.mkdirSync(F.rfqs, { recursive: true });
 const readJSON = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return d; } };
@@ -144,7 +147,9 @@ const readBody = (req, limit = 8 * 1024 * 1024) => new Promise((ok, bad) => {
   req.on('end', () => { try { ok(n ? JSON.parse(Buffer.concat(chunks).toString()) : {}); } catch { bad(Object.assign(new Error('Bad JSON'), { code: 400 })); } });
   req.on('error', bad);
 });
-const ROLES = ['rep', 'editor', 'admin'];
+const ROLES = ['rep', 'quoter', 'editor', 'admin'];
+const canEditData = u => u.role === 'editor' || u.role === 'admin'; // burners, cross-reference, history
+const canQuote = u => u.role === 'quoter' || u.role === 'admin';     // attach quotes to RFQs
 const normRole = r => ROLES.includes(r) ? r : 'rep';
 const clip = v => String(v ?? '').trim().slice(0, 100);
 const contact = (u, b) => { for (const k of ['full', 'phone', 'email']) if (b[k] !== undefined) u[k] = clip(b[k]); };
@@ -265,6 +270,11 @@ const cleanXref = b => {
   if (to.some(k => !keys.has(k))) return { error: 'One of the replacement burners isn’t in the burner list any more.' };
   return { brand, model, note, to, none: false };
 };
+// searches reps made in "Replacing a burner?" that found nothing, so editors know what to add next
+const xnorm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const xrefMatches = (q, list) => { const toks = String(q).toLowerCase().split(/\s+/).map(xnorm).filter(Boolean), all = xnorm(q);
+  return toks.length > 0 && list.some(x => { const hay = xnorm(x.brand + ' ' + x.model); return toks.every(t => hay.includes(t)) || hay.includes(all); }); };
+const getMisses = () => { const m = readJSON(F.xmiss, {}); return m && typeof m === 'object' && !Array.isArray(m) ? m : {}; };
 const xrefKey = x => (x.brand + '|' + x.model).toLowerCase().replace(/[\s-]+/g, '');
 
 // saved customers (Customers → Add customer); RFQs add to these automatically
@@ -287,11 +297,14 @@ const effSt = r => r.status || ((r.sends || []).length ? 'sent' : 'draft');
 const limitedRfq = r => ({ id: '', no: r.no, date: r.date, by: r.by, byFull: r.byFull || r.by, burner: `${r.burner.brand} ${r.burner.name}`, fuel: r.burner.fuel,
   status: effSt(r), sentAt: ((r.sends || []).slice(-1)[0] || {}).at || '', limited: true });
 const canSee = (me, r) => r && (me.role !== 'rep' || r.by === me.name);
-const rfqSummary = r => ({ id: r.id, no: r.no, date: r.date, by: r.by, byFull: r.byFull, updated: r.updated,
+const quoteInfo = q => q ? { no: q.no || '', value: typeof q.value === 'number' ? q.value : null, note: q.note || '', at: q.at, by: q.by, byFull: q.byFull || q.by, file: !!q.file, fname: q.fname || '' } : null;
+const unreadFor = (r, me) => me ? (r.comments || []).filter(c => c.by !== me.name && c.at > ((r.seen || {})[me.name] || '')).length : 0;
+const rfqSummary = (r, me) => ({ id: r.id, no: r.no, date: r.date, by: r.by, byFull: r.byFull, updated: r.updated,
   burner: `${r.burner.brand} ${r.burner.name}`, fuel: r.burner.fuel,
   company: r.fields['q-co'] || '', contact: r.fields['q-ct'] || '', job: r.fields['q-job'] || '',
   sent: (r.sends || []).slice(-1)[0] || null, status: r.status || '', statusAt: r.statusAt || '',
   value: typeof r.value === 'number' ? r.value : null, lostReason: r.status === 'lost' ? r.lostReason || '' : '', lostNote: r.status === 'lost' ? r.lostNote || '' : '',
+  quote: quoteInfo(r.quote), comments: (r.comments || []).length, unread: unreadFor(r, me),
   ...followUp(r) });
 // Emailed or Quoted RFQs with no activity for N days need a follow-up. Activity = last email, status change or "followed up".
 function followUp(r) {
@@ -363,7 +376,7 @@ async function api(req, res, url) {
   }
   // ----- RFQs: reps see their own, editors and admins see everyone's -----
   if (p === '/api/rfqs' && m === 'GET') {
-    const list = allRfqs().filter(r => canSee(me, r)).map(rfqSummary).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    const list = allRfqs().filter(r => canSee(me, r)).map(r => rfqSummary(r, me)).sort((a, b) => String(b.date).localeCompare(String(a.date)));
     return send(res, 200, list);
   }
   if (p === '/api/rfqs/export.xlsx' && m === 'GET') { // everything the user can see, as a spreadsheet
@@ -477,7 +490,7 @@ async function api(req, res, url) {
     writeJSON(rfqFile(r.id), r);
     return send(res, 200, r);
   }
-  const rm = /^\/api\/rfqs\/([a-f0-9]{12})(\/pdf|\/send|\/status|\/followup)?$/.exec(p);
+  const rm = /^\/api\/rfqs\/([a-f0-9]{12})(\/pdf|\/send|\/status|\/followup|\/quote|\/comments|\/seen)?$/.exec(p);
   if (rm) {
     const r = getRfq(rm[1]);
     if (!canSee(me, r)) return send(res, 404, { error: 'RFQ not found' });
@@ -509,18 +522,105 @@ async function api(req, res, url) {
       r.status = status; r.statusAt = new Date().toISOString(); r.statusBy = me.name;
       (r.statusLog = r.statusLog || []).push({ at: r.statusAt, by: me.name, status, value: r.value, lostReason: r.lostReason });
       writeJSON(rfqFile(r.id), r);
-      return send(res, 200, rfqSummary(r));
+      return send(res, 200, rfqSummary(r, me));
     }
     if (rm[2] === '/followup' && m === 'POST') { // "I followed up": restarts the follow-up clock
       if (r.by !== me.name && me.role === 'rep') return send(res, 403, { error: 'Only the rep who made it can do this' });
       r.followedUpAt = new Date().toISOString();
       (r.followLog = r.followLog || []).push({ at: r.followedUpAt, by: me.name });
       writeJSON(rfqFile(r.id), r);
-      return send(res, 200, rfqSummary(r));
+      return send(res, 200, rfqSummary(r, me));
     }
     if (rm[2] === '/pdf' && m === 'GET') {
       let pdf; try { pdf = await rfqPdf(r, me); } catch (e) { console.error('PDF:', e.message); return send(res, 502, { error: 'Could not build the PDF: ' + e.message }); }
       return send(res, 200, pdf, 'application/pdf', { 'Content-Disposition': `attachment; filename="${pdfName(r)}"` });
+    }
+    // ----- the office's quote for this RFQ (quoters and admins) -----
+    if (rm[2] === '/quote' && m === 'GET') {
+      if (!r.quote || !r.quote.file) return send(res, 404, { error: 'No quote PDF on this RFQ' });
+      const f = path.join(F.quotes, path.basename(r.quote.file));
+      if (!fs.existsSync(f)) return send(res, 404, { error: 'The quote file is missing' });
+      return send(res, 200, fs.readFileSync(f), 'application/pdf', { 'Content-Disposition': `attachment; filename="${(r.quote.fname || 'Quote-' + r.no + '.pdf').replace(/[^A-Za-z0-9._ -]/g, '')}"` });
+    }
+    if (rm[2] === '/quote' && (m === 'POST' || m === 'DELETE')) {
+      if (!canQuote(me)) return send(res, 403, { error: 'Only quoters and admins can add quotes' });
+      const old = r.quote && r.quote.file ? path.join(F.quotes, path.basename(r.quote.file)) : null;
+      if (m === 'DELETE') {
+        if (!r.quote) return send(res, 404, { error: 'No quote on this RFQ' });
+        if (old) fs.rmSync(old, { force: true });
+        (r.quoteLog = r.quoteLog || []).push({ at: new Date().toISOString(), by: me.name, removed: true });
+        delete r.quote; writeJSON(rfqFile(r.id), r); return send(res, 200, rfqSummary(r, me));
+      }
+      const b = (await readBody(req, 16 * 1024 * 1024)) || {}, now = new Date().toISOString();
+      const qno = String(b.no || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 40), note = String(b.note || '').replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, ' ').trim().slice(0, 1000);
+      let value = null;
+      if (b.value !== undefined && b.value !== null && String(b.value).trim() !== '') {
+        value = Number(String(b.value).replace(/[$,\s]/g, ''));
+        if (!isFinite(value) || value < 0 || value > 1e9) return send(res, 422, { error: 'Price must be a dollar amount' });
+        value = Math.round(value * 100) / 100;
+      }
+      let file = null, fname = '';
+      if (b.file && b.file.data) {
+        const buf = Buffer.from(String(b.file.data), 'base64');
+        if (buf.length > 10 * 1024 * 1024) return send(res, 413, { error: 'The quote PDF must be 10 MB or smaller' });
+        if (buf.slice(0, 5).toString() !== '%PDF-') return send(res, 422, { error: 'The quote file must be a PDF' });
+        file = `${r.id}-${Date.now()}.pdf`; fname = String(b.file.name || '').replace(/[^A-Za-z0-9._ -]/g, '').slice(0, 80) || `Quote-${r.no}.pdf`;
+        fs.writeFileSync(path.join(F.quotes, file), buf);
+      } else if (b.keepFile && r.quote && r.quote.file) { file = r.quote.file; fname = r.quote.fname; }
+      if (!file && value === null && !qno) return send(res, 422, { error: 'Add the quote PDF, a quote number or the price.' });
+      if (old && file !== r.quote.file) fs.rmSync(old, { force: true });
+      r.quote = { no: qno, value, note, file, fname, by: me.name, byFull: me.full || me.name, at: now };
+      (r.quoteLog = r.quoteLog || []).push({ at: now, by: me.name, no: qno, value });
+      if (value !== null) r.value = value;
+      if (r.status !== 'won' && r.status !== 'lost') { // quoting moves it to Quoted
+        r.status = 'quoted'; r.statusAt = now; r.statusBy = me.name;
+        (r.statusLog = r.statusLog || []).push({ at: now, by: me.name, status: 'quoted', value: r.value });
+      }
+      writeJSON(rfqFile(r.id), r);
+      let mailed = null, mailError = null;
+      if (b.emailRep && Mail.configured()) { // let the rep know, with the quote attached
+        const owner = users.find(u => u.name === r.by), to = [owner && owner.email, r.fields['q-repe']].filter(Mail.isEmail).slice(0, 1);
+        if (to.length) {
+          const lines = [`The quote for RFQ ${r.no} (${r.burner.brand} ${r.burner.name}${r.fields['q-co'] ? ', ' + r.fields['q-co'] : ''}) is ready.`, '',
+            qno ? `Quote number: ${qno}` : '', value !== null ? `Price: $${value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}` : '', note ? `Note: ${note}` : '',
+            '', `Quoted by ${me.full || me.name}.`].filter((l, i, a) => l || (a[i - 1] && i < a.length - 1));
+          try { const out = await Mail.sendMail({ to, replyTo: me.email, subject: `Quote ready: RFQ ${r.no}` + (r.fields['q-co'] ? ` – ${r.fields['q-co']}` : ''), text: lines.join('\n'),
+              attachments: file ? [{ filename: fname, type: 'application/pdf', content: fs.readFileSync(path.join(F.quotes, file)) }] : [] }); mailed = out.to; }
+          catch (e) { console.error('Mail:', e.message); mailError = e.message; }
+        } else mailError = 'The rep has no email address on file';
+      }
+      return send(res, 200, { ...rfqSummary(r, me), mailed, mailError });
+    }
+    // ----- internal comments between the rep and the office (never on the PDF) -----
+    if (rm[2] === '/seen' && m === 'POST') { r.seen = { ...(r.seen || {}), [me.name]: new Date().toISOString() }; writeJSON(rfqFile(r.id), r); return send(res, 200, { ok: true }); }
+    if (rm[2] === '/comments' && m === 'GET') return send(res, 200, r.comments || []);
+    if (rm[2] === '/comments' && m === 'POST') {
+      const b = (await readBody(req, 16 * 1024)) || {}, text = String(b.text || '').replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, ' ').trim().slice(0, 2000);
+      if (!text) return send(res, 422, { error: 'Write a comment first' });
+      const now = new Date().toISOString(), c = { id: crypto.randomBytes(4).toString('hex'), by: me.name, byFull: me.full || me.name, at: now, text };
+      (r.comments = r.comments || []).push(c); if (r.comments.length > 300) r.comments = r.comments.slice(-300);
+      r.seen = { ...(r.seen || {}), [me.name]: now }; writeJSON(rfqFile(r.id), r);
+      let mailed = null, mailError = null;
+      if (b.notify !== false && Mail.configured()) { // tell the other side: the rep, or the office people on this RFQ
+        const emailOf = n => { const u = users.find(x => x.name === n); return u && Mail.isEmail(u.email) ? u.email : null; };
+        let to;
+        if (me.name !== r.by) to = [emailOf(r.by) || (Mail.isEmail(r.fields['q-repe']) ? r.fields['q-repe'] : null)];
+        else { const office = new Set([r.quote && r.quote.by, ...(r.comments || []).map(x => x.by)].filter(n => n && n !== r.by));
+          to = [...office].map(emailOf); if (!to.filter(Boolean).length) to = Mail.splitList(rfqTo()); }
+        to = [...new Set(to.filter(Mail.isEmail))].slice(0, 10);
+        if (to.length) {
+          try { const out = await Mail.sendMail({ to, replyTo: me.email, subject: `Comment on RFQ ${r.no}` + (r.fields['q-co'] ? ` – ${r.fields['q-co']}` : ''),
+              text: `${me.full || me.name} wrote on RFQ ${r.no} (${r.burner.brand} ${r.burner.name}):\n\n${text}\n\nOpen the RFQ in the Burner Matrix to reply.` }); mailed = out.to; }
+          catch (e) { console.error('Mail:', e.message); mailError = e.message; }
+        }
+      }
+      return send(res, 200, { comments: r.comments, mailed, mailError });
+    }
+    if (rm[2] === '/comments' && m === 'DELETE') {
+      const b = (await readBody(req, 1024)) || {}, i = (r.comments || []).findIndex(c => c.id === b.id);
+      if (i < 0) return send(res, 404, { error: 'Comment not found' });
+      if (r.comments[i].by !== me.name && me.role !== 'admin') return send(res, 403, { error: 'You can only delete your own comments' });
+      r.comments.splice(i, 1); writeJSON(rfqFile(r.id), r); return send(res, 200, { comments: r.comments });
     }
     if (rm[2] === '/send' && m === 'POST') {
       if (!Mail.configured()) return send(res, 503, { error: 'Email is not set up on the server yet (SMTP settings)' });
@@ -546,6 +646,7 @@ async function api(req, res, url) {
         if (r.by !== me.name) return send(res, 403, { error: 'Only the person who made it (or an admin) can delete it' });
         if ((r.sends || []).length) return send(res, 409, { error: 'Emailed RFQs can only be deleted by an admin' });
       }
+      if (r.quote && r.quote.file) fs.rmSync(path.join(F.quotes, path.basename(r.quote.file)), { force: true });
       fs.unlinkSync(rfqFile(r.id));
       return send(res, 200, { ok: true });
     }
@@ -556,8 +657,27 @@ async function api(req, res, url) {
   }
   if (p === '/api/burners' && m === 'GET') return send(res, 200, getBurners());
   if (p === '/api/xref' && m === 'GET') return send(res, 200, getXref());
+  if (p === '/api/xref/miss' && m === 'POST') { // any signed-in user: a lookup that matched nothing
+    const b = (await readBody(req, 1024)) || {}, q = String(b.q || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80), k = xnorm(q);
+    if (k.length < 2 || xrefMatches(q, getXref())) return send(res, 200, { ok: true });
+    const mm = getMisses(), now = new Date().toISOString(), e = mm[k] || { q, n: 0, users: [], first: now };
+    e.q = q; e.n++; e.last = now; delete e.dismissed; if (!e.users.includes(me.name)) e.users = [...e.users, me.name].slice(-20); mm[k] = e;
+    const keys = Object.keys(mm); if (keys.length > 500) keys.sort((a, c) => String(mm[a].last).localeCompare(String(mm[c].last))).slice(0, keys.length - 500).forEach(x => delete mm[x]);
+    writeJSON(F.xmiss, mm); return send(res, 200, { ok: true });
+  }
 
-  if (me.role === 'rep' && p !== '/api/password') return send(res, 403, { error: 'Your account can view the matrix only' });
+  if (!canEditData(me) && p !== '/api/password') return send(res, 403, { error: me.role === 'quoter' ? 'Quoters can’t change burner data' : 'Your account can view the matrix only' });
+  if (p === '/api/xref/misses' && m === 'GET') { // still-unmatched searches, most asked first
+    const xs = getXref(), names = new Map(users.map(u => [u.name, u.full || u.name]));
+    return send(res, 200, Object.entries(getMisses()).filter(([, e]) => !e.dismissed && !xrefMatches(e.q, xs))
+      .map(([k, e]) => ({ k, q: e.q, n: e.n, last: e.last, first: e.first, users: e.users.map(u => names.get(u) || u) }))
+      .sort((a, c) => c.n - a.n || String(c.last).localeCompare(String(a.last))));
+  }
+  if (p === '/api/xref/misses' && m === 'DELETE') { // dismiss one (it stays dismissed unless searched again later)
+    const b = (await readBody(req, 1024)) || {}, mm = getMisses();
+    if (!mm[b.k]) return send(res, 404, { error: 'Not found' });
+    mm[b.k].dismissed = true; mm[b.k].n = 0; writeJSON(F.xmiss, mm); return send(res, 200, { ok: true });
+  }
   const xm = /^\/api\/xref(?:\/([a-f0-9]{10}))?$/.exec(p);
   if (xm && m !== 'GET') { // editors and admins keep the cross-reference list
     const list = getXref(), now = new Date().toISOString();
@@ -726,7 +846,7 @@ const server = http.createServer(async (req, res) => {
           return send(res, 302, '', 'text/plain', { Location: '/login' + (p.startsWith('/admin') ? '?next=admin' : '') });
         return send(res, 401, 'Sign in required', 'text/plain');
       }
-      if (me.role === 'rep' && p.startsWith('/admin')) return send(res, 302, '', 'text/plain', { Location: '/' });
+      if (!canEditData(me) && p.startsWith('/admin')) return send(res, 302, '', 'text/plain', { Location: '/' });
     }
     if (p === '/burners.json') return sendFile(res, F.burners);
     if (p === '/admin/') return send(res, 302, '', 'text/plain', { Location: '/admin' }); // relative photo paths need /admin

@@ -239,6 +239,11 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
           <button type="button" class="btn" id="xfclr" hidden>Clear filters</button>
         </div>
         <div class="scroll"><table><thead><tr><th>Replaces</th><th>Use instead</th><th>Note</th><th></th></tr></thead><tbody id="xlist"></tbody></table></div>
+        <div class="xmiss" id="xmissbox" hidden>
+          <h3 style="margin:6px 0 4px;font-size:15px">Searched for but not in the list</h3>
+          <p class="u" style="margin:0 0 8px">What reps typed in <b>Replacing a burner?</b> that found nothing, most asked first. <b>Add</b> fills in the form above; entries drop off once a cross-reference matches them.</p>
+          <div class="scroll"><table><thead><tr><th>Searched for</th><th>Times</th><th>By</th><th>Last searched</th><th></th></tr></thead><tbody id="xmlist"></tbody></table></div>
+        </div>
         <details class="ximp"><summary>Add many at once (paste from a spreadsheet)</summary>
           <p class="u">One per line: <b>Brand, Model, Replacement(s), Note</b>. Separate several replacements with <b>;</b> and use the burner names as they appear in the Burners tab (or <b>none</b> when nothing replaces it), e.g. <code>Carlin, 301CRD, AF/AFG, Use a 7 in tube</code> or <code>Riello, 40F5, AF/AFG; NX</code>. Tabs work too, so you can copy straight from Excel.</p>
           <textarea id="ximp" rows="6" style="width:100%;font:13px ui-monospace,monospace"></textarea>
@@ -262,7 +267,7 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
     <section id="t-users" hidden>
       <div class="panel" style="display:grid;gap:16px">
         <h2>Who can sign in</h2>
-        <p class="u" style="margin:0">Everyone needs an account to open the site. <b>Reps</b> can use the matrix and make RFQs. <b>Editors</b> can also change burners. <b>Admins</b> can also add and remove people. Name, phone and email fill in “Prepared by” on RFQs; people can change their own from <i>My profile</i> on the main page.</p>
+        <p class="u" style="margin:0">Everyone needs an account to open the site. <b>Reps</b> can use the matrix and make RFQs. <b>Quoters</b> (inside sales) see every rep’s RFQs, attach the quotes and comment, but can’t change burners. <b>Editors</b> can see every RFQ and change burners and cross-references. <b>Admins</b> can also add and remove people. Name, phone and email fill in “Prepared by” on RFQs; people can change their own from <i>My profile</i> on the main page.</p>
         <div class="scroll"><table><thead><tr><th>Username</th><th>Role</th><th>Full name</th><th>Phone</th><th>Email</th><th></th><th>New password</th><th></th></tr></thead><tbody id="ulist"></tbody></table></div>
         <form id="uf" class="grid" style="align-items:end">
           <label class="f">New username<input type="text" name="name" autocapitalize="none" placeholder="e.g. jsmith@beckettcorp.com"></label>
@@ -270,7 +275,7 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
           <label class="f">Full name<input type="text" name="full" placeholder="e.g. Jane Smith"></label>
           <label class="f">Phone<input type="text" inputmode="tel" name="phone"></label>
           <label class="f">Email<input type="text" inputmode="email" autocapitalize="none" name="email"></label>
-          <label class="f">Role<select name="role"><option value="rep">Rep</option><option value="editor">Editor</option><option value="admin">Admin</option></select></label>
+          <label class="f">Role<select name="role"><option value="rep">Rep</option><option value="quoter">Quoter</option><option value="editor">Editor</option><option value="admin">Admin</option></select></label>
           <button class="btn pri" type="submit">Add person</button>
         </form>
         <div id="umsg" class="msg" hidden></div>
@@ -337,7 +342,7 @@ $('lf').onsubmit=async e=>{e.preventDefault();$('lerr').hidden=true;
   catch(err){$('lerr').textContent=err.message;$('lerr').hidden=false}};
 $('out').onclick=async()=>{await call('POST','/api/logout',{});me=null;showLogin('Signed out.')};
 async function boot(){try{me=await call('GET','/api/me');start()}catch(e){showLogin()}}
-function start(){if(me.role==='rep'){location.replace('/');return}$('login').hidden=true;$('app').hidden=false;$('who').textContent=`${me.name} (${me.role})`;$('usertab').hidden=me.role!=='admin';$('settab').hidden=me.role!=='admin';tab('burners');loadBurners()}
+function start(){if(me.role!=='editor'&&me.role!=='admin'){location.replace('/');return}$('login').hidden=true;$('app').hidden=false;$('who').textContent=`${me.name} (${me.role})`;$('usertab').hidden=me.role!=='admin';$('settab').hidden=me.role!=='admin';tab('burners');loadBurners()}
 
 /* ---------- tabs ---------- */
 function tab(t){if(t!=='burners'&&!leaveOk())return;document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));
@@ -460,7 +465,7 @@ $('exp').onclick=async e=>{e.preventDefault();const data=await call('GET','/api/
 /* ---------- cross-reference ---------- */
 let XR=[],XED=null;
 const bKey=b=>(b.brand+'|'+b.name).toLowerCase(),bByKey=k=>list.find(b=>bKey(b)===k);
-async function loadXref(){try{if(!list.length)await loadBurners();XR=await call('GET','/api/xref');xRender();xReset()}catch(e){showMsg($('xmsg'),'err',esc(e.message))}}
+async function loadXref(){try{if(!list.length)await loadBurners();XR=await call('GET','/api/xref');xRender();xReset();loadMisses()}catch(e){showMsg($('xmsg'),'err',esc(e.message))}}
 let XF='';
 const xFuel=x=>new Set(x.to.map(k=>(bByKey(k)||{}).fuel).filter(Boolean));
 function xRender(){const q=$('xq').value.trim().toLowerCase(),fb=$('xfb').value,fm=$('xfm').value.trim().toLowerCase().replace(/[\s-]+/g,'');
@@ -513,7 +518,7 @@ document.querySelector('.xseg').onclick=e=>{const b=e.target.closest('button[dat
 $('xfclr').onclick=()=>{$('xq').value='';$('xfb').value='';$('xfm').value='';XF='';document.querySelectorAll('.xseg button').forEach(o=>o.setAttribute('aria-pressed',o.dataset.f===''));xRender()};$('xcancel').onclick=()=>xReset();
 $('xf').onsubmit=async e=>{e.preventDefault();const f=e.target;$('xmsg').hidden=true;
   const none=$('xnone').checked,body={brand:f.elements.brand.value,model:f.elements.model.value,note:f.elements.note.value,to:none?[]:XSEL,none};
-  try{if(XED)await call('PUT','/api/xref/'+XED.id,body);else await call('POST','/api/xref',body);toast(XED?'Saved':'Added '+body.brand.trim()+' '+body.model.trim());XR=await call('GET','/api/xref');xRender();xReset();$('xms').open=false}
+  try{if(XED)await call('PUT','/api/xref/'+XED.id,body);else await call('POST','/api/xref',body);toast(XED?'Saved':'Added '+body.brand.trim()+' '+body.model.trim());XR=await call('GET','/api/xref');xRender();xReset();loadMisses();$('xms').open=false}
   catch(err){showMsg($('xmsg'),'err',esc(err.message))}};
 $('xlist').onclick=async e=>{const b=e.target.closest('button[data-a]');if(!b)return;const x=XR.find(o=>o.id===b.closest('tr').dataset.id);if(!x)return;
   if(b.dataset.a==='edit'){xReset(x);$('xf').scrollIntoView({behavior:'smooth',block:'start'});$('xf').elements.brand.focus({preventScroll:true});return}
@@ -532,6 +537,18 @@ $('ximpgo').onclick=async()=>{const lines=$('ximp').value.split(/\r?\n/).map(l=>
   $('ximpgo').disabled=false;XR=await call('GET','/api/xref');xRender();
   showMsg($('ximpmsg'),bad.length?'err':'ok',`Added ${ok}.`+(bad.length?'<br>'+bad.map(esc).join('<br>'):''));if(!bad.length)$('ximp').value=''};
 
+// searches that found nothing
+let XM=[];
+async function loadMisses(){try{XM=await call('GET','/api/xref/misses')}catch(e){XM=[]}
+  $('xmissbox').hidden=!XM.length;
+  $('xmlist').innerHTML=XM.map(m=>`<tr data-k="${esc(m.k)}"><td><b>${esc(m.q)}</b></td><td>${m.n}</td><td class="u">${esc(m.users.join(', '))}</td><td class="u" style="white-space:nowrap">${esc(new Date(m.last).toLocaleDateString())}</td>
+    <td style="white-space:nowrap;text-align:right"><button class="btn pri" data-a="add">Add</button> <button class="btn" data-a="dis">Dismiss</button></td></tr>`).join('')}
+$('xmlist').onclick=async e=>{const b=e.target.closest('button[data-a]');if(!b)return;const m=XM.find(o=>o.k===b.closest('tr').dataset.k);if(!m)return;
+  if(b.dataset.a==='add'){xReset();const w=m.q.split(' '),known=XR.map(x=>x.brand).find(br=>m.q.toLowerCase().startsWith(br.toLowerCase()+' '));
+    const f=$('xf');f.elements.brand.value=known||(w.length>1?w[0]:'');f.elements.model.value=known?m.q.slice(known.length).trim():(w.length>1?w.slice(1).join(' '):m.q);
+    $('xf').scrollIntoView({behavior:'smooth',block:'start'});(f.elements.brand.value?f.elements.model:f.elements.brand).focus({preventScroll:true});return}
+  try{await call('DELETE','/api/xref/misses',{k:m.k});loadMisses()}catch(err){toast(err.message)}};
+
 /* ---------- settings ---------- */
 function showSettings(s){$('sf').elements.rfqTo.value=s.rfqTo;$('sf').elements.followUpDays.value=s.followUpDays;$('sf').elements.stepDownWarn.checked=s.stepDownWarn;
   $('btz').textContent=s.tz||'server time';$('bkeep').textContent=s.backupKeep;
@@ -547,13 +564,13 @@ $('bnow').onclick=async e=>{const b=e.currentTarget;b.disabled=true;b.textConten
 /* ---------- users ---------- */
 async function loadUsers(){const u=await call('GET','/api/users');
   $('ulist').innerHTML=u.map(x=>`<tr data-n="${esc(x.name)}"><td><b>${esc(x.name)}</b>${x.name===me.name?' <span class="u">(you)</span>':''}</td>
-   <td><select class="ur" style="min-width:92px" aria-label="Role for ${esc(x.name)}">${[['rep','Rep'],['editor','Editor'],['admin','Admin']].map(([v,l])=>`<option value="${v}"${x.role===v?' selected':''}>${l}</option>`).join('')}</select></td>
+   <td><select class="ur" style="min-width:92px" aria-label="Role for ${esc(x.name)}">${[['rep','Rep'],['quoter','Quoter'],['editor','Editor'],['admin','Admin']].map(([v,l])=>`<option value="${v}"${x.role===v?' selected':''}>${l}</option>`).join('')}</select></td>
    ${['full','phone','email'].map(k=>`<td><input type="text" class="uc" data-k="${k}" value="${esc(x[k])}" aria-label="${k} for ${esc(x.name)}" style="min-width:110px"></td>`).join('')}
    <td><button class="btn usv">Save</button></td>
    <td><div class="row" style="flex-wrap:nowrap"><input type="text" class="up" placeholder="8+ characters" aria-label="New password for ${esc(x.name)}"><button class="btn us">Set</button></div></td>
    <td>${x.name===me.name?'':'<button class="btn dan ux">Remove</button>'}</td></tr>`).join('')}
 $('ulist').addEventListener('change',async e=>{const s=e.target.closest('.ur');if(!s)return;const n=s.closest('tr').dataset.n;
-  try{await call('PATCH','/api/users',{name:n,role:s.value});toast(`${n} is now ${{admin:'an admin',editor:'an editor',rep:'a rep'}[s.value]}`)}catch(err){showMsg($('umsg'),'err',esc(err.message));loadUsers()}});
+  try{await call('PATCH','/api/users',{name:n,role:s.value});toast(`${n} is now ${{admin:'an admin',editor:'an editor',quoter:'a quoter',rep:'a rep'}[s.value]}`)}catch(err){showMsg($('umsg'),'err',esc(err.message));loadUsers()}});
 $('ulist').addEventListener('click',async e=>{const tr=e.target.closest('tr');if(!tr)return;const n=tr.dataset.n;
   if(e.target.closest('.usv')){const b={name:n};tr.querySelectorAll('.uc').forEach(i=>b[i.dataset.k]=i.value);try{await call('PATCH','/api/users',b);toast(`Saved ${n}`)}catch(err){showMsg($('umsg'),'err',esc(err.message))}}
   if(e.target.closest('.us')){const p=tr.querySelector('.up').value;try{await call('PATCH','/api/users',{name:n,password:p});toast(`Password set for ${n}. They'll need to sign in again.`);tr.querySelector('.up').value=''}catch(err){showMsg($('umsg'),'err',esc(err.message))}}
