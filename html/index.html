@@ -782,7 +782,6 @@ function openRFQ(x,meta){rfqB=x;const r=reqMBH();const[a,b]=mb(x);$('sheet').cla
     ${x.fl!=null||x.fw!=null?ro('Flame size',`${x.fl!=null?n2(x.fl):'?'} × ${x.fw!=null?n2(x.fw):'?'} in (L × W)`):''}
     ${x.op!=null?ro('Max overfire',`${n2(x.op)} in. WC`):''}
     ${ro('Chassis dimensions',dims)}
-    ${ro('Air tube / insertion',esc(x.tube))}
     ${x.tubes.length?ro('Air tube lengths',esc(x.tubes.map(t=>tubeLbl(t)+(t===x.tubeStd?' (std)':'')).join(', '))):''}
     ${x.bio?ro('Fuel ratings',esc(x.bio)):''}
     ${ro('Applications',x.a.map(k=>APPS[k]).join(', '))}
