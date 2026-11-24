@@ -161,7 +161,14 @@ td b.nm-gas a{color:var(--gas)}
 .fit.edge::before{content:"";display:inline-block;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:9px solid #fff;margin-right:6px;vertical-align:0}
 tr.edge td{background:#fff3e8 !important}
 tr.edge td:first-child{box-shadow:inset 4px 0 0 #d9480f}
-tr.hl td{background:#fde3e5 !important}
+tr.hl td{background:#fde3e5 !important;box-shadow:inset 0 3px 0 var(--red),inset 0 -3px 0 var(--red)}
+tr.hl td:first-child{box-shadow:inset 7px 0 0 var(--red),inset 0 3px 0 var(--red),inset 0 -3px 0 var(--red)}
+tr.hl td:last-child{box-shadow:inset -3px 0 0 var(--red),inset 0 3px 0 var(--red),inset 0 -3px 0 var(--red)}
+@media(max-width:1279px){#tbl tr.hl{outline:3px solid var(--red);outline-offset:2px;border-radius:2px;background:#fde3e5}#tbl tr.hl td{box-shadow:none}}
+@media(prefers-reduced-motion:no-preference){tr.hl.flash td{animation:hlflash .5s ease-in-out 3}}
+@keyframes hlflash{50%{background:#f7a1ab}}
+.selb{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:3px;background:var(--red);color:#fff;font-size:11px;font-weight:700;vertical-align:2px;letter-spacing:.02em}
+.lr.on .nm{color:var(--red);font-weight:800}.lr.on .track{background:#fde3e5;border-radius:3px}.lr.on .bar{outline:2px solid var(--ink);outline-offset:1px}
 a{color:inherit}
 .note{font-size:13px;color:var(--mute);max-width:90ch}
 footer{background:var(--ink);color:#d8d8d2;font-size:13px}
@@ -691,7 +698,10 @@ $('o-x').onclick=()=>$('o2g').close();
 $('o-go').onclick=()=>{const c=o2gCalc();if(!c)return;o2gApply(c);
   (document.querySelector('.ladder')||$('lad')).scrollIntoView({behavior:'smooth',block:'start'});toast(`Showing gas burners for ${c.mbh.toLocaleString()} MBH`)};
 
-$('lad').onclick=e=>{const row=e.target.closest('.lr');if(!row)return;const t=$('r-'+row.dataset.n.replace(/\W/g,''));if(!t)return;document.querySelectorAll('tr.hl').forEach(x=>x.classList.remove('hl'));t.classList.add('hl');t.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'center'})};
+$('lad').onclick=e=>{const row=e.target.closest('.lr');if(!row)return;const t=$('r-'+row.dataset.n.replace(/\W/g,''));if(!t)return;
+  document.querySelectorAll('tr.hl').forEach(x=>x.classList.remove('hl','flash'));document.querySelectorAll('.selb').forEach(x=>x.remove());document.querySelectorAll('.lr.on').forEach(x=>x.classList.remove('on'));
+  row.classList.add('on');t.classList.add('hl');void t.offsetWidth;t.classList.add('flash');
+  const nm=t.querySelector('td b');if(nm)nm.insertAdjacentHTML('afterend','<span class="selb">Selected</span>');t.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'center'})};
 const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),Math.max(1800,String(m).length*60))};
 /* ---------- Hover photo ---------- */
 const pic=$('pic'),pimg=pic.querySelector('img'),pcap=pic.querySelector('span');
