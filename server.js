@@ -296,7 +296,10 @@ const effSt = r => r.status || ((r.sends || []).length ? 'sent' : 'draft');
 // what anyone may see about an RFQ that isn't theirs: no customer details, contacts, values or notes
 const limitedRfq = r => ({ id: '', no: r.no, date: r.date, by: r.by, byFull: r.byFull || r.by, burner: `${r.burner.brand} ${r.burner.name}`, fuel: r.burner.fuel,
   status: effSt(r), sentAt: ((r.sends || []).slice(-1)[0] || {}).at || '', limited: true });
-const canSee = (me, r) => r && (me.role !== 'rep' || r.by === me.name);
+// quoters only see RFQs once they're emailed (or already have a status or quote), never someone's draft
+const isDraft = r => !(r.sends || []).length && !r.status && !r.quote;
+const canSee = (me, r) => !!r && (r.by === me.name || (me.role !== 'rep' && !(me.role === 'quoter' && isDraft(r))));
+const hiddenDraft = (me, r) => me.role === 'quoter' && r.by !== me.name && isDraft(r);
 const quoteInfo = q => q ? { no: q.no || '', value: typeof q.value === 'number' ? q.value : null, note: q.note || '', at: q.at, by: q.by, byFull: q.byFull || q.by, file: !!q.file, fname: q.fname || '' } : null;
 const unreadFor = (r, me) => me ? (r.comments || []).filter(c => c.by !== me.name && c.at > ((r.seen || {})[me.name] || '')).length : 0;
 const rfqSummary = (r, me) => ({ id: r.id, no: r.no, date: r.date, by: r.by, byFull: r.byFull, updated: r.updated,
@@ -403,7 +406,7 @@ async function api(req, res, url) {
   }
   if (p === '/api/customers' && m === 'GET') { // address book + per-customer totals: saved customers + everyone's RFQs (newest details win)
     const by = new Map(), staff = me.role !== 'rep', saved = getCustomers();
-    for (const r of allRfqs().sort((a, b) => String(a.date).localeCompare(String(b.date)))) {
+    for (const r of allRfqs().filter(r => !hiddenDraft(me, r)).sort((a, b) => String(a.date).localeCompare(String(b.date)))) {
       const co = String(r.fields['q-co'] || '').trim(); if (!co) continue;
       const k = custKey(co), c = by.get(k) || { company: co, address: '', contacts: new Map(), rfqs: 0, won: 0, lost: 0, valueWon: 0, last: '', lastBurner: '', mine: 0 };
       c.company = co; if (r.fields['q-addr']) c.address = r.fields['q-addr'];
@@ -463,7 +466,7 @@ async function api(req, res, url) {
   if (p === '/api/customers/history' && m === 'GET') { // every RFQ for one customer; others' RFQs are summary-only for reps
     const k = custKey(url.searchParams.get('company'));
     if (!k) return send(res, 400, { error: 'Missing company' });
-    const rows = allRfqs().filter(r => custKey(r.fields['q-co']) === k).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    const rows = allRfqs().filter(r => custKey(r.fields['q-co']) === k && !hiddenDraft(me, r)).sort((a, b) => String(b.date).localeCompare(String(a.date)));
     const sc = getCustomers().find(c => custKey(c.company) === k);
     if (!rows.length && !sc) return send(res, 404, { error: 'No such customer' });
     return send(res, 200, { company: rows.length ? String(rows[0].fields['q-co']).trim() : sc.company, rfqs: rows.map(r => canSee(me, r) ? { ...rfqSummary(r), open: true } : limitedRfq(r)) });
@@ -471,7 +474,7 @@ async function api(req, res, url) {
   if (p === '/api/customers/recent' && m === 'GET') { // for the duplicate warning: same customer in the last 90 days
     const k = custKey(url.searchParams.get('company')), skip = url.searchParams.get('exclude') || '', since = Date.now() - 90 * 864e5;
     if (!k) return send(res, 200, []);
-    return send(res, 200, allRfqs().filter(r => r.id !== skip && custKey(r.fields['q-co']) === k && Date.parse(r.date) >= since)
+    return send(res, 200, allRfqs().filter(r => r.id !== skip && custKey(r.fields['q-co']) === k && Date.parse(r.date) >= since && !hiddenDraft(me, r))
       .sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 5).map(r => ({ ...limitedRfq(r), mine: r.by === me.name })));
   }
   if (p === '/api/rfqs' && m === 'POST') { // create

@@ -36,7 +36,7 @@ sign in at `/admin`, change your password, and add other people under **Users**.
 the password variable.
 
 **Everyone needs an account.** The whole site (matrix, photos, data) is behind sign-in. Give each rep
-a **Rep** account (matrix + RFQs only); **Quoters** (inside sales) see every rep's RFQs, customers and jobs, attach quotes and comment, but can't change burners or open Admin; **Editors** can also change burners and cross-references; **Admins** also manage people and settings.
+a **Rep** account (matrix + RFQs only); **Quoters** (inside sales) see every rep's RFQs once they're emailed (never drafts), plus customers and jobs, attach quotes and comment, but can't change burners or open Admin; **Editors** can also change burners and cross-references; **Admins** also manage people and settings.
 Each person's full name, phone and email fill in *Prepared by* on their RFQs. Admins set these under
 **Users**; anyone can change their own from **My profile** at the top of the main page.
 **Photos are stored on the server.** Any burner photo that points at a website (the Wayne/Comet
