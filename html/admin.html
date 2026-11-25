@@ -80,7 +80,7 @@ input.xbq:focus{border-color:var(--ink);outline:2px solid var(--ink);outline-off
 .xform{display:grid;gap:12px;background:#f6f6f3;border:1px solid var(--rule);border-radius:4px;padding:14px}.xopts{max-height:260px;overflow:auto}.xopts .bh{font-size:12px;font-weight:700;color:var(--mute);margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em}
 #xlist td{vertical-align:top}#xlist .bt{display:inline-block;background:#eef3fb;color:var(--gas);font-weight:700;font-size:12.5px;border-radius:3px;padding:1px 7px;margin:0 4px 4px 0}#xlist .bt.oil{background:#fdecee;color:var(--red)}#xlist .bt.gone{background:#eee;color:#888;text-decoration:line-through}
 .ximp summary{cursor:pointer;font-weight:700;font-size:14px}
-#splist .btn{min-height:34px;padding:4px 10px;font-size:13px}#splist td{padding:6px 8px}
+.splist{display:grid;border-top:1px solid var(--rule)}.spg{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:10px 2px;border-bottom:1px solid var(--rule)}.spg .who{flex:1 1 260px;min-width:0;font-size:14px;overflow-wrap:anywhere}.spg .who .u{display:block;margin-top:2px}.spg .acts{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;margin-left:auto}.spg .btn{min-height:34px;padding:4px 10px;font-size:13px}.spg.gone .who b{color:var(--mute)}
 .confirm{background:#fff3e8;border-left:4px solid #d9480f;padding:10px 14px;border-radius:3px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .dirty{color:#b35c00;font-size:13px;font-weight:700}
 /* tables */
@@ -301,7 +301,7 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
         <div id="specs" style="border-top:1px solid var(--rule);padding-top:12px;display:grid;gap:10px">
           <h2 style="font-size:17px">Appliance specs</h2>
           <p class="u" style="margin:0">Guides of which burner setup fits which boiler or furnace model (e.g. residential oil, commercial oil, residential gas, commercial gas). Reps search all of them from <b>Look up an appliance</b> on the matrix page and can start an RFQ with the spec filled in. Each brand can have any number of guides.</p>
-          <div class="scroll"><table><thead><tr><th>Guide</th><th>Specs</th><th>Last updated</th><th></th></tr></thead><tbody id="splist"></tbody></table></div>
+          <div id="splist" class="splist"></div>
           <form id="spimp" class="xform" style="gap:10px">
             <h3 style="margin:0;font-size:15px">Load guides from CSV</h3>
             <div class="row" style="align-items:flex-end">
@@ -587,15 +587,14 @@ const fmtWhen=d=>d?new Date(d).toLocaleDateString(undefined,{year:'numeric',mont
 // same naming the server uses: "Residential_Gas_Specifications_Guide_SQL.csv" -> "Residential gas"
 const guideName=f=>{let n=String(f||'').replace(/\.[a-z0-9]+$/i,'').replace(/^[0-9a-f]{6,}[-_]/i,'').replace(/_+/g,' ').replace(/\b(spec(ification)?s?|guide|sql|export|csv)\b/gi,' ').replace(/\s+/g,' ').trim().toLowerCase();return n?(n[0].toUpperCase()+n.slice(1)).slice(0,40):''};
 const UNIT={gph:'GPH',mbh:'MBH',btu:'BTU/hr'};
-async function loadSpecs(){let all;try{all=await call('GET','/api/specs')}catch(err){$('splist').innerHTML=`<tr><td colspan="4">${esc(err.message)}</td></tr>`;return}
+async function loadSpecs(){let all;try{all=await call('GET','/api/specs')}catch(err){$('splist').innerHTML=`<div class="msg err">${esc(err.message)}</div>`;return}
   SP=all.filter(s=>!s.removed);
   if(!list.length)try{list=await call('GET','/api/burners')}catch(e){}
   const brands=[...new Set(list.map(b=>b.brand).concat(all.map(s=>s.brand)))].sort((a,b)=>a.localeCompare(b));
-  $('splist').innerHTML=all.length?all.map(s=>`<tr><td><b>${esc(s.title)}</b>${s.burner?` <span class="u">· every spec is ${esc(s.burner)}</span>`:''}</td>
-    <td>${s.removed?`<span class="u">Removed (${s.prevCount.toLocaleString()} can be restored)</span>`:s.count.toLocaleString()+(s.rateUnit?` <span class="u">· ${UNIT[s.rateUnit]||''}</span>`:'')}</td>
-    <td style="white-space:nowrap">${s.removed?'':esc(fmtWhen(s.updated))+(s.by?` <span class="u">by ${esc(s.by)}</span>`:'')}</td>
-    <td style="text-align:right;white-space:nowrap">${s.removed?`<button class="btn" type="button" data-sa="restore" data-id="${esc(s.id)}" data-t="${esc(s.title)}">Restore</button>`:`<a class="btn" style="display:inline-flex;align-items:center;text-decoration:none" href="/api/specs/export?id=${encodeURIComponent(s.id)}" download>Download CSV</a> ${s.hasPrevious?`<button class="btn" type="button" data-sa="restore" data-id="${esc(s.id)}" data-t="${esc(s.title)}">Restore previous</button> `:''}<button class="btn dan" type="button" data-sa="clear" data-id="${esc(s.id)}" data-t="${esc(s.title)}">Remove</button>`}</td></tr>`).join('')
-    :'<tr><td colspan="4" class="u">No guides loaded yet.</td></tr>';
+  $('splist').innerHTML=all.length?all.map(s=>`<div class="spg${s.removed?' gone':''}"><div class="who"><b>${esc(s.title)}</b>
+      <span class="u">${s.removed?`Removed · ${s.prevCount.toLocaleString()} specs can be restored`:`${s.count.toLocaleString()} specs${s.rateUnit?` · ${UNIT[s.rateUnit]||''}`:''}${s.burner?` · every spec is ${esc(s.burner)}`:''} · updated ${esc(fmtWhen(s.updated))}${s.by?` by ${esc(s.by)}`:''}`}</span></div>
+    <div class="acts">${s.removed?`<button class="btn" type="button" data-sa="restore" data-id="${esc(s.id)}" data-t="${esc(s.title)}">Restore</button>`:`<a class="btn" style="display:inline-flex;align-items:center;text-decoration:none" href="/api/specs/export?id=${encodeURIComponent(s.id)}" download>Download CSV</a>${s.hasPrevious?`<button class="btn" type="button" data-sa="restore" data-id="${esc(s.id)}" data-t="${esc(s.title)}">Restore previous</button>`:''}<button class="btn dan" type="button" data-sa="clear" data-id="${esc(s.id)}" data-t="${esc(s.title)}">Remove</button>`}</div></div>`).join('')
+    :'<div class="u" style="padding:10px 2px">No guides loaded yet.</div>';
   const keep=$('spbrand').value;$('spbrand').innerHTML=brands.map(b=>`<option>${esc(b)}</option>`).join('');if(brands.includes(keep))$('spbrand').value=keep;
   const k2=$('sprb').value;$('sprb').innerHTML=SP.map(s=>`<option value="${esc(s.id)}">${esc(s.title)}</option>`).join('');if(SP.some(s=>s.id===k2))$('sprb').value=k2;
   $('sped').hidden=!SP.length;if(SP.length)spRows()}
