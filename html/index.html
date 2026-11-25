@@ -135,6 +135,9 @@ th .infob{border-color:#cfcfc9;background:transparent;color:#fff;width:16px;heig
 .spd{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:2px 12px;font-size:12.5px;margin:6px 0 4px;padding:8px 10px;background:#fafaf8;border-radius:3px}.spd dt{color:var(--mute)}.spd dd{margin:0;overflow-wrap:anywhere}
 .spn{font-size:12.5px;margin-top:5px;background:#fff8e1;border-left:3px solid #e0a800;padding:4px 8px;border-radius:2px}
 .spx{font-size:12px;color:var(--mute);margin-top:4px}
+.rcs{display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px}.spl .rc{font:600 12.5px Montserrat,sans-serif;min-height:28px;min-width:44px;padding:2px 8px;border-radius:14px;border:1px solid #b9b9b2;background:#fff;color:var(--ink);cursor:pointer}.spl .rc[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+.spk{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;margin:8px 0 2px}.spk .k{color:var(--mute)}.spa{margin-top:8px}.spa button{font:600 12.5px Montserrat,sans-serif;min-height:30px;padding:3px 10px;border-radius:3px;border:1px solid var(--red);background:#fff;color:var(--red);cursor:pointer}
+.sug{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;color:var(--ink)}.sug button{font:500 13px Montserrat,sans-serif;min-height:32px;padding:3px 10px;border-radius:3px;border:1px solid #b9b9b2;background:#fff;cursor:pointer}.sug button:hover{border-color:var(--ink)}
 .rail .f-last{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 24px;border-top:1px solid var(--rule);padding-top:12px}
 .rail .opts{display:flex;flex-wrap:wrap;gap:4px 24px}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -850,7 +853,7 @@ const spMatch=q=>SPH.q===q.trim()&&SPH.hits.length>0;
 function specGet(q){clearTimeout(spT);const k=q.trim();if(xnorm(k).length<2){SPH={q:k,hits:[],ok:true};return}
   if(SPH.q===k&&SPH.ok)return;const s=++spSeq;
   spT=setTimeout(()=>J('GET','api/specs/search?q='+encodeURIComponent(k)).then(d=>{if(s!==spSeq)return;
-    SPH={q:k,hits:Array.isArray(d&&d.hits)?d.hits:[],ok:true};SPBY.clear();SPH.hits.forEach(h=>SPBY.set(h.gid+'|'+h.id,h));
+    SPH={q:k,hits:Array.isArray(d&&d.hits)?d.hits:[],suggest:Array.isArray(d&&d.suggest)?d.suggest:[],ok:true};SPBY.clear();SPH.hits.forEach(h=>SPBY.set(h.gid+'|'+h.id,h));
     if($('aq').value.trim()===k&&document.activeElement===$('aq'))aShow(true)}).catch(()=>{if(s!==spSeq)return;SPH={q:k,hits:[],ok:false};if($('aq').value.trim()===k)aShow(true)}),180)}
 // first non-empty value whose column heading matches (works for any brand's guide layout)
 const fv=(h,re,not)=>{const p=h.f.find(([c,v])=>re.test(c)&&!(not&&not.test(c))&&String(v).trim());return p?String(p[1]).trim():''};
@@ -870,16 +873,26 @@ const spKeys=h=>SPKEY.map(([re,not])=>fc(h,re,not)).filter(Boolean);
 function specNo(h){const n=fv(h,/^beckett spec$/i),m=fv(h,/^spec match$/i),p=fv(h,/^possible specs?$/i);
   if(n)return`<span><span class="k">Spec</span> <b>${esc(n)}</b>${/inactive/i.test(m)?' <span class="k">(inactive)</span>':/medium/i.test(m)?' <span class="k">(likely)</span>':''}</span>`;
   return p?`<span><span class="k">Possible spec</span> ${esc(p.split(/,\s*/)[0])}</span>`:''}
-function specHTML(hits){const g=new Map();for(const h of hits){const k=h.gid+'|'+h.mfg+'|'+h.model;if(!g.has(k))g.set(k,[]);g.get(k).push(h)}
-  const groups=[...g.values()];
-  return groups.slice(0,10).map(vs=>{const h0=vs[0];return`<div class="xr sp" role="option"><div class="from"><span><b>${esc(h0.mfg)} ${esc(h0.model)}</b> · ${esc(h0.guide)} spec${vs.length>1?` (${vs.length} setups)`:''}</span></div>
-    ${vs.map(h=>{const x=specBurner(h),key=esc(h.gid+'|'+h.id),rt=spRateTxt(h);
-      return`<div class="spv"><div class="spl"><span class="nm ${x?x.f:'un'}">${esc(h.brand)} ${esc(h.burner)}</span>${rt?`<span><b>${esc(rt)}</b></span>`:''}
-        ${specNo(h)}${spKeys(h).map(([c,v])=>`<span><span class="k">${esc(c)}</span> ${esc(v)}</span>`).join('')}
-        <span class="bt"><button type="button" class="gh" data-a="spdet" data-s="${key}" aria-expanded="false">Details</button>${x?`<button type="button" data-a="spshow" data-s="${key}">Show in the matrix</button><button type="button" class="pri" data-a="sprfq" data-s="${key}">Create RFQ</button>`:''}</span></div>
-        ${x?'':`<div class="spx">${esc(h.burner)} isn’t in the matrix, so an RFQ can’t be started from here.</div>`}<div class="spdh" hidden></div></div>`}).join('')}</div>`}).join('')
-   +(groups.length>10?`<div class="xr none">${groups.length-10} more appliances match. Type more of the model number to narrow it down.</div>`:'')}
-function specDetail(h){const note=fv(h,/^note|notes$/i);return`<dl class="spd">${h.f.filter(([c,v])=>String(v).trim()&&!/^(appliance|note$|notes$)/i.test(c)).map(([c,v])=>`<dt>${esc(c)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>${note?`<div class="spn">${esc(note)}</div>`:''}`}
+// one line per appliance + burner; several firing rates for the same burner are chips on that line, and the line follows the chosen one
+const SPG=new Map();
+function specHTML(hits){const old=new Map(SPG);SPG.clear();const apps=new Map();
+  for(const h of hits){const ak=h.gid+'|'+h.mfg+'|'+h.model,gk=ak+'|'+h.burner;if(!apps.has(ak))apps.set(ak,new Map());const a=apps.get(ak);if(!a.has(gk))a.set(gk,[]);a.get(gk).push(h)}
+  const list=[...apps.values()];
+  return list.slice(0,10).map(a=>{const gs=[...a.entries()],h0=gs[0][1][0];
+    return`<div class="xr sp" role="option"><div class="from"><span><b>${esc(h0.mfg)} ${esc(h0.model)}</b> · ${esc(h0.guide)} spec</span></div>
+      ${gs.map(([gk,l])=>{l.sort((x,y)=>(parseFloat(x.rate)||0)-(parseFloat(y.rate)||0));const o=old.get(gk);SPG.set(gk,{list:l,sel:o&&o.sel<l.length?o.sel:0,open:!!(o&&o.open)});return`<div class="spv" data-g="${esc(gk)}">${spvInner(gk)}</div>`}).join('')}</div>`}).join('')
+   +(list.length>10?`<div class="xr none">${list.length-10} more appliances match. Type more of the model number to narrow it down.</div>`:'')}
+function spvInner(gk){const g=SPG.get(gk);if(!g)return'';const h=g.list[g.sel],x=specBurner(h),key=esc(h.gid+'|'+h.id),r0=spRate(h),G2=esc(gk);
+  const lbl=l=>{const r=spRate(l);return r?r.v.toLocaleString():'–'},seen={};
+  const chips=g.list.length>1?`<span class="rcs" role="group" aria-label="Firing rate">${g.list.map((l,i)=>{let t=lbl(l);seen[t]=(seen[t]||0)+1;if(seen[t]>1)t+=` (${seen[t]})`;return`<button type="button" class="rc" data-a="sprate" data-g="${G2}" data-i="${i}" aria-pressed="${i===g.sel}">${esc(t)}</button>`}).join('')}<span class="k">${r0&&r0.u==='gph'?'GPH':'MBH'}</span></span>`:(spRateTxt(h)?`<span><b>${esc(spRateTxt(h))}</b></span>`:'');
+  return`<div class="spl"><span class="nm ${x?x.f:'un'}">${esc(h.brand)} ${esc(h.burner)}</span>${chips}${specNo(h)}
+    <span class="bt"><button type="button" class="gh" data-a="spdet" data-g="${G2}" aria-expanded="${g.open}">${g.open?'Hide details':'Details'}</button>${x?`<button type="button" class="pri" data-a="sprfq" data-s="${key}">Create RFQ</button>`:''}</span></div>
+    ${x?'':`<div class="spx">${esc(h.burner)} isn’t in the matrix, so an RFQ can’t be started from here.</div>`}
+    <div class="spdh"${g.open?'':' hidden'}>${g.open?specDetail(h,x,key):''}</div>`}
+function specDetail(h,x,key){const note=fv(h,/^note|notes$/i),kf=spKeys(h);
+  return`${kf.length?`<div class="spk">${kf.map(([c,v])=>`<span><span class="k">${esc(c)}</span> <b>${esc(v)}</b></span>`).join('')}</div>`:''}
+    <dl class="spd">${h.f.filter(([c,v])=>String(v).trim()&&!/^(appliance|note$|notes$|beckett spec$|spec match$|possible specs$|matched on$)/i.test(c)&&!kf.some(([k])=>k===c)).map(([c,v])=>`<dt>${esc(c)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+    ${note&&!/^none$/i.test(note)?`<div class="spn">${esc(note)}</div>`:''}${x?`<div class="spa"><button type="button" class="gh" data-a="spshow" data-s="${key}">Show ${esc(x.b+' '+x.n)} in the matrix</button></div>`:''}`}
 // a search that finds nothing is reported once it settles, so editors can see what reps look for
 const XLOGGED=new Set();let xMissT=0;
 const xMiss=q=>{clearTimeout(xMissT);const k=xnorm(q);if(k.length<2||XLOGGED.has(k)||xFind(q).length)return;XLOGGED.add(k);J('POST','api/xref/miss',{q}).catch(()=>{})};
@@ -893,9 +906,9 @@ function xShow(){const q=$('xq').value.trim(),box=$('xres');clearTimeout(xMissT)
   box.hidden=false;$('xq').setAttribute('aria-expanded','true')}
 function aShow(fromSpec){const q=$('aq').value.trim(),box=$('ares');if(!q){box.hidden=true;$('aq').setAttribute('aria-expanded','false');return}
   if(fromSpec!==true)specGet(q);
-  const sp=spMatch(q)?SPH.hits:[],open=new Set([...box.querySelectorAll('button[data-a="spdet"][aria-expanded="true"]')].map(b=>b.dataset.s));
-  box.innerHTML=sp.length?specHTML(sp):`<div class="xr none">${xnorm(q).length<2?'Type at least 2 letters or numbers.':SPH.q!==q?'Searching…':SPH.ok?`No appliance spec for “${esc(q)}”. Try just the model number (e.g. V8H4), or the maker and model.`:'Couldn’t search the appliance specs. Check your connection and try again.'}</div>`;
-  open.forEach(k=>{const b=box.querySelector(`button[data-a="spdet"][data-s="${CSS.escape(k)}"]`);if(b)spToggle(b)});
+  const sp=spMatch(q)?SPH.hits:[],sug=SPH.q===q&&SPH.suggest||[];
+  box.innerHTML=sp.length?specHTML(sp):`<div class="xr none">${xnorm(q).length<2?'Type at least 2 letters or numbers.':SPH.q!==q?'Searching…':SPH.ok?`No appliance spec for “${esc(q)}”.${sug.length?'':' Try just the model number (e.g. V8H4), or the maker and model.'}`:'Couldn’t search the appliance specs. Check your connection and try again.'}
+    ${sug.length?`<div class="sug"><span>Did you mean</span>${sug.map(o=>`<button type="button" data-a="spsug" data-q="${esc(o.mfg.split(/[ /]/)[0]+' '+o.model)}">${esc(o.mfg)} <b>${esc(o.model)}</b></button>`).join('')}</div>`:''}</div>`;
   box.hidden=false;$('aq').setAttribute('aria-expanded','true')}
 $('aq').addEventListener('input',()=>aShow());$('aq').addEventListener('focus',()=>aShow());
 $('aq').addEventListener('keydown',e=>{if(e.key==='Escape'){$('ares').hidden=true;$('aq').setAttribute('aria-expanded','false')}});
@@ -903,8 +916,9 @@ $('xonly').addEventListener('click',e=>{if(e.target.closest('#xonlyx')){S.only=n
 $('xq').addEventListener('input',xShow);$('xq').addEventListener('focus',()=>{if(!XREF.length)loadXref().then(xShow);else xShow()});
 $('xq').addEventListener('blur',()=>{const q=$('xq').value.trim();if(q&&XREF_OK&&!xFind(q).length)xMiss(q)});
 $('xq').addEventListener('keydown',e=>{if(e.key==='Enter'){const q=$('xq').value.trim();if(q&&XREF_OK&&!xFind(q).length)xMiss(q)}if(e.key==='Escape'){$('xres').hidden=true;$('xq').setAttribute('aria-expanded','false')}});
-document.addEventListener('click',e=>{const w=e.target.closest('.xwrap');for(const[i,b]of[['xq','xres'],['aq','ares']])if(!w||!w.contains($(i))){$(b).hidden=true;$(i).setAttribute('aria-expanded','false')}});
-function spToggle(b){const d=b.closest('.spv').querySelector('.spdh'),h=SPBY.get(b.dataset.s);if(!d||!h)return;const on=d.hidden;d.hidden=!on;if(on&&!d.innerHTML)d.innerHTML=specDetail(h);b.setAttribute('aria-expanded',String(on));b.textContent=on?'Hide details':'Details'}
+// composedPath, not closest: a click can redraw its own button, leaving the target detached
+document.addEventListener('click',e=>{const path=e.composedPath();for(const[i,b]of[['xq','xres'],['aq','ares']])if(!path.includes($(i).closest('.xwrap'))){$(b).hidden=true;$(i).setAttribute('aria-expanded','false')}});
+function spRedraw(gk){const el=[...$('ares').querySelectorAll('.spv')].find(e=>e.dataset.g===gk);if(el)el.innerHTML=spvInner(gk)}
 async function specRFQ(h,b){const x=specBurner(h);if(!x)return;const xfmr=stepDownNote(x);if(xfmr&&!await stepDownOK(x))return;
   const r=spRate(h),rate=!r?'':r.u==='gph'?`${r.v} GPH (≈ ${Math.round(r.v*G).toLocaleString()} MBH)`:`${r.v.toLocaleString()} MBH${x.f==='oil'?` (≈ ${(r.v/G).toFixed(2)} GPH)`:''}`;
   const keys=spKeys(h),ins=(keys.find(([c])=>/insertion/i.test(c))||[])[1]||'';
@@ -918,7 +932,9 @@ async function specRFQ(h,b){const x=specBurner(h);if(!x)return;const xfmr=stepDo
   try{await newRFQ(x,{...(xfmr?{xfmr}:{}),note:`Per the ${h.guide} spec for the ${h.mfg} ${h.model}${ids?` (${ids})`:''}.${fm&&!mode?` Firing mode: ${fm}.`:''}${note&&!/^none$/i.test(note)?' Spec note: '+note:''}`,
     pre:{'q-app':`${h.mfg} ${h.model}`,'q-rate':rate,'q-ins':ins,'q-opt':opt,'q-fuel':fuel,'q-vent':vent,'q-m':mode}})}catch(err){toast(err.message)}finally{b.disabled=false}}
 async function lookClick(e){const b=e.target.closest('button[data-a]');if(!b)return;
-  if(b.dataset.a==='spdet'){spToggle(b);return}
+  if(b.dataset.a==='spdet'){const g=SPG.get(b.dataset.g);if(g){g.open=!g.open;spRedraw(b.dataset.g)}return}
+  if(b.dataset.a==='sprate'){const g=SPG.get(b.dataset.g);if(g){g.sel=+b.dataset.i;spRedraw(b.dataset.g);const n=[...$('ares').querySelectorAll('.spv')].find(e=>e.dataset.g===b.dataset.g);const c=n&&n.querySelector(`[data-a="sprate"][data-i="${b.dataset.i}"]`);if(c)c.focus()}return}
+  if(b.dataset.a==='spsug'){$('aq').value=b.dataset.q;$('aq').focus();aShow();return}
   if(b.dataset.a==='spshow'||b.dataset.a==='sprfq'){const h=SPBY.get(b.dataset.s),x=h&&specBurner(h);if(!x)return;$('ares').hidden=true;$('aq').setAttribute('aria-expanded','false');
     if(b.dataset.a==='sprfq')return specRFQ(h,b);
     S={...JSON.parse(JSON.stringify(DEF)),only:[(x.b+'|'+x.n).toLowerCase()],onlyLbl:`${h.mfg} ${h.model}`,onlyKind:'spec',rate:spRate(h)?String(spRate(h).v):'',unit:spRate(h)?spRate(h).u:'gph'};CONV=null;sync();

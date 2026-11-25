@@ -754,8 +754,8 @@ async function api(req, res, url) {
   if (p === '/api/burners' && m === 'GET') return send(res, 200, getBurners());
   if (p === '/api/xref' && m === 'GET') return send(res, 200, getXref());
   if (p === '/api/specs/search' && m === 'GET') { // appliance spec lookup for everyone
-    const hits = SPECS.search(String(url.searchParams.get('q') || '').slice(0, 100), 80);
-    return send(res, 200, { guides: SPECS.sets().map(Specs.title), hits: hits.map(({ set, row }) => { const r = set.roles, v = row.v;
+    const q = String(url.searchParams.get('q') || '').slice(0, 100), hits = SPECS.search(q, 120);
+    return send(res, 200, { guides: SPECS.sets().map(Specs.title), suggest: hits.length ? [] : SPECS.suggest(q), hits: hits.map(({ set, row }) => { const r = set.roles, v = row.v;
       return { brand: set.brand, guide: Specs.title(set), gid: set.id, id: row.id, mfg: v[r.mfg], model: v[r.model], burner: Specs.burnerOf(set, row), rate: r.rate >= 0 && parseFloat(v[r.rate]) > 0 ? v[r.rate] : '',
         rateCol: r.rate >= 0 ? set.cols[r.rate] : '', unit: set.rateUnit || '',
         f: set.cols.map((c, i) => [c, v[i]]).filter(([, x]) => x && x !== '0' && x !== '-').concat(r.burner < 0 && set.burner ? [['Burner', set.burner]] : []) }; }) });  }
@@ -876,9 +876,10 @@ async function api(req, res, url) {
       const b = (await readBody(req, 25 * 1024 * 1024)) || {};
       if (!okStr(b.brand, 40)) return send(res, 422, { error: 'Pick the brand these specs are for' });
       const name = typeof b.name === 'string' && b.name.trim() ? b.name.trim().slice(0, 40) : Specs.guideName(b.file);
-      const out = SPECS.importCSV(b.brand.trim(), name, String(b.csv || ''), me.name, typeof b.burner === 'string' ? b.burner : '');
+      const out = SPECS.importCSV(b.brand.trim(), name, String(b.csv || ''), me.name, typeof b.burner === 'string' ? b.burner : '', b.dryRun === true);
       if (out.error) return send(res, 422, { error: out.error, needBurner: !!out.needBurner });
-      return send(res, 200, { ...meta(out.set), skipped: out.skipped, warnings: out.warnings });
+      const m = b.dryRun === true ? { id: out.set.id, title: Specs.title(out.set), count: out.set.rows.length } : meta(out.set);
+      return send(res, 200, { ...m, dryRun: b.dryRun === true, skipped: out.skipped, warnings: out.warnings, diff: out.diff, kept: out.kept, replaces: out.replaces });
     }
     const one = id => SPECS.get(String(id || ''));
     if (p === '/api/specs/export' && m === 'GET') {
@@ -891,6 +892,36 @@ async function api(req, res, url) {
       const s = one(url.searchParams.get('id')); if (!s) return send(res, 404, { error: 'No such spec guide' });
       const q = String(url.searchParams.get('q') || '').slice(0, 100), hits = q ? SPECS.search(q, 200, s).map(h => h.row) : s.rows.slice(0, 50);
       return send(res, 200, { cols: s.cols, roles: s.roles, burner: s.burner || '', total: s.rows.length, rows: hits.slice(0, 100) });
+    }
+    if (p === '/api/specs/review' && m === 'GET') { // spec links that still need a person to look at them
+      const s = one(url.searchParams.get('id')); if (!s) return send(res, 404, { error: 'No such spec guide' });
+      const ix = n => s.cols.findIndex(c => c.toLowerCase() === n), cS = ix('beckett spec'), cM = ix('spec match'), cP = ix('possible specs'), cW = ix('matched on');
+      if (cM < 0) return send(res, 200, { linked: false, counts: {}, rows: [] });
+      const kind = url.searchParams.get('kind') || 'likely', counts = { likely: 0, possible: 0, confirmed: 0, rejected: 0, sure: 0 }, out = [];
+      const r = s.roles, val = (row, i) => i >= 0 ? row.v[i] || '' : '';
+      for (const row of s.rows) {
+        const mt = val(row, cM).toLowerCase(), k = /^confirmed/.test(mt) ? 'confirmed' : /^rejected/.test(mt) ? 'rejected' : /^medium/.test(mt) ? 'likely' : /^high/.test(mt) ? 'sure' : val(row, cP) ? 'possible' : '';
+        if (!k) continue; counts[k]++;
+        if (k === kind && out.length < 400) out.push({ id: row.id, mfg: row.v[r.mfg], model: row.v[r.model], burner: Specs.burnerOf(s, row), rate: r.rate >= 0 ? row.v[r.rate] : '',
+          spec: val(row, cS), possible: val(row, cP).split(/\s*,\s*/).filter(Boolean), why: val(row, cW),
+          f: s.cols.map((c, i) => [c, row.v[i]]).filter(([c, x]) => x && x !== '0' && x !== '-' && !/^(beckett spec|spec match|possible specs|matched on|note|updated date|date modified|see note|proj no)$/i.test(c) && ![r.mfg, r.model].includes(s.cols.indexOf(c))) });
+      }
+      return send(res, 200, { linked: true, counts, unit: s.rateUnit || '', rows: out });
+    }
+    if (p === '/api/specs/review' && m === 'POST') { // confirm or reject one appliance's spec link; kept when the guide is loaded again
+      const b = (await readBody(req, 4096)) || {}, s = one(b.guide); if (!s) return send(res, 404, { error: 'No such spec guide' });
+      const i = s.rows.findIndex(x => x.id === b.id); if (i < 0) return send(res, 404, { error: 'That spec was changed or removed. Reload the list.' });
+      if (!['confirm', 'reject', 'undo'].includes(b.action)) return send(res, 422, { error: 'Unknown action' });
+      const spec = String(b.spec || '').trim().toUpperCase().slice(0, 40);
+      if (b.action === 'confirm' && !/^[A-Z0-9-]{2,40}$/.test(spec)) return send(res, 422, { error: 'Give the spec number to confirm' });
+      const cur = { ...s, cols: s.cols.slice(), rows: s.rows.map(x => ({ ...x, v: x.v.slice() })), updated: new Date().toISOString(), by: me.name };
+      const L = SPECS.linkCols(cur), row = cur.rows[i];
+      if (b.action === 'confirm') { row.v[L.spec] = spec; row.v[L.match] = 'Confirmed'; }
+      else if (b.action === 'reject') { // the rejected spec stays at the front of Possible Specs, so Undo can bring it back
+        const was = row.v[L.spec] || spec, ps = String(row.v[L.poss] || '').split(/\s*,\s*/).filter(x => x && x !== was);
+        if (was) row.v[L.poss] = [was, ...ps].join(', '); row.v[L.spec] = ''; row.v[L.match] = 'Rejected'; }
+      else { row.v[L.match] = row.v[L.spec] ? 'Medium' : ''; }
+      SPECS.save(cur); return send(res, 200, { ok: true, spec: row.v[L.spec], match: row.v[L.match] });
     }
     if (p === '/api/specs/row' && (m === 'POST' || m === 'DELETE')) { // add / change / delete one spec
       const b = (await readBody(req, 64 * 1024)) || {}, s = one(b.guide); if (!s) return send(res, 404, { error: 'No such spec guide' });

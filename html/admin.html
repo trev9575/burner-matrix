@@ -80,7 +80,9 @@ input.xbq:focus{border-color:var(--ink);outline:2px solid var(--ink);outline-off
 .xform{display:grid;gap:12px;background:#f6f6f3;border:1px solid var(--rule);border-radius:4px;padding:14px}.xopts{max-height:260px;overflow:auto}.xopts .bh{font-size:12px;font-weight:700;color:var(--mute);margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em}
 #xlist td{vertical-align:top}#xlist .bt{display:inline-block;background:#eef3fb;color:var(--gas);font-weight:700;font-size:12.5px;border-radius:3px;padding:1px 7px;margin:0 4px 4px 0}#xlist .bt.oil{background:#fdecee;color:var(--red)}#xlist .bt.gone{background:#eee;color:#888;text-decoration:line-through}
 .ximp summary{cursor:pointer;font-weight:700;font-size:14px}
-.splist{display:grid;border-top:1px solid var(--rule)}.spg{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:10px 2px;border-bottom:1px solid var(--rule)}.spg .who{flex:1 1 260px;min-width:0;font-size:14px;overflow-wrap:anywhere}.spg .who .u{display:block;margin-top:2px}.spg .acts{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;margin-left:auto}.spg .btn{min-height:34px;padding:4px 10px;font-size:13px}.spg.gone .who b{color:var(--mute)}
+.rvlist{display:grid;gap:8px}.rvi{display:grid;gap:6px;background:#fff;border:1px solid var(--rule);border-radius:4px;padding:10px 12px}.rvi .t{font-size:14px}.rvi .t .u{margin-left:6px}
+.rvi .f{display:flex;flex-wrap:wrap;gap:2px 14px;font-size:12.5px;color:var(--mute)}.rvi .f b{color:var(--ink);font-weight:600}.rvi .acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.rvi .btn{min-height:34px;padding:4px 12px;font-size:13px}.rvi .why{font-size:12px;color:var(--mute)}
+.btn.ok{background:#1d7a3a;color:#fff}.splist{display:grid;border-top:1px solid var(--rule)}.spg{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:10px 2px;border-bottom:1px solid var(--rule)}.spg .who{flex:1 1 260px;min-width:0;font-size:14px;overflow-wrap:anywhere}.spg .who .u{display:block;margin-top:2px}.spg .acts{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;margin-left:auto}.spg .btn{min-height:34px;padding:4px 10px;font-size:13px}.spg.gone .who b{color:var(--mute)}
 .confirm{background:#fff3e8;border-left:4px solid #d9480f;padding:10px 14px;border-radius:3px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .dirty{color:#b35c00;font-size:13px;font-weight:700}
 /* tables */
@@ -313,6 +315,12 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
             <div class="row"><button class="btn pri" type="submit" id="spgo" disabled>Load</button></div>
             <div id="spmsg" class="msg" hidden></div>
           </form>
+          <div id="sprev" hidden style="display:grid;gap:10px;border-top:1px solid var(--rule);padding-top:12px">
+            <h3 style="margin:0;font-size:15px">Review spec links</h3>
+            <p class="u" style="margin:0">Which Beckett spec number goes with each appliance (from the guide's <b>Beckett Spec</b> column). Confirm or reject the likely and possible matches; your decisions are kept when the guide is loaded again.</p>
+            <div class="xfil"><label>Guide<select id="rvg"></select></label><div class="xsegw"><span>Show</span><div class="xseg" role="group" aria-label="Which links" id="rvk"></div></div></div>
+            <div id="rvlist" class="rvlist"></div><div class="row"><button class="btn" type="button" id="rvmore" hidden>Show more</button></div>
+          </div>
           <div id="sped" hidden style="display:grid;gap:10px">
             <h3 style="margin:0;font-size:15px">Find, change or add a single spec</h3>
             <div class="xfil"><label>Guide<select id="sprb"></select></label><input type="text" id="sprq" class="xbq" placeholder="Search by appliance maker, model or burner" aria-label="Search appliance specs" autocomplete="off"><button type="button" class="btn" id="spadd">Add a spec</button></div>
@@ -597,7 +605,42 @@ async function loadSpecs(){let all;try{all=await call('GET','/api/specs')}catch(
     :'<div class="u" style="padding:10px 2px">No guides loaded yet.</div>';
   const keep=$('spbrand').value;$('spbrand').innerHTML=brands.map(b=>`<option>${esc(b)}</option>`).join('');if(brands.includes(keep))$('spbrand').value=keep;
   const k2=$('sprb').value;$('sprb').innerHTML=SP.map(s=>`<option value="${esc(s.id)}">${esc(s.title)}</option>`).join('');if(SP.some(s=>s.id===k2))$('sprb').value=k2;
-  $('sped').hidden=!SP.length;if(SP.length)spRows()}
+  $('sped').hidden=!SP.length;if(SP.length)spRows();
+  const k3=$('rvg').value;$('rvg').innerHTML=SP.map(s=>`<option value="${esc(s.id)}">${esc(s.title)}</option>`).join('');
+  if(SP.some(s=>s.id===k3))$('rvg').value=k3;
+  else if(SP.length){ // first time: open the guide with the most links left to review
+    let best=null,n=-1;for(const g of SP){try{const r=await call('GET',`/api/specs/review?id=${encodeURIComponent(g.id)}&kind=none`);const c=r.counts||{},t=(c.likely||0)+(c.possible||0);if(t>n){n=t;best=g.id}}catch(e){}}
+    if(best)$('rvg').value=best}
+  $('sprev').hidden=!SP.length;if(SP.length)rvLoad()}
+/* review: confirm or reject which Beckett spec goes with each appliance */
+let RV=null,RVK='likely',RVN=25;
+const RVL={likely:'Likely',possible:'Possible',confirmed:'Confirmed',rejected:'Rejected'};
+async function rvLoad(keepN){const id=$('rvg').value;if(!id)return;if(!keepN)RVN=25;
+  try{RV=await call('GET',`/api/specs/review?id=${encodeURIComponent(id)}&kind=${RVK}`)}catch(err){$('rvlist').innerHTML=`<div class="msg err">${esc(err.message)}</div>`;return}
+  if(id!==$('rvg').value)return;rvDraw()}
+function rvDraw(){const c=RV.counts||{};
+  $('rvk').innerHTML=Object.entries(RVL).map(([k,t])=>`<button type="button" data-k="${k}" aria-pressed="${k===RVK}">${t} (${(c[k]||0).toLocaleString()})</button>`).join('');
+  if(!RV.linked){$('rvlist').innerHTML='<div class="u">This guide has no spec links yet. Load a copy of it that has a <b>Beckett Spec</b> column (and Spec Match / Possible Specs) to review them here.</div>';$('rvmore').hidden=true;return}
+  const rows=RV.rows.slice(0,RVN),unit=RV.unit==='mbh'||RV.unit==='btu'?'':' GPH';
+  $('rvlist').innerHTML=rows.length?rows.map(r=>{const cand=r.spec?[r.spec,...r.possible.filter(p=>p!==r.spec)]:r.possible;
+    return`<div class="rvi" data-id="${esc(r.id)}"><div class="t"><b>${esc(r.mfg)} ${esc(r.model)}</b><span class="u">${esc(r.burner)}${r.rate?` · ${esc(r.rate)}${unit}`:''}</span></div>
+      <div class="f">${r.f.slice(0,9).map(([c,v])=>`<span>${esc(c)} <b>${esc(v)}</b></span>`).join('')}</div>
+      ${r.why?`<div class="why">Matched on: ${esc(r.why)}</div>`:''}
+      <div class="acts">${RVK==='confirmed'?`<span>Spec <b>${esc(r.spec)}</b></span><button class="btn" type="button" data-a="undo">Undo</button>`
+        :RVK==='rejected'?`<span class="u">No spec${r.possible.length?` (was ${esc(r.possible[0])})`:''}</span><button class="btn" type="button" data-a="undo">Undo</button>`
+        :cand.slice(0,4).map((p,i)=>`<button class="btn${i===0?' ok':''}" type="button" data-a="confirm" data-s="${esc(p)}">Confirm ${esc(p)}</button>`).join('')+`<button class="btn dan" type="button" data-a="reject">${cand.length>1?'None of these':'Reject'}</button>`}</div></div>`}).join('')
+    :`<div class="u">Nothing ${RVL[RVK].toLowerCase()} in this guide.</div>`;
+  $('rvmore').hidden=RV.rows.length<=RVN;$('rvmore').textContent=`Show more (${(RV.rows.length-RVN).toLocaleString()} left${RV.rows.length>=400?' of the first 400':''})`}
+$('rvg').onchange=()=>rvLoad();
+$('rvk').onclick=e=>{const b=e.target.closest('button[data-k]');if(!b)return;RVK=b.dataset.k;rvLoad()};
+$('rvmore').onclick=()=>{RVN+=25;rvDraw()};
+$('rvlist').onclick=async e=>{const b=e.target.closest('button[data-a]');if(!b)return;const card=b.closest('.rvi'),id=card.dataset.id;card.querySelectorAll('button').forEach(x=>x.disabled=true);
+  try{await call('POST','/api/specs/review',{guide:$('rvg').value,id,action:b.dataset.a,spec:b.dataset.s||''});
+    const i=RV.rows.findIndex(r=>r.id===id);if(i>=0)RV.rows.splice(i,1);
+    const to=b.dataset.a==='confirm'?'confirmed':b.dataset.a==='reject'?'rejected':null;RV.counts[RVK]=Math.max(0,(RV.counts[RVK]||0)-1);
+    if(to)RV.counts[to]=(RV.counts[to]||0)+1;else rvLoad(true);
+    toast(b.dataset.a==='confirm'?`Confirmed ${b.dataset.s}`:b.dataset.a==='reject'?'Rejected':'Moved back');rvDraw()}
+  catch(err){toast(err.message);card.querySelectorAll('button').forEach(x=>x.disabled=false)}};
 $('splist').onclick=async e=>{const b=e.target.closest('button[data-sa]');if(!b)return;
   if(!b.dataset.armed){b.dataset.armed=1;const t=b.textContent;b.textContent=b.dataset.sa==='clear'?'Click again to remove':'Click again to restore';setTimeout(()=>{delete b.dataset.armed;b.textContent=t},4000);return}
   try{if(b.dataset.sa==='clear')await call('DELETE','/api/specs',{id:b.dataset.id});else await call('POST','/api/specs/restore',{id:b.dataset.id});
@@ -605,24 +648,33 @@ $('splist').onclick=async e=>{const b=e.target.closest('button[data-sa]');if(!b)
 // one row per chosen file: guide name (from the file name), plus a burner box if the server says the file has no burner column
 function spQueue(){$('spq').innerHTML=SPQ.map((q,i)=>{const ex=SP.find(s=>s.brand===$('spbrand').value&&s.name.toLowerCase()===q.name.trim().toLowerCase());
   return`<div class="row" data-i="${i}" style="background:#fff;border:1px solid var(--rule);border-radius:3px;padding:8px 10px;align-items:flex-end">
-    <div style="flex:1 1 200px;font-size:13.5px;overflow-wrap:anywhere"><b>${esc(q.file.name)}</b><br><span class="u">${q.done?esc(q.done):ex?`Replaces the ${esc(ex.title)} guide (${ex.count.toLocaleString()} specs)`:'New guide'}</span></div>
+    <div style="flex:1 1 200px;font-size:13.5px;overflow-wrap:anywhere"><b>${esc(q.file.name)}</b><br><span class="u">${q.done?esc(q.done):ex?`Replaces the ${esc(ex.title)} guide (${ex.count.toLocaleString()} specs)${q.pv&&q.pv.key===spPvKey(q)?`: <b>${esc(diffTxt(q.pv.r))}</b>`:q.pvBusy?' · checking what changes…':''}`:'New guide'}</span></div>
     <label class="f" style="flex:0 1 200px">Guide name<input type="text" data-k="name" value="${esc(q.name)}" maxlength="40"></label>
     ${q.needBurner||q.burner?`<label class="f" style="flex:0 1 150px">Burner for every spec<input type="text" data-k="burner" value="${esc(q.burner||'')}" maxlength="40" placeholder="e.g. CG4"></label>`:''}
     ${q.err?`<div class="msg err" style="flex-basis:100%;margin:0">${esc(q.err)}</div>`:''}</div>`}).join('');
   $('spgo').disabled=!SPQ.some(q=>!q.done);$('spgo').textContent=SPQ.filter(q=>!q.done).length>1?`Load ${SPQ.filter(q=>!q.done).length} guides`:'Load'}
+// what loading a file would change in the guide it replaces, worked out on the server without saving anything
+const diffTxt=r=>{const d=r.diff;if(!d)return`${r.count.toLocaleString()} specs`;const p=[];if(d.added)p.push(`${d.added.toLocaleString()} added`);if(d.removed)p.push(`${d.removed.toLocaleString()} removed`);if(d.changed)p.push(`${d.changed.toLocaleString()} changed`);
+  return(p.length?p.join(', '):'no changes')+(d.same?` (${d.same.toLocaleString()} the same)`:'')+(r.kept?`; keeps ${r.kept.toLocaleString()} confirmed/rejected spec link${r.kept>1?'s':''}`:'')+(d.linksDropped?'. This file has no Beckett Spec column, so the spec numbers linked to this guide would be dropped (confirmed and rejected links come back if a file with that column is loaded again)':'')};
+const spPvKey=q=>$('spbrand').value+'|'+q.name.trim().toLowerCase()+'|'+(q.burner||'');
+async function spPreview(){for(const q of SPQ){if(q.done)continue;const ex=SP.find(s=>s.brand===$('spbrand').value&&s.name.toLowerCase()===q.name.trim().toLowerCase());
+    if(!ex||(q.pv&&q.pv.key===spPvKey(q))||(q.needBurner&&!q.burner))continue;const key=spPvKey(q);q.pvBusy=true;spQueue();
+    try{const r=await call('POST','/api/specs/import',{brand:$('spbrand').value,name:q.name.trim(),file:q.file.name,burner:q.burner||'',csv:await q.file.text(),dryRun:true});q.pv={key,r};q.err=''}
+    catch(err){q.err=err.message}finally{q.pvBusy=false}spQueue()}}
 // a file whose headings have no burner column needs the one burner all its specs are for (Beckett's residential gas guide is all CG4)
 $('spfile').onchange=async()=>{SPQ=[...$('spfile').files].map(f=>({file:f,name:guideName(f.name)||'Specs',burner:''}));$('spmsg').hidden=true;spQueue();
   for(const q of SPQ){try{const head=(await q.file.slice(0,4096).text()).split(/\r?\n/)[0].toLowerCase();
     if(!/burner/.test(head)){q.needBurner=true;if(/resid.*gas/i.test(q.name)&&$('spbrand').value==='Beckett')q.burner='CG4'}}catch(e){}}
-  spQueue()};
-$('spbrand').onchange=spQueue;
+  spQueue();spPreview()};
+$('spbrand').onchange=()=>{spQueue();spPreview()};
+$('spq').addEventListener('change',()=>spPreview());
 $('spq').oninput=e=>{const r=e.target.closest('[data-i]'),k=e.target.dataset.k;if(!r||!k)return;SPQ[+r.dataset.i][k]=e.target.value;if(k==='name'){const p=e.target.selectionStart;spQueue();const el=$('spq').querySelector(`[data-i="${r.dataset.i}"] [data-k="name"]`);if(el){el.focus();el.setSelectionRange(p,p)}}};
 $('spimp').onsubmit=async e=>{e.preventDefault();$('spmsg').hidden=true;const brand=$('spbrand').value,todo=SPQ.filter(q=>!q.done);if(!todo.length)return;
   const names=todo.map(q=>q.name.trim().toLowerCase());if(new Set(names).size<names.length)return showMsg($('spmsg'),'err','Two files have the same guide name, so the second would replace the first. Give each its own name.');
   $('spgo').disabled=true;$('spgo').textContent='Loading…';let ok=0;
   for(const q of todo){q.err='';if(!q.name.trim()){q.err='Give this guide a name.';continue}if(q.file.size>24*1024*1024){q.err='This file is too big (24 MB max).';continue}
     try{const r=await call('POST','/api/specs/import',{brand,name:q.name.trim(),file:q.file.name,burner:q.burner||'',csv:await q.file.text()});
-      q.done=`Loaded ${r.count.toLocaleString()} specs as ${r.title}${r.skipped?` (skipped ${r.skipped} blank or heading row${r.skipped>1?'s':''})`:''}${r.warnings&&r.warnings.length?'. '+r.warnings.join(' '):''}`;ok++}
+      q.done=`Loaded ${r.count.toLocaleString()} specs as ${r.title}${r.diff?` (${diffTxt(r)})`:''}${r.skipped?` (skipped ${r.skipped} blank or heading row${r.skipped>1?'s':''})`:''}${r.warnings&&r.warnings.length?'. '+r.warnings.join(' '):''}`;ok++}
     catch(err){q.err=err.message;if(/no burner model column/i.test(err.message))q.needBurner=true}}
   spQueue();if(ok){toast(`${ok} guide${ok>1?'s':''} loaded`);await loadSpecs();spQueue()}
   const bad=SPQ.filter(q=>q.err);if(!bad.length){$('spfile').value='';showMsg($('spmsg'),'ok','<ul style="margin:0">'+SPQ.map(q=>`<li>${esc(q.done)}</li>`).join('')+'</ul>');SPQ=[];spQueue()}
