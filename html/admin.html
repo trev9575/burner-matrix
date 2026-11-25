@@ -80,6 +80,7 @@ input.xbq:focus{border-color:var(--ink);outline:2px solid var(--ink);outline-off
 .xform{display:grid;gap:12px;background:#f6f6f3;border:1px solid var(--rule);border-radius:4px;padding:14px}.xopts{max-height:260px;overflow:auto}.xopts .bh{font-size:12px;font-weight:700;color:var(--mute);margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em}
 #xlist td{vertical-align:top}#xlist .bt{display:inline-block;background:#eef3fb;color:var(--gas);font-weight:700;font-size:12.5px;border-radius:3px;padding:1px 7px;margin:0 4px 4px 0}#xlist .bt.oil{background:#fdecee;color:var(--red)}#xlist .bt.gone{background:#eee;color:#888;text-decoration:line-through}
 .ximp summary{cursor:pointer;font-weight:700;font-size:14px}
+#splist .btn{min-height:34px;padding:4px 10px;font-size:13px}#splist td{padding:6px 8px}
 .confirm{background:#fff3e8;border-left:4px solid #d9480f;padding:10px 14px;border-radius:3px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .dirty{color:#b35c00;font-size:13px;font-weight:700}
 /* tables */
@@ -299,21 +300,22 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
         <div id="smsg" class="msg" hidden></div>
         <div id="specs" style="border-top:1px solid var(--rule);padding-top:12px;display:grid;gap:10px">
           <h2 style="font-size:17px">Appliance specs</h2>
-          <p class="u" style="margin:0">Each brand's guide of which burner setup fits which boiler or furnace model. Reps search it from <b>Look up an appliance or burner</b> on the matrix page and can start an RFQ with the spec filled in. Load it from the guide's CSV export; the columns can be in any order as long as there's an appliance maker, appliance model and burner model column.</p>
-          <div class="scroll"><table><thead><tr><th>Brand</th><th>Specs</th><th>Last updated</th><th></th></tr></thead><tbody id="splist"></tbody></table></div>
+          <p class="u" style="margin:0">Guides of which burner setup fits which boiler or furnace model (e.g. residential oil, commercial oil, residential gas, commercial gas). Reps search all of them from <b>Look up an appliance or burner</b> on the matrix page and can start an RFQ with the spec filled in. Each brand can have any number of guides.</p>
+          <div class="scroll"><table><thead><tr><th>Guide</th><th>Specs</th><th>Last updated</th><th></th></tr></thead><tbody id="splist"></tbody></table></div>
           <form id="spimp" class="xform" style="gap:10px">
-            <h3 style="margin:0;font-size:15px">Load or replace a guide from CSV</h3>
+            <h3 style="margin:0;font-size:15px">Load guides from CSV</h3>
             <div class="row" style="align-items:flex-end">
-              <label class="f" style="flex:0 1 200px">Brand<select id="spbrand"></select></label>
-              <label class="f" style="flex:1 1 260px">CSV file<input type="file" id="spfile" accept=".csv,text/csv" style="min-height:42px;padding:8px 0"></label>
-              <button class="btn pri" type="submit" id="spgo">Load guide</button>
+              <label class="f" style="flex:0 1 180px">Brand<select id="spbrand"></select></label>
+              <label class="f" style="flex:1 1 280px">CSV files <span class="u">pick one or several</span><input type="file" id="spfile" accept=".csv,text/csv" multiple style="min-height:42px;padding:8px 0"></label>
             </div>
-            <p class="u" style="margin:0">Replaces that brand's whole guide. The version it replaces is kept, so <b>Restore previous</b> puts it back if the new file is wrong.</p>
+            <div id="spq" style="display:grid;gap:8px"></div>
+            <p class="u" style="margin:0">Each file becomes its own guide, named from the file (you can change the name). Loading a file whose brand and name match an existing guide replaces only that guide, and the old version is kept for <b>Restore previous</b>. Other guides are never touched.</p>
+            <div class="row"><button class="btn pri" type="submit" id="spgo" disabled>Load</button></div>
             <div id="spmsg" class="msg" hidden></div>
           </form>
           <div id="sped" hidden style="display:grid;gap:10px">
             <h3 style="margin:0;font-size:15px">Find, change or add a single spec</h3>
-            <div class="xfil"><label>Brand<select id="sprb"></select></label><input type="text" id="sprq" class="xbq" placeholder="Search by appliance maker, model or burner" aria-label="Search appliance specs" autocomplete="off"><button type="button" class="btn" id="spadd">Add a spec</button></div>
+            <div class="xfil"><label>Guide<select id="sprb"></select></label><input type="text" id="sprq" class="xbq" placeholder="Search by appliance maker, model or burner" aria-label="Search appliance specs" autocomplete="off"><button type="button" class="btn" id="spadd">Add a spec</button></div>
             <form id="spf" class="xform" hidden><h3 id="spfh" style="margin:0;font-size:15px"></h3><div class="grid" id="spfields"></div>
               <div class="row"><button class="btn pri" type="submit" id="spsave">Save</button><button class="btn" type="button" id="spcancel">Cancel</button><span class="sp" style="flex:1"></span><button class="btn dan" type="button" id="spdel" hidden>Delete this spec</button></div>
               <div id="spfmsg" class="msg" hidden></div></form>
@@ -579,44 +581,65 @@ function showSettings(s){$('sf').elements.rfqTo.value=s.rfqTo;$('sf').elements.f
   $('bstat').innerHTML=s.lastBackup?`Last backup: <b>${esc(new Date(s.lastBackup.at).toLocaleString())}</b> (${esc(s.lastBackup.why)})`+(s.backups.length?`<br>Newest copies: ${s.backups.map(esc).join(', ')}`:''):'No backup yet. The first one runs at 1:00 a.m., or click Back up now.';$('envto').textContent=s.envRfqTo?` (currently ${s.envRfqTo})`:' (not set)';
   $('mailstat').innerHTML=s.mail?`Email server: <b>set up</b> – sending through ${esc(s.smtpHost)} as ${esc(s.smtpFrom)}. RFQs go to <b>${esc(s.effective||'(no default – reps must type an address)')}</b>.`:'Email server: <b>not set up yet</b>. Add the SMTP variables to the container (see README) before reps can email RFQs.'}
 async function loadSettings(){$('smsg').hidden=true;try{showSettings(await call('GET','/api/settings'))}catch(err){showMsg($('smsg'),'err',esc(err.message))}loadSpecs()}
-/* ---------- appliance specs (one guide per burner brand) ---------- */
-let SP=[],SPR=null,SPED=null;
+/* ---------- appliance specs (any number of guides per burner brand) ---------- */
+let SP=[],SPR=null,SPED=null,SPQ=[];
 const fmtWhen=d=>d?new Date(d).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}):'';
+// same naming the server uses: "Residential_Gas_Specifications_Guide_SQL.csv" -> "Residential gas"
+const guideName=f=>{let n=String(f||'').replace(/\.[a-z0-9]+$/i,'').replace(/^[0-9a-f]{6,}[-_]/i,'').replace(/_+/g,' ').replace(/\b(spec(ification)?s?|guide|sql|export|csv)\b/gi,' ').replace(/\s+/g,' ').trim().toLowerCase();return n?(n[0].toUpperCase()+n.slice(1)).slice(0,40):''};
+const UNIT={gph:'GPH',mbh:'MBH',btu:'BTU/hr'};
 async function loadSpecs(){let all;try{all=await call('GET','/api/specs')}catch(err){$('splist').innerHTML=`<tr><td colspan="4">${esc(err.message)}</td></tr>`;return}
-  SP=all.filter(s=>!s.removed);const GONE=all.filter(s=>s.removed);
+  SP=all.filter(s=>!s.removed);
   if(!list.length)try{list=await call('GET','/api/burners')}catch(e){}
   const brands=[...new Set(list.map(b=>b.brand).concat(all.map(s=>s.brand)))].sort((a,b)=>a.localeCompare(b));
-  $('splist').innerHTML=brands.map(b=>{const s=SP.find(x=>x.brand.toLowerCase()===b.toLowerCase());
-    const g=!s&&GONE.find(x=>x.brand.toLowerCase()===b.toLowerCase());
-    return`<tr><td><b>${esc(b)}</b></td><td>${s?s.count.toLocaleString()+' specs':g?`<span class="u">Removed (${g.prevCount.toLocaleString()} specs can be restored)</span>`:'<span class="u">No guide loaded</span>'}</td><td>${s?esc(fmtWhen(s.updated))+(s.by?` <span class="u">by ${esc(s.by)}</span>`:''):''}</td>
-    <td style="text-align:right;white-space:nowrap">${s?`<a class="btn" style="display:inline-flex;align-items:center;text-decoration:none" href="/api/specs/export?brand=${encodeURIComponent(s.brand)}" download>Download CSV</a> ${s.hasPrevious?`<button class="btn" type="button" data-sa="restore" data-b="${esc(s.brand)}">Restore previous</button> `:''}<button class="btn dan" type="button" data-sa="clear" data-b="${esc(s.brand)}">Remove</button>`:g?`<button class="btn" type="button" data-sa="restore" data-b="${esc(g.brand)}">Restore</button>`:''}</td></tr>`}).join('');
+  $('splist').innerHTML=all.length?all.map(s=>`<tr><td><b>${esc(s.title)}</b>${s.burner?` <span class="u">· every spec is ${esc(s.burner)}</span>`:''}</td>
+    <td>${s.removed?`<span class="u">Removed (${s.prevCount.toLocaleString()} can be restored)</span>`:s.count.toLocaleString()+(s.rateUnit?` <span class="u">· ${UNIT[s.rateUnit]||''}</span>`:'')}</td>
+    <td style="white-space:nowrap">${s.removed?'':esc(fmtWhen(s.updated))+(s.by?` <span class="u">by ${esc(s.by)}</span>`:'')}</td>
+    <td style="text-align:right;white-space:nowrap">${s.removed?`<button class="btn" type="button" data-sa="restore" data-id="${esc(s.id)}" data-t="${esc(s.title)}">Restore</button>`:`<a class="btn" style="display:inline-flex;align-items:center;text-decoration:none" href="/api/specs/export?id=${encodeURIComponent(s.id)}" download>Download CSV</a> ${s.hasPrevious?`<button class="btn" type="button" data-sa="restore" data-id="${esc(s.id)}" data-t="${esc(s.title)}">Restore previous</button> `:''}<button class="btn dan" type="button" data-sa="clear" data-id="${esc(s.id)}" data-t="${esc(s.title)}">Remove</button>`}</td></tr>`).join('')
+    :'<tr><td colspan="4" class="u">No guides loaded yet.</td></tr>';
   const keep=$('spbrand').value;$('spbrand').innerHTML=brands.map(b=>`<option>${esc(b)}</option>`).join('');if(brands.includes(keep))$('spbrand').value=keep;
-  const k2=$('sprb').value;$('sprb').innerHTML=SP.map(s=>`<option>${esc(s.brand)}</option>`).join('');if(SP.some(s=>s.brand===k2))$('sprb').value=k2;
+  const k2=$('sprb').value;$('sprb').innerHTML=SP.map(s=>`<option value="${esc(s.id)}">${esc(s.title)}</option>`).join('');if(SP.some(s=>s.id===k2))$('sprb').value=k2;
   $('sped').hidden=!SP.length;if(SP.length)spRows()}
 $('splist').onclick=async e=>{const b=e.target.closest('button[data-sa]');if(!b)return;
   if(!b.dataset.armed){b.dataset.armed=1;const t=b.textContent;b.textContent=b.dataset.sa==='clear'?'Click again to remove':'Click again to restore';setTimeout(()=>{delete b.dataset.armed;b.textContent=t},4000);return}
-  try{if(b.dataset.sa==='clear')await call('DELETE','/api/specs',{brand:b.dataset.b});else await call('POST','/api/specs/restore',{brand:b.dataset.b});
-    toast(b.dataset.sa==='clear'?`${b.dataset.b} guide removed`:`Previous ${b.dataset.b} guide restored`);SPED=null;$('spf').hidden=true;loadSpecs()}catch(err){toast(err.message)}};
-$('spimp').onsubmit=async e=>{e.preventDefault();const f=$('spfile').files[0],brand=$('spbrand').value;$('spmsg').hidden=true;
-  if(!f)return showMsg($('spmsg'),'err','Choose the CSV file first.');if(f.size>24*1024*1024)return showMsg($('spmsg'),'err','That file is too big (24 MB max).');
-  const have=SP.find(s=>s.brand===brand);
-  if(have&&!$('spgo').dataset.armed){$('spgo').dataset.armed=1;$('spgo').textContent=`Replace ${have.count.toLocaleString()} ${brand} specs`;setTimeout(()=>{delete $('spgo').dataset.armed;$('spgo').textContent='Load guide'},5000);return}
-  delete $('spgo').dataset.armed;$('spgo').textContent='Loading…';$('spgo').disabled=true;
-  try{const r=await call('POST','/api/specs/import',{brand,csv:await f.text()});
-    showMsg($('spmsg'),'ok',`Loaded <b>${r.count.toLocaleString()}</b> ${esc(r.brand)} specs.${r.skipped?` Skipped ${r.skipped} blank or repeated heading row${r.skipped>1?'s':''}.`:''}${r.warnings&&r.warnings.length?'<ul>'+r.warnings.map(w=>`<li>${esc(w)}</li>`).join('')+'</ul>':''}`);
-    $('spfile').value='';$('sprb').value=r.brand;SPED=null;$('spf').hidden=true;await loadSpecs()}
-  catch(err){showMsg($('spmsg'),'err',esc(err.message))}finally{$('spgo').textContent='Load guide';$('spgo').disabled=false}};
+  try{if(b.dataset.sa==='clear')await call('DELETE','/api/specs',{id:b.dataset.id});else await call('POST','/api/specs/restore',{id:b.dataset.id});
+    toast(b.dataset.sa==='clear'?`${b.dataset.t} guide removed`:`${b.dataset.t} guide restored`);SPED=null;$('spf').hidden=true;loadSpecs()}catch(err){toast(err.message)}};
+// one row per chosen file: guide name (from the file name), plus a burner box if the server says the file has no burner column
+function spQueue(){$('spq').innerHTML=SPQ.map((q,i)=>{const ex=SP.find(s=>s.brand===$('spbrand').value&&s.name.toLowerCase()===q.name.trim().toLowerCase());
+  return`<div class="row" data-i="${i}" style="background:#fff;border:1px solid var(--rule);border-radius:3px;padding:8px 10px;align-items:flex-end">
+    <div style="flex:1 1 200px;font-size:13.5px;overflow-wrap:anywhere"><b>${esc(q.file.name)}</b><br><span class="u">${q.done?esc(q.done):ex?`Replaces the ${esc(ex.title)} guide (${ex.count.toLocaleString()} specs)`:'New guide'}</span></div>
+    <label class="f" style="flex:0 1 200px">Guide name<input type="text" data-k="name" value="${esc(q.name)}" maxlength="40"></label>
+    ${q.needBurner||q.burner?`<label class="f" style="flex:0 1 150px">Burner for every spec<input type="text" data-k="burner" value="${esc(q.burner||'')}" maxlength="40" placeholder="e.g. CG4"></label>`:''}
+    ${q.err?`<div class="msg err" style="flex-basis:100%;margin:0">${esc(q.err)}</div>`:''}</div>`}).join('');
+  $('spgo').disabled=!SPQ.some(q=>!q.done);$('spgo').textContent=SPQ.filter(q=>!q.done).length>1?`Load ${SPQ.filter(q=>!q.done).length} guides`:'Load'}
+// a file whose headings have no burner column needs the one burner all its specs are for (Beckett's residential gas guide is all CG4)
+$('spfile').onchange=async()=>{SPQ=[...$('spfile').files].map(f=>({file:f,name:guideName(f.name)||'Specs',burner:''}));$('spmsg').hidden=true;spQueue();
+  for(const q of SPQ){try{const head=(await q.file.slice(0,4096).text()).split(/\r?\n/)[0].toLowerCase();
+    if(!/burner/.test(head)){q.needBurner=true;if(/resid.*gas/i.test(q.name)&&$('spbrand').value==='Beckett')q.burner='CG4'}}catch(e){}}
+  spQueue()};
+$('spbrand').onchange=spQueue;
+$('spq').oninput=e=>{const r=e.target.closest('[data-i]'),k=e.target.dataset.k;if(!r||!k)return;SPQ[+r.dataset.i][k]=e.target.value;if(k==='name'){const p=e.target.selectionStart;spQueue();const el=$('spq').querySelector(`[data-i="${r.dataset.i}"] [data-k="name"]`);if(el){el.focus();el.setSelectionRange(p,p)}}};
+$('spimp').onsubmit=async e=>{e.preventDefault();$('spmsg').hidden=true;const brand=$('spbrand').value,todo=SPQ.filter(q=>!q.done);if(!todo.length)return;
+  const names=todo.map(q=>q.name.trim().toLowerCase());if(new Set(names).size<names.length)return showMsg($('spmsg'),'err','Two files have the same guide name, so the second would replace the first. Give each its own name.');
+  $('spgo').disabled=true;$('spgo').textContent='Loading…';let ok=0;
+  for(const q of todo){q.err='';if(!q.name.trim()){q.err='Give this guide a name.';continue}if(q.file.size>24*1024*1024){q.err='This file is too big (24 MB max).';continue}
+    try{const r=await call('POST','/api/specs/import',{brand,name:q.name.trim(),file:q.file.name,burner:q.burner||'',csv:await q.file.text()});
+      q.done=`Loaded ${r.count.toLocaleString()} specs as ${r.title}${r.skipped?` (skipped ${r.skipped} blank or heading row${r.skipped>1?'s':''})`:''}${r.warnings&&r.warnings.length?'. '+r.warnings.join(' '):''}`;ok++}
+    catch(err){q.err=err.message;if(/no burner model column/i.test(err.message))q.needBurner=true}}
+  spQueue();if(ok){toast(`${ok} guide${ok>1?'s':''} loaded`);await loadSpecs();spQueue()}
+  const bad=SPQ.filter(q=>q.err);if(!bad.length){$('spfile').value='';showMsg($('spmsg'),'ok','<ul style="margin:0">'+SPQ.map(q=>`<li>${esc(q.done)}</li>`).join('')+'</ul>');SPQ=[];spQueue()}
+  else showMsg($('spmsg'),'err',bad.some(q=>q.needBurner)?'A file has no burner model column. Enter the burner every spec in it is for, then click Load again.':'Some files weren’t loaded. See the message under each.');
+  const f=$('spq').querySelector('[data-k="burner"]');if(f&&!f.value)f.focus()};
 let sprT=0;$('sprq').oninput=()=>{clearTimeout(sprT);sprT=setTimeout(spRows,200)};$('sprb').onchange=()=>{SPED=null;$('spf').hidden=true;spRows()};
 const spCell=(r,cols,roles,k)=>roles[k]>=0?r.v[roles[k]]||'':'';
-async function spRows(){const brand=$('sprb').value;if(!brand)return;const q=$('sprq').value.trim();
-  try{SPR=await call('GET',`/api/specs/rows?brand=${encodeURIComponent(brand)}&q=${encodeURIComponent(q)}`)}catch(err){$('sprows').innerHTML=`<tr><td colspan="4">${esc(err.message)}</td></tr>`;return}
-  if(brand!==$('sprb').value||q!==$('sprq').value.trim())return;
-  const{cols,roles,rows,total}=SPR;
+async function spRows(){const id=$('sprb').value;if(!id)return;const q=$('sprq').value.trim();
+  try{SPR=await call('GET',`/api/specs/rows?id=${encodeURIComponent(id)}&q=${encodeURIComponent(q)}`)}catch(err){$('sprows').innerHTML=`<tr><td colspan="4">${esc(err.message)}</td></tr>`;return}
+  if(id!==$('sprb').value||q!==$('sprq').value.trim())return;
+  const{cols,roles,rows,total,burner}=SPR;
   $('sprcnt').textContent=q?(rows.length?`${rows.length}${rows.length>=100?'+':''} of ${total.toLocaleString()} specs match`:'No specs match'):`Showing the first ${rows.length} of ${total.toLocaleString()} specs. Search to find one.`;
-  $('sprows').innerHTML=rows.map(r=>`<tr><td><b>${esc(spCell(r,cols,roles,'mfg'))}</b> ${esc(spCell(r,cols,roles,'model'))}</td><td>${esc(spCell(r,cols,roles,'burner'))}</td><td>${esc(spCell(r,cols,roles,'rate'))}</td><td style="text-align:right"><button class="btn" type="button" data-id="${esc(r.id)}">Edit</button></td></tr>`).join('')}
+  $('sprows').innerHTML=rows.map(r=>`<tr><td><b>${esc(spCell(r,cols,roles,'mfg'))}</b> ${esc(spCell(r,cols,roles,'model'))}</td><td>${esc(spCell(r,cols,roles,'burner')||burner)}</td><td>${esc(spCell(r,cols,roles,'rate'))}</td><td style="text-align:right"><button class="btn" type="button" data-id="${esc(r.id)}">Edit</button></td></tr>`).join('')}
 function spForm(row){const{cols,roles}=SPR;SPED=row?row.id:'';$('spfmsg').hidden=true;$('spdel').hidden=!row;delete $('spdel').dataset.armed;$('spdel').textContent='Delete this spec';
-  const need=new Set(['mfg','model','burner'].map(k=>roles[k]).filter(i=>i>=0));
-  $('spfh').textContent=row?`Edit ${spCell(row,cols,roles,'mfg')} ${spCell(row,cols,roles,'model')}`:`Add a ${$('sprb').value} spec`;
+  const need=new Set(['mfg','model','burner'].map(k=>roles[k]).filter(i=>i>=0)),g=SP.find(s=>s.id===$('sprb').value);
+  $('spfh').textContent=row?`Edit ${spCell(row,cols,roles,'mfg')} ${spCell(row,cols,roles,'model')}`:`Add a spec to ${g?g.title:'this guide'}`;
   $('spfields').innerHTML=cols.map((c,i)=>{const v=row?row.v[i]||'':'',long=i===roles.note||v.length>60;
     return`<label class="f"${long?' style="grid-column:1/-1"':''}>${esc(c)}${need.has(i)?' <span class="u">required</span>':''}${long?`<textarea data-i="${i}" rows="2">${esc(v)}</textarea>`:`<input type="text" data-i="${i}" value="${esc(v)}" autocomplete="off">`}</label>`}).join('');
   $('spf').hidden=false;$('spf').scrollIntoView({block:'nearest'});const first=$('spfields').querySelector('input,textarea');if(first)first.focus({preventScroll:true})}
@@ -624,10 +647,10 @@ $('sprows').onclick=e=>{const b=e.target.closest('button[data-id]');if(!b||!SPR)
 $('spadd').onclick=()=>{if(SPR)spForm(null)};
 $('spcancel').onclick=()=>{SPED=null;$('spf').hidden=true};
 $('spf').onsubmit=async e=>{e.preventDefault();const v=SPR.cols.map((_,i)=>{const el=$('spfields').querySelector(`[data-i="${i}"]`);return el?el.value:''});
-  try{await call('POST','/api/specs/row',{brand:$('sprb').value,...(SPED?{id:SPED}:{}),v});toast(SPED?'Spec saved':'Spec added');SPED=null;$('spf').hidden=true;await loadSpecs()}
+  try{await call('POST','/api/specs/row',{guide:$('sprb').value,...(SPED?{id:SPED}:{}),v});toast(SPED?'Spec saved':'Spec added');SPED=null;$('spf').hidden=true;await loadSpecs()}
   catch(err){showMsg($('spfmsg'),'err',esc(err.message))}};
 $('spdel').onclick=async()=>{const b=$('spdel');if(!b.dataset.armed){b.dataset.armed=1;b.textContent='Click again to delete';setTimeout(()=>{delete b.dataset.armed;b.textContent='Delete this spec'},4000);return}
-  try{await call('DELETE','/api/specs/row',{brand:$('sprb').value,id:SPED});toast('Spec deleted');SPED=null;$('spf').hidden=true;await loadSpecs()}catch(err){showMsg($('spfmsg'),'err',esc(err.message))}};
+  try{await call('DELETE','/api/specs/row',{guide:$('sprb').value,id:SPED});toast('Spec deleted');SPED=null;$('spf').hidden=true;await loadSpecs()}catch(err){showMsg($('spfmsg'),'err',esc(err.message))}};
 $('sf').onsubmit=async e=>{e.preventDefault();$('smsg').hidden=true;
   try{const s=await call('PUT','/api/settings',{rfqTo:e.target.elements.rfqTo.value,followUpDays:Number(e.target.elements.followUpDays.value||0),stepDownWarn:e.target.elements.stepDownWarn.checked});showSettings(s);toast('Settings saved')}catch(err){showMsg($('smsg'),'err',esc(err.message))}};
 

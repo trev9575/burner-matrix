@@ -72,7 +72,7 @@ function notify(names, data) {
     e => { console.warn(`Push to ${s.user} failed: ${e.message}`); return null; })))
     .then(gone => { const g = new Set(gone.filter(Boolean)); if (g.size) writeJSON(F.push, getSubs().filter(s => !g.has(s.endpoint))); });
 }
-const SPECS = Specs.store(F.specs); // appliance spec guides, one file per burner brand
+const SPECS = Specs.store(F.specs); // appliance spec guides, any number per burner brand
 const quoters = () => users.filter(u => u.role === 'quoter').map(u => u.name);
 
 // ---------- users ----------
@@ -755,10 +755,10 @@ async function api(req, res, url) {
   if (p === '/api/xref' && m === 'GET') return send(res, 200, getXref());
   if (p === '/api/specs/search' && m === 'GET') { // appliance spec lookup for everyone
     const hits = SPECS.search(String(url.searchParams.get('q') || '').slice(0, 100), 80);
-    return send(res, 200, { brands: SPECS.sets().map(s => s.brand), hits: hits.map(({ set, row }) => { const r = set.roles, v = row.v;
-      return { brand: set.brand, id: row.id, mfg: v[r.mfg], model: v[r.model], burner: v[r.burner], rate: r.rate >= 0 ? v[r.rate] : '', rateCol: r.rate >= 0 ? set.cols[r.rate] : '',
-        f: set.cols.map((c, i) => [c, v[i]]).filter(([, x], i) => x && x !== '0' || i === r.rate) }; }) });
-  }
+    return send(res, 200, { guides: SPECS.sets().map(Specs.title), hits: hits.map(({ set, row }) => { const r = set.roles, v = row.v;
+      return { brand: set.brand, guide: Specs.title(set), gid: set.id, id: row.id, mfg: v[r.mfg], model: v[r.model], burner: Specs.burnerOf(set, row), rate: r.rate >= 0 && parseFloat(v[r.rate]) > 0 ? v[r.rate] : '',
+        rateCol: r.rate >= 0 ? set.cols[r.rate] : '', unit: set.rateUnit || '',
+        f: set.cols.map((c, i) => [c, v[i]]).filter(([, x]) => x && x !== '0' && x !== '-').concat(r.burner < 0 && set.burner ? [['Burner', set.burner]] : []) }; }) });  }
   if (p === '/api/xref/miss' && m === 'POST') { // any signed-in user: a lookup that matched nothing
     const b = (await readBody(req, 1024)) || {}, q = String(b.q || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80), k = xnorm(q);
     if (k.length < 2 || xrefMatches(q, getXref())) return send(res, 200, { ok: true });
@@ -869,28 +869,31 @@ async function api(req, res, url) {
   // ----- admin-only: appliance spec guides -----
   if (p.startsWith('/api/specs')) {
     if (me.role !== 'admin') return send(res, 403, { error: 'Admins only' });
-    const brandOk = b => typeof b === 'string' && b.trim() && b.trim().length <= 40;
-    if (p === '/api/specs' && m === 'GET') return send(res, 200, SPECS.sets().map(s => ({ brand: s.brand, count: s.rows.length, cols: s.cols, roles: s.roles, updated: s.updated, by: s.by, hasPrevious: SPECS.hasPrevious(s.brand) })).concat(SPECS.removed().map(r => ({ brand: r.brand, count: 0, removed: true, prevCount: r.count, hasPrevious: true }))));
-    if (p === '/api/specs/import' && m === 'POST') {
+    const okStr = (b, n) => typeof b === 'string' && b.trim() && b.trim().length <= n;
+    const meta = s => ({ id: s.id, brand: s.brand, name: s.name || '', title: Specs.title(s), count: s.rows.length, cols: s.cols, roles: s.roles, burner: s.burner || '', rateUnit: s.rateUnit || '', updated: s.updated, by: s.by, hasPrevious: SPECS.hasPrevious(s.id) });
+    if (p === '/api/specs' && m === 'GET') return send(res, 200, SPECS.sets().map(meta).concat(SPECS.removed().map(r => ({ id: r.id, brand: r.brand, name: r.name, title: Specs.title(r), count: 0, removed: true, prevCount: r.count, hasPrevious: true }))));
+    if (p === '/api/specs/import' && m === 'POST') { // one file = one guide; a guide with the same brand + name is replaced (and kept for Restore)
       const b = (await readBody(req, 25 * 1024 * 1024)) || {};
-      if (!brandOk(b.brand)) return send(res, 422, { error: 'Pick the brand these specs are for' });
-      const out = SPECS.importCSV(b.brand.trim(), String(b.csv || ''), me.name);
-      if (out.error) return send(res, 422, { error: out.error });
-      return send(res, 200, { brand: out.set.brand, count: out.set.rows.length, skipped: out.skipped, warnings: out.warnings });
+      if (!okStr(b.brand, 40)) return send(res, 422, { error: 'Pick the brand these specs are for' });
+      const name = typeof b.name === 'string' && b.name.trim() ? b.name.trim().slice(0, 40) : Specs.guideName(b.file);
+      const out = SPECS.importCSV(b.brand.trim(), name, String(b.csv || ''), me.name, typeof b.burner === 'string' ? b.burner : '');
+      if (out.error) return send(res, 422, { error: out.error, needBurner: !!out.needBurner });
+      return send(res, 200, { ...meta(out.set), skipped: out.skipped, warnings: out.warnings });
     }
+    const one = id => SPECS.get(String(id || ''));
     if (p === '/api/specs/export' && m === 'GET') {
-      const s = SPECS.get(url.searchParams.get('brand') || ''); if (!s) return send(res, 404, { error: 'No specs for that brand' });
-      return send(res, 200, Specs.toCSV(s.cols, s.rows.map(r => r.v)), 'text/csv; charset=utf-8', { 'Content-Disposition': `attachment; filename="${Specs.slug(s.brand)}-appliance-specs.csv"` });
+      const s = one(url.searchParams.get('id')); if (!s) return send(res, 404, { error: 'No such spec guide' });
+      return send(res, 200, Specs.toCSV(s.cols, s.rows.map(r => r.v)), 'text/csv; charset=utf-8', { 'Content-Disposition': `attachment; filename="${s.id}-specs.csv"` });
     }
-    if (p === '/api/specs/restore' && m === 'POST') { const b = (await readBody(req, 1024)) || {}; return SPECS.restorePrevious(String(b.brand || '')) ? send(res, 200, { ok: true }) : send(res, 404, { error: 'No previous version to restore' }); }
-    if (p === '/api/specs' && m === 'DELETE') { const b = (await readBody(req, 1024)) || {}; if (!SPECS.get(String(b.brand || ''))) return send(res, 404, { error: 'No specs for that brand' }); SPECS.remove(b.brand); return send(res, 200, { ok: true }); }
+    if (p === '/api/specs/restore' && m === 'POST') { const b = (await readBody(req, 1024)) || {}; return SPECS.restorePrevious(String(b.id || '')) ? send(res, 200, { ok: true }) : send(res, 404, { error: 'No previous version to restore' }); }
+    if (p === '/api/specs' && m === 'DELETE') { const b = (await readBody(req, 1024)) || {}; if (!one(b.id)) return send(res, 404, { error: 'No such spec guide' }); SPECS.remove(b.id); return send(res, 200, { ok: true }); }
     if (p === '/api/specs/rows' && m === 'GET') { // find rows to edit
-      const s = SPECS.get(url.searchParams.get('brand') || ''); if (!s) return send(res, 404, { error: 'No specs for that brand' });
-      const q = url.searchParams.get('q') || '', hits = q ? SPECS.search(q, 200).filter(h => h.set === s).map(h => h.row) : s.rows.slice(0, 50);
-      return send(res, 200, { cols: s.cols, roles: s.roles, total: s.rows.length, rows: hits.slice(0, 100) });
+      const s = one(url.searchParams.get('id')); if (!s) return send(res, 404, { error: 'No such spec guide' });
+      const q = String(url.searchParams.get('q') || '').slice(0, 100), hits = q ? SPECS.search(q, 200, s).map(h => h.row) : s.rows.slice(0, 50);
+      return send(res, 200, { cols: s.cols, roles: s.roles, burner: s.burner || '', total: s.rows.length, rows: hits.slice(0, 100) });
     }
     if (p === '/api/specs/row' && (m === 'POST' || m === 'DELETE')) { // add / change / delete one spec
-      const b = (await readBody(req, 64 * 1024)) || {}, s = SPECS.get(String(b.brand || '')); if (!s) return send(res, 404, { error: 'No specs for that brand' });
+      const b = (await readBody(req, 64 * 1024)) || {}, s = one(b.guide); if (!s) return send(res, 404, { error: 'No such spec guide' });
       const i = b.id ? s.rows.findIndex(r => r.id === b.id) : -1;
       if (b.id && i < 0) return send(res, 404, { error: 'That spec was changed or removed. Search again.' });
       const cur = { ...s, rows: s.rows.slice(), updated: new Date().toISOString(), by: me.name };

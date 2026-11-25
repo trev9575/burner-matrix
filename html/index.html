@@ -846,7 +846,7 @@ const spMatch=q=>SPH.q===q.trim()&&SPH.hits.length>0;
 function specGet(q){clearTimeout(spT);const k=q.trim();if(xnorm(k).length<2){SPH={q:k,hits:[],ok:true};return}
   if(SPH.q===k&&SPH.ok)return;const s=++spSeq;
   spT=setTimeout(()=>J('GET','api/specs/search?q='+encodeURIComponent(k)).then(d=>{if(s!==spSeq)return;
-    SPH={q:k,hits:Array.isArray(d&&d.hits)?d.hits:[],ok:true};SPBY.clear();SPH.hits.forEach(h=>SPBY.set(h.brand+'|'+h.id,h));
+    SPH={q:k,hits:Array.isArray(d&&d.hits)?d.hits:[],ok:true};SPBY.clear();SPH.hits.forEach(h=>SPBY.set(h.gid+'|'+h.id,h));
     if($('xq').value.trim()===k&&document.activeElement===$('xq'))xShow(true)}).catch(()=>{if(s!==spSeq)return;SPH={q:k,hits:[],ok:false};if($('xq').value.trim()===k)xShow(true)}),180)}
 // first non-empty value whose column heading matches (works for any brand's guide layout)
 const fv=(h,re,not)=>{const p=h.f.find(([c,v])=>re.test(c)&&!(not&&not.test(c))&&String(v).trim());return p?String(p[1]).trim():''};
@@ -855,14 +855,19 @@ function specBurner(h){const s=xnorm(h.burner),br=String(h.brand).toLowerCase();
   const c=D.filter(b=>b.b.toLowerCase()===br).map(b=>({b,parts:[b.n,...b.n.split(/[\/,]/)].map(xnorm).filter(Boolean)}));
   const ex=c.find(o=>o.parts.includes(s));if(ex)return ex.b;
   let best=null,len=0;for(const o of c)for(const p of o.parts)if(p.length>=2&&s.startsWith(p)&&p.length>len){best=o.b;len=p.length}return best}
-const spMBH=h=>/mbh|btu/i.test(h.rateCol||'');
-const gphTxt=(r,h)=>{const n=parseFloat(r);return n>0?`${esc(r)} ${h&&spMBH(h)?'MBH':'GPH'}`:r?esc(r):''};
-function specHTML(hits){const g=new Map();for(const h of hits){const k=h.brand+'|'+h.mfg+'|'+h.model;if(!g.has(k))g.set(k,[]);g.get(k).push(h)}
+// a spec's firing rate in its own unit: GPH (oil), MBH, or BTU/hr (shown as MBH)
+const spRate=h=>{const n=parseFloat(h.rate);if(!(n>0))return null;return h.unit==='btu'?{v:+(n/1000).toFixed(1),u:'mbh'}:{v:n,u:h.unit==='mbh'?'mbh':'gph'}};
+const spRateTxt=h=>{const r=spRate(h);return r?`${r.v.toLocaleString()} ${r.u==='gph'?'GPH':'MBH'}`:''};
+// the few columns worth seeing at a glance, whichever guide (residential/commercial, oil/gas) they come from
+const SPKEY=[[/^nozzle$/i,/alt/i],[/^head/i],[/high.*pump|^pump|psi/i],[/manifold/i],[/^ng orifice/i],[/^lp orifice/i],[/firing mode/i],[/air tube combo/i],[/insertion/i,/weld/i]];
+const fc=(h,re,not)=>{const p=h.f.find(([c,v])=>re.test(c)&&!(not&&not.test(c))&&String(v).trim()&&!/^(n\/a|-)$/i.test(String(v).trim()));return p?[p[0],String(p[1]).trim()]:null};
+const spKeys=h=>SPKEY.map(([re,not])=>fc(h,re,not)).filter(Boolean);
+function specHTML(hits){const g=new Map();for(const h of hits){const k=h.gid+'|'+h.mfg+'|'+h.model;if(!g.has(k))g.set(k,[]);g.get(k).push(h)}
   const groups=[...g.values()];
-  return groups.slice(0,10).map(vs=>{const h0=vs[0];return`<div class="xr sp" role="option"><div class="from"><span><b>${esc(h0.mfg)} ${esc(h0.model)}</b> · ${esc(h0.brand)} spec on file${vs.length>1?` (${vs.length} firing rates)`:''}</span></div>
-    ${vs.map(h=>{const x=specBurner(h),nz=fv(h,/nozzle/i,/alt/i),hd=fv(h,/^head$/i)||fv(h,/head/i,/setting/i),ps=fv(h,/pump|psi/i),ins=fv(h,/insertion/i,/weld/i),key=esc(h.brand+'|'+h.id);
-      return`<div class="spv"><div class="spl"><span class="nm ${x?x.f:'un'}">${esc(h.brand)} ${esc(h.burner)}</span>${h.rate?`<span><b>${gphTxt(h.rate,h)}</b></span>`:''}
-        ${nz?`<span><span class="k">Nozzle</span> ${esc(nz)}</span>`:''}${hd?`<span><span class="k">Head</span> ${esc(hd)}</span>`:''}${ps?`<span><span class="k">Pump</span> ${esc(ps)} psi</span>`:''}${ins?`<span><span class="k">Insertion</span> ${esc(ins)}</span>`:''}
+  return groups.slice(0,10).map(vs=>{const h0=vs[0];return`<div class="xr sp" role="option"><div class="from"><span><b>${esc(h0.mfg)} ${esc(h0.model)}</b> · ${esc(h0.guide)} spec${vs.length>1?` (${vs.length} setups)`:''}</span></div>
+    ${vs.map(h=>{const x=specBurner(h),key=esc(h.gid+'|'+h.id),rt=spRateTxt(h);
+      return`<div class="spv"><div class="spl"><span class="nm ${x?x.f:'un'}">${esc(h.brand)} ${esc(h.burner)}</span>${rt?`<span><b>${esc(rt)}</b></span>`:''}
+        ${spKeys(h).map(([c,v])=>`<span><span class="k">${esc(c)}</span> ${esc(v)}</span>`).join('')}
         <span class="bt"><button type="button" class="gh" data-a="spdet" data-s="${key}" aria-expanded="false">Details</button>${x?`<button type="button" data-a="spshow" data-s="${key}">Show in the matrix</button><button type="button" class="pri" data-a="sprfq" data-s="${key}">Create RFQ</button>`:''}</span></div>
         ${x?'':`<div class="spx">${esc(h.burner)} isn’t in the matrix, so an RFQ can’t be started from here.</div>`}<div class="spdh" hidden></div></div>`}).join('')}</div>`}).join('')
    +(groups.length>10?`<div class="xr none">${groups.length-10} more appliances match. Type more of the model number to narrow it down.</div>`:'')}
@@ -888,21 +893,22 @@ $('xq').addEventListener('keydown',e=>{if(e.key==='Enter'){const q=$('xq').value
 document.addEventListener('click',e=>{if(!e.target.closest('.xwrap')){$('xres').hidden=true;$('xq').setAttribute('aria-expanded','false')}});
 function spToggle(b){const d=b.closest('.spv').querySelector('.spdh'),h=SPBY.get(b.dataset.s);if(!d||!h)return;const on=d.hidden;d.hidden=!on;if(on&&!d.innerHTML)d.innerHTML=specDetail(h);b.setAttribute('aria-expanded',String(on));b.textContent=on?'Hide details':'Details'}
 async function specRFQ(h,b){const x=specBurner(h);if(!x)return;const xfmr=stepDownNote(x);if(xfmr&&!await stepDownOK(x))return;
-  const r=parseFloat(h.rate),rate=!(r>0)?(h.rate||''):spMBH(h)?`${h.rate} MBH${x.f==='oil'?` (≈ ${(r/G).toFixed(2)} GPH)`:''}`:`${h.rate} GPH (≈ ${Math.round(r*G).toLocaleString()} MBH)`;
-  const nz=fv(h,/nozzle/i,/alt/i),alt=fv(h,/alt.*nozzle/i),hd=fv(h,/^head$/i)||fv(h,/head/i,/setting/i),ps=fv(h,/pump|psi/i),ins=fv(h,/insertion/i,/weld/i);
-  const opt=[nz&&`Nozzle ${nz}`,alt&&`alt. ${alt}`,hd&&`head ${hd}`,ps&&`pump ${ps} psi`].filter(Boolean).join(', ');
+  const r=spRate(h),rate=!r?'':r.u==='gph'?`${r.v} GPH (≈ ${Math.round(r.v*G).toLocaleString()} MBH)`:`${r.v.toLocaleString()} MBH${x.f==='oil'?` (≈ ${(r.v/G).toFixed(2)} GPH)`:''}`;
+  const keys=spKeys(h),ins=(keys.find(([c])=>/insertion/i.test(c))||[])[1]||'';
+  const alt=fc(h,/alt.*nozzle/i),opt=keys.filter(([c])=>!/insertion|firing mode/i.test(c)).concat(alt?[alt]:[]).map(([c,v])=>`${c}: ${v}`).join(', ');
   const ids=[['spec',fv(h,/atc|spec\s*(no|#|number)/i)],['chassis',fv(h,/chassis/i)],['universal assy',fv(h,/universal/i)]].filter(o=>o[1]).map(o=>`${o[0]} ${o[1]}`).join(', ');
-  const note=fv(h,/^note|notes$/i),ft=fv(h,/fuel/i).toLowerCase(),vt=fv(h,/vent/i).toLowerCase();
+  const note=fv(h,/^note|notes$/i),ft=fv(h,/fuel/i).toLowerCase(),vt=fv(h,/vent/i).toLowerCase(),fm=(fc(h,/firing mode/i)||[])[1]||'';
   // only the clear cases are carried over; anything else is left for the rep to pick
-  const fuel=x.f==='oil'&&/^#?2\b/.test(ft)?DD.oil[0]:'',vent=vt==='chimney'?DD.vent[0]:/^direct/.test(vt)?DD.vent[2]:'';
+  const fuel=x.f==='oil'?(/^#?2\b/.test(ft)?DD.oil[0]:''):/\bLP\b/.test(h.model)?DD.gas[1]:/\bnat(ural)?\b/i.test(h.model)?DD.gas[0]:'',vent=vt==='chimney'?DD.vent[0]:/^direct/.test(vt)?DD.vent[2]:'';
+  const mk=/^mod/i.test(fm)?'mod':/low\s*\/\s*high|hi.?lo/i.test(fm)?'hilo':/^on\s*\/\s*off$/i.test(fm)?'onoff':'',mode=mk&&x.m.includes(mk)?MODEW[mk]:'';
   b.disabled=true;
-  try{await newRFQ(x,{...(xfmr?{xfmr}:{}),note:`Per the ${h.brand} appliance spec for the ${h.mfg} ${h.model}${ids?` (${ids})`:''}.${note?' Spec note: '+note:''}`,
-    pre:{'q-app':`${h.mfg} ${h.model}`,'q-rate':rate,'q-ins':ins,'q-opt':opt,'q-fuel':fuel,'q-vent':vent}})}catch(err){toast(err.message)}finally{b.disabled=false}}
+  try{await newRFQ(x,{...(xfmr?{xfmr}:{}),note:`Per the ${h.guide} spec for the ${h.mfg} ${h.model}${ids?` (${ids})`:''}.${fm&&!mode?` Firing mode: ${fm}.`:''}${note&&!/^none$/i.test(note)?' Spec note: '+note:''}`,
+    pre:{'q-app':`${h.mfg} ${h.model}`,'q-rate':rate,'q-ins':ins,'q-opt':opt,'q-fuel':fuel,'q-vent':vent,'q-m':mode}})}catch(err){toast(err.message)}finally{b.disabled=false}}
 $('xres').addEventListener('click',async e=>{const b=e.target.closest('button[data-a]');if(!b)return;
   if(b.dataset.a==='spdet'){spToggle(b);return}
   if(b.dataset.a==='spshow'||b.dataset.a==='sprfq'){const h=SPBY.get(b.dataset.s),x=h&&specBurner(h);if(!x)return;$('xres').hidden=true;$('xq').setAttribute('aria-expanded','false');
     if(b.dataset.a==='sprfq')return specRFQ(h,b);
-    S={...JSON.parse(JSON.stringify(DEF)),only:[(x.b+'|'+x.n).toLowerCase()],onlyLbl:`${h.mfg} ${h.model}`,onlyKind:'spec',rate:parseFloat(h.rate)>0?String(parseFloat(h.rate)):'',unit:spMBH(h)?'mbh':'gph'};CONV=null;sync();
+    S={...JSON.parse(JSON.stringify(DEF)),only:[(x.b+'|'+x.n).toLowerCase()],onlyLbl:`${h.mfg} ${h.model}`,onlyKind:'spec',rate:spRate(h)?String(spRate(h).v):'',unit:spRate(h)?spRate(h).u:'gph'};CONV=null;sync();
     requestAnimationFrame(()=>{if(!hiBurner(x.n,'Spec')){const lad=$('lad');const bx=lad&&(lad.closest('.ladder')||lad);if(bx)bx.scrollIntoView({block:'start'})}});return}
   if(b.dataset.a==='showall'){const xr=XREF.find(o=>o.id===b.dataset.id);if(!xr)return;$('xres').hidden=true;
     // show only this entry's replacements; other filters are cleared so none of them is hidden
