@@ -127,6 +127,14 @@ th .infob{border-color:#cfcfc9;background:transparent;color:#fff;width:16px;heig
 .xonly button{font:600 13px Montserrat,sans-serif;min-height:32px;padding:4px 12px;border-radius:3px;border:1px solid var(--red);background:#fff;color:var(--red);cursor:pointer}.xonly button:hover{background:var(--red);color:#fff}
 .xnone{margin-top:6px;font-size:13.5px;background:#f0f0ec;border-left:3px solid #8c8c86;padding:6px 10px;border-radius:2px}
 .xr.none{color:var(--mute);font-size:13.5px}
+@media(min-width:760px){.xres{left:auto;width:max(100%,min(660px,calc(100vw - 32px)))}}
+.xg{position:sticky;top:0;z-index:1;background:#f4f4f0;border-bottom:1px solid var(--rule);padding:5px 12px;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#55554f}
+.spv{border-top:1px solid #ecece6;padding:7px 0 2px;margin-top:6px}.spv:first-of-type{border-top:0}
+.spl{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;font-size:13px}.spl .nm{font-weight:700;color:var(--ink)}.spl .nm.oil{color:var(--oil)}.spl .nm.gas{color:var(--gas)}.spl .k{color:var(--mute)}
+.spl .bt{display:flex;gap:6px;margin-left:auto}.spl button{font:600 12.5px Montserrat,sans-serif;min-height:30px;padding:3px 10px;border-radius:3px;border:1px solid var(--red);background:#fff;color:var(--red);cursor:pointer}.spl button.pri{background:var(--red);color:#fff}.spl button.gh{border-color:#b9b9b2;color:var(--ink)}
+.spd{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:2px 12px;font-size:12.5px;margin:6px 0 4px;padding:8px 10px;background:#fafaf8;border-radius:3px}.spd dt{color:var(--mute)}.spd dd{margin:0;overflow-wrap:anywhere}
+.spn{font-size:12.5px;margin-top:5px;background:#fff8e1;border-left:3px solid #e0a800;padding:4px 8px;border-radius:2px}
+.spx{font-size:12px;color:var(--mute);margin-top:4px}
 .rail .f-last{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 24px;border-top:1px solid var(--rule);padding-top:12px}
 .rail .opts{display:flex;flex-wrap:wrap;gap:4px 24px}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -483,11 +491,11 @@ tr.fu td{background:#fffaf2 !important}
         <label class="chk"><input type="checkbox" id="bio"> Biofuel rated (B20 or higher)</label>
       </div>
       <div class="xbar" id="xbar">
-        <label for="xq"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h13l-3-3M20 17H7l3 3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Replacing a burner?</label>
-        <div class="xwrap"><input type="search" id="xq" autocomplete="off" placeholder="Type the brand or model, e.g. Carlin 301CRD" aria-describedby="xhint" aria-controls="xres" aria-expanded="false">
-          <div class="xres" id="xres" hidden role="listbox" aria-label="Cross-reference matches"></div></div>
+        <label for="xq"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h13l-3-3M20 17H7l3 3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Look up an appliance or burner</label>
+        <div class="xwrap"><input type="search" id="xq" autocomplete="off" placeholder="Appliance model or old burner, e.g. Burnham V8H4 or Carlin 301CRD" aria-describedby="xhint" aria-controls="xres" aria-expanded="false">
+          <div class="xres" id="xres" hidden role="listbox" aria-label="Appliance specs and cross-reference matches"></div></div>
         <div class="xonly" id="xonly" hidden role="status"></div>
-        <span class="vh" id="xhint">Finds the Beckett or Wayne burner to sell instead of another maker’s or an older model.</span>
+        <span class="vh" id="xhint">Finds the burner spec for a boiler or furnace model, or the Beckett or Wayne burner to sell instead of another maker’s or an older model.</span>
       </div>
       <div class="acts"><button class="btn" id="o2gb" title="Size a gas burner from the oil nozzle it replaces">Oil-To-Gas<br>Conversion Tool</button><button class="btn" id="reset">Reset</button></div>
     </div>
@@ -716,7 +724,7 @@ const L0=Math.log10(15),L1=Math.log10(15000);
 const pos=v=>(Math.log10(v)-L0)/(L1-L0)*100;
 const $=id=>document.getElementById(id);
 const VOLTS0={'12dc':1,'24dc':1,'120':1,'240':1,'3p240':1,'3p480':1};
-const DEF={fuel:'all',brand:'all',rate:'',unit:'gph',volt:[],mode:'any',app:'',maxh:'',maxw:'',unk:true,bio:false,only:null,onlyLbl:'',fl:'',fw:'',td:'',op:'',unks:true};
+const DEF={fuel:'all',brand:'all',rate:'',unit:'gph',volt:[],mode:'any',app:'',maxh:'',maxw:'',unk:true,bio:false,only:null,onlyLbl:'',onlyKind:'',fl:'',fw:'',td:'',op:'',unks:true};
 let S=JSON.parse(JSON.stringify(DEF));try{localStorage.removeItem('burnerSel2')}catch(e){}
 const save=()=>{};
 const seg=(el,opts,key)=>{$(el).innerHTML=opts.map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="${S[key]===v}">${t}</button>`).join('');$(el).onclick=e=>{const b=e.target.closest('button');if(!b)return;S[key]=b.dataset.v;sync();}};
@@ -765,7 +773,7 @@ function render(){
   const TH=[...document.querySelectorAll('#tbl thead th')].map(t=>t.dataset.t||t.textContent);$('tb').querySelectorAll('tr').forEach(tr=>[...tr.cells].forEach((c,i)=>c.dataset.l=TH[i]));
   facets();
   const xo=$('xonly');if(xo){const n=S.only?S.only.length:0;xo.hidden=!S.only;
-    if(S.only)xo.innerHTML=`<span>Showing only the ${n>1?n+' replacements':'replacement'} for <b>${esc(S.onlyLbl)}</b>${list.length<n?` (${n-list.length} hidden by your other filters)`:''}.</span><button type="button" id="xonlyx">Show all burners</button>`}
+    if(S.only)xo.innerHTML=`<span>${S.onlyKind==='spec'?`Showing the burner specified for <b>${esc(S.onlyLbl)}</b>${S.rate?` at ${esc(S.rate)} ${S.unit==='mbh'?'MBH':'GPH'}`:''}`:`Showing only the ${n>1?n+' replacements':'replacement'} for <b>${esc(S.onlyLbl)}</b>`}${list.length<n?` (${n-list.length} hidden by your other filters)`:''}.</span><button type="button" id="xonlyx">Show all burners</button>`}
 }
 // Gray out any filter option that, combined with everything else already chosen, would leave no burners.
 const NA='No burners match this together with your other selections';
@@ -832,23 +840,70 @@ function xFind(q){const toks=q.toLowerCase().split(/\s+/).map(xnorm).filter(Bool
     const score=(mod===all||xnorm(x.brand+x.model)===all?0:mod.startsWith(toks[toks.length-1])?1:2);return{x,score}}).filter(Boolean)
     .sort((a,b)=>a.score-b.score||a.x.brand.localeCompare(b.x.brand)||a.x.model.localeCompare(b.x.model,undefined,{numeric:true})).slice(0,8).map(o=>o.x)}
 const bOf=k=>D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===k);
+// ---------- appliance specs (boiler/furnace model -> burner spec), searched on the server ----------
+let SPH={q:'',hits:[],ok:false},spT=0,spSeq=0;const SPBY=new Map();
+const spMatch=q=>SPH.q===q.trim()&&SPH.hits.length>0;
+function specGet(q){clearTimeout(spT);const k=q.trim();if(xnorm(k).length<2){SPH={q:k,hits:[],ok:true};return}
+  if(SPH.q===k&&SPH.ok)return;const s=++spSeq;
+  spT=setTimeout(()=>J('GET','api/specs/search?q='+encodeURIComponent(k)).then(d=>{if(s!==spSeq)return;
+    SPH={q:k,hits:Array.isArray(d&&d.hits)?d.hits:[],ok:true};SPBY.clear();SPH.hits.forEach(h=>SPBY.set(h.brand+'|'+h.id,h));
+    if($('xq').value.trim()===k&&document.activeElement===$('xq'))xShow(true)}).catch(()=>{if(s!==spSeq)return;SPH={q:k,hits:[],ok:false};if($('xq').value.trim()===k)xShow(true)}),180)}
+// first non-empty value whose column heading matches (works for any brand's guide layout)
+const fv=(h,re,not)=>{const p=h.f.find(([c,v])=>re.test(c)&&!(not&&not.test(c))&&String(v).trim());return p?String(p[1]).trim():''};
+// spec burner name -> matrix burner of the same brand: exact name, one part of "AF/AFG", else the longest name it starts with (AFII 150 -> AF/AFG)
+function specBurner(h){const s=xnorm(h.burner),br=String(h.brand).toLowerCase();if(!s)return null;
+  const c=D.filter(b=>b.b.toLowerCase()===br).map(b=>({b,parts:[b.n,...b.n.split(/[\/,]/)].map(xnorm).filter(Boolean)}));
+  const ex=c.find(o=>o.parts.includes(s));if(ex)return ex.b;
+  let best=null,len=0;for(const o of c)for(const p of o.parts)if(p.length>=2&&s.startsWith(p)&&p.length>len){best=o.b;len=p.length}return best}
+const spMBH=h=>/mbh|btu/i.test(h.rateCol||'');
+const gphTxt=(r,h)=>{const n=parseFloat(r);return n>0?`${esc(r)} ${h&&spMBH(h)?'MBH':'GPH'}`:r?esc(r):''};
+function specHTML(hits){const g=new Map();for(const h of hits){const k=h.brand+'|'+h.mfg+'|'+h.model;if(!g.has(k))g.set(k,[]);g.get(k).push(h)}
+  const groups=[...g.values()];
+  return groups.slice(0,10).map(vs=>{const h0=vs[0];return`<div class="xr sp" role="option"><div class="from"><span><b>${esc(h0.mfg)} ${esc(h0.model)}</b> · ${esc(h0.brand)} spec on file${vs.length>1?` (${vs.length} firing rates)`:''}</span></div>
+    ${vs.map(h=>{const x=specBurner(h),nz=fv(h,/nozzle/i,/alt/i),hd=fv(h,/^head$/i)||fv(h,/head/i,/setting/i),ps=fv(h,/pump|psi/i),ins=fv(h,/insertion/i,/weld/i),key=esc(h.brand+'|'+h.id);
+      return`<div class="spv"><div class="spl"><span class="nm ${x?x.f:'un'}">${esc(h.brand)} ${esc(h.burner)}</span>${h.rate?`<span><b>${gphTxt(h.rate,h)}</b></span>`:''}
+        ${nz?`<span><span class="k">Nozzle</span> ${esc(nz)}</span>`:''}${hd?`<span><span class="k">Head</span> ${esc(hd)}</span>`:''}${ps?`<span><span class="k">Pump</span> ${esc(ps)} psi</span>`:''}${ins?`<span><span class="k">Insertion</span> ${esc(ins)}</span>`:''}
+        <span class="bt"><button type="button" class="gh" data-a="spdet" data-s="${key}" aria-expanded="false">Details</button>${x?`<button type="button" data-a="spshow" data-s="${key}">Show in the matrix</button><button type="button" class="pri" data-a="sprfq" data-s="${key}">Create RFQ</button>`:''}</span></div>
+        ${x?'':`<div class="spx">${esc(h.burner)} isn’t in the matrix, so an RFQ can’t be started from here.</div>`}<div class="spdh" hidden></div></div>`}).join('')}</div>`}).join('')
+   +(groups.length>10?`<div class="xr none">${groups.length-10} more appliances match. Type more of the model number to narrow it down.</div>`:'')}
+function specDetail(h){const note=fv(h,/^note|notes$/i);return`<dl class="spd">${h.f.filter(([c,v])=>String(v).trim()&&!/^(appliance|note$|notes$)/i.test(c)).map(([c,v])=>`<dt>${esc(c)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>${note?`<div class="spn">${esc(note)}</div>`:''}`}
 // a search that finds nothing is reported once it settles, so editors can see what reps look for
 const XLOGGED=new Set();let xMissT=0;
-const xMiss=q=>{clearTimeout(xMissT);const k=xnorm(q);if(k.length<2||XLOGGED.has(k)||xFind(q).length)return;XLOGGED.add(k);J('POST','api/xref/miss',{q}).catch(()=>{})};
-function xShow(){const q=$('xq').value.trim(),box=$('xres');clearTimeout(xMissT);if(!q){box.hidden=true;$('xq').setAttribute('aria-expanded','false');return}
-  const m=xFind(q);if(!m.length&&XREF_OK)xMissT=setTimeout(()=>xMiss(q),2500);
-  box.innerHTML=m.length?m.map(x=>{const bs=x.to.map(bOf).filter(Boolean);return`<div class="xr" role="option"><div class="from"><span>Replaces <b>${esc(x.brand)} ${esc(x.model)}</b>${x.none?'':' with:'}</span>${bs.length?`<button type="button" class="showall" data-a="showall" data-id="${esc(x.id)}">${bs.length>1?`Show all ${bs.length} in the matrix`:'Show in the matrix'}</button>`:''}</div>
+const xMiss=q=>{clearTimeout(xMissT);const k=xnorm(q);if(k.length<2||XLOGGED.has(k)||xFind(q).length||spMatch(q)||!(SPH.q===q.trim()&&SPH.ok))return;XLOGGED.add(k);J('POST','api/xref/miss',{q}).catch(()=>{})};
+function xShow(fromSpec){const q=$('xq').value.trim(),box=$('xres');clearTimeout(xMissT);if(!q){box.hidden=true;$('xq').setAttribute('aria-expanded','false');return}
+  if(fromSpec!==true)specGet(q);
+  const m=xFind(q),sp=spMatch(q)?SPH.hits:[];if(!m.length&&!sp.length&&XREF_OK)xMissT=setTimeout(()=>xMiss(q),2500);
+  const open=new Set([...box.querySelectorAll('button[data-a="spdet"][aria-expanded="true"]')].map(b=>b.dataset.s));
+  box.innerHTML=(sp.length?`<div class="xg">Appliance specs</div>${specHTML(sp)}`:'')+(sp.length&&m.length?'<div class="xg">Replacing another burner</div>':'')+(m.length?m.map(x=>{const bs=x.to.map(bOf).filter(Boolean);return`<div class="xr" role="option"><div class="from"><span>Replaces <b>${esc(x.brand)} ${esc(x.model)}</b>${x.none?'':' with:'}</span>${bs.length?`<button type="button" class="showall" data-a="showall" data-id="${esc(x.id)}">${bs.length>1?`Show all ${bs.length} in the matrix`:'Show in the matrix'}</button>`:''}</div>
     ${bs.map(b=>`<div class="to"><div class="tline"><span class="nm ${b.f}">${esc(b.b+' '+b.n)}</span><span class="sm" style="color:var(--mute)">${esc(fmt(b))}</span><span style="flex:1"></span>
       <button type="button" class="pri" data-a="rfq" data-k="${esc((b.b+'|'+b.n).toLowerCase())}" data-from="${esc(x.brand+' '+x.model)}">Create RFQ</button></div></div>`).join('')||(x.none?'<div class="xnone"><b>No current Beckett or Wayne replacement.</b> Nothing in the line replaces this model yet.</div>':'<div class="sm">The replacement burner is no longer in the list. Ask an admin to update this entry.</div>')}
     ${x.note?`<div class="xn">${esc(x.note)}</div>`:''}</div>`}).join('')
-    :`<div class="xr none">No match for “${esc(q)}”. ${XREF.length?'Try just the model number, or':'The cross-reference list is empty, so'} ask an editor or admin to add it. You can still use the filters below.</div>`;
+    :sp.length?'':`<div class="xr none">${SPH.q!==q?'Searching…':`No appliance spec or cross-reference for “${esc(q)}”. Try just the model number, or ask an editor or admin to add it. You can still use the filters below.`}</div>`);
+  open.forEach(k=>{const b=box.querySelector(`button[data-a="spdet"][data-s="${CSS.escape(k)}"]`);if(b)spToggle(b)});
   box.hidden=false;$('xq').setAttribute('aria-expanded','true')}
-$('xonly').addEventListener('click',e=>{if(e.target.closest('#xonlyx')){S.only=null;S.onlyLbl='';render()}});
+$('xonly').addEventListener('click',e=>{if(e.target.closest('#xonlyx')){S.only=null;S.onlyLbl='';S.onlyKind='';render()}});
 $('xq').addEventListener('input',xShow);$('xq').addEventListener('focus',()=>{if(!XREF.length)loadXref().then(xShow);else xShow()});
 $('xq').addEventListener('blur',()=>{const q=$('xq').value.trim();if(q&&XREF_OK&&!xFind(q).length)xMiss(q)});
 $('xq').addEventListener('keydown',e=>{if(e.key==='Enter'){const q=$('xq').value.trim();if(q&&XREF_OK&&!xFind(q).length)xMiss(q)}if(e.key==='Escape'){$('xres').hidden=true;$('xq').setAttribute('aria-expanded','false')}});
 document.addEventListener('click',e=>{if(!e.target.closest('.xwrap')){$('xres').hidden=true;$('xq').setAttribute('aria-expanded','false')}});
+function spToggle(b){const d=b.closest('.spv').querySelector('.spdh'),h=SPBY.get(b.dataset.s);if(!d||!h)return;const on=d.hidden;d.hidden=!on;if(on&&!d.innerHTML)d.innerHTML=specDetail(h);b.setAttribute('aria-expanded',String(on));b.textContent=on?'Hide details':'Details'}
+async function specRFQ(h,b){const x=specBurner(h);if(!x)return;const xfmr=stepDownNote(x);if(xfmr&&!await stepDownOK(x))return;
+  const r=parseFloat(h.rate),rate=!(r>0)?(h.rate||''):spMBH(h)?`${h.rate} MBH${x.f==='oil'?` (≈ ${(r/G).toFixed(2)} GPH)`:''}`:`${h.rate} GPH (≈ ${Math.round(r*G).toLocaleString()} MBH)`;
+  const nz=fv(h,/nozzle/i,/alt/i),alt=fv(h,/alt.*nozzle/i),hd=fv(h,/^head$/i)||fv(h,/head/i,/setting/i),ps=fv(h,/pump|psi/i),ins=fv(h,/insertion/i,/weld/i);
+  const opt=[nz&&`Nozzle ${nz}`,alt&&`alt. ${alt}`,hd&&`head ${hd}`,ps&&`pump ${ps} psi`].filter(Boolean).join(', ');
+  const ids=[['spec',fv(h,/atc|spec\s*(no|#|number)/i)],['chassis',fv(h,/chassis/i)],['universal assy',fv(h,/universal/i)]].filter(o=>o[1]).map(o=>`${o[0]} ${o[1]}`).join(', ');
+  const note=fv(h,/^note|notes$/i),ft=fv(h,/fuel/i).toLowerCase(),vt=fv(h,/vent/i).toLowerCase();
+  // only the clear cases are carried over; anything else is left for the rep to pick
+  const fuel=x.f==='oil'&&/^#?2\b/.test(ft)?DD.oil[0]:'',vent=vt==='chimney'?DD.vent[0]:/^direct/.test(vt)?DD.vent[2]:'';
+  b.disabled=true;
+  try{await newRFQ(x,{...(xfmr?{xfmr}:{}),note:`Per the ${h.brand} appliance spec for the ${h.mfg} ${h.model}${ids?` (${ids})`:''}.${note?' Spec note: '+note:''}`,
+    pre:{'q-app':`${h.mfg} ${h.model}`,'q-rate':rate,'q-ins':ins,'q-opt':opt,'q-fuel':fuel,'q-vent':vent}})}catch(err){toast(err.message)}finally{b.disabled=false}}
 $('xres').addEventListener('click',async e=>{const b=e.target.closest('button[data-a]');if(!b)return;
+  if(b.dataset.a==='spdet'){spToggle(b);return}
+  if(b.dataset.a==='spshow'||b.dataset.a==='sprfq'){const h=SPBY.get(b.dataset.s),x=h&&specBurner(h);if(!x)return;$('xres').hidden=true;$('xq').setAttribute('aria-expanded','false');
+    if(b.dataset.a==='sprfq')return specRFQ(h,b);
+    S={...JSON.parse(JSON.stringify(DEF)),only:[(x.b+'|'+x.n).toLowerCase()],onlyLbl:`${h.mfg} ${h.model}`,onlyKind:'spec',rate:parseFloat(h.rate)>0?String(parseFloat(h.rate)):'',unit:spMBH(h)?'mbh':'gph'};CONV=null;sync();
+    requestAnimationFrame(()=>{if(!hiBurner(x.n,'Spec')){const lad=$('lad');const bx=lad&&(lad.closest('.ladder')||lad);if(bx)bx.scrollIntoView({block:'start'})}});return}
   if(b.dataset.a==='showall'){const xr=XREF.find(o=>o.id===b.dataset.id);if(!xr)return;$('xres').hidden=true;
     // show only this entry's replacements; other filters are cleared so none of them is hidden
     S={...JSON.parse(JSON.stringify(DEF)),only:xr.to.filter(k=>bOf(k)),onlyLbl:xr.brand+' '+xr.model};CONV=null;sync();
@@ -1028,7 +1083,8 @@ function openRFQ(x,meta){rfqB=x;const mineSheet=!meta.by||!ME||meta.by===ME.name
   if(meta.fields)for(const[k,v]of Object.entries(meta.fields)){const el=$(k);if(!el||!/^q-/.test(k))continue;
     if(el.tagName==='SELECT'&&v&&![...el.options].some(o=>o.value===v))el.add(new Option(v,v));el.value=v}
   // fields filled from the matrix filters are fixed; change the filter in the matrix to change them
-  const locks=meta.locks||LOCKABLE.filter(id=>$(id).value.trim());RFQ.locks=locks;
+  if(meta.pre)for(const[k,v]of Object.entries(meta.pre)){const el=$(k);if(el&&v&&/^q-/.test(k)){if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value===v))el.add(new Option(v,v));el.value=v}}
+  const locks=meta.locks||LOCKABLE.filter(id=>!(meta.pre&&meta.pre[id])&&$(id).value.trim());RFQ.locks=locks;
   locks.forEach(id=>{const el=$(id);if(el&&el.value.trim()){if(el.tagName==='SELECT')el.disabled=true;else el.readOnly=true;el.dataset.lock='1';el.title='Set by your selections on the matrix page. Change the filter there to change this.'}});
   infoRFQ();
   if(!meta.fields&&meta.note)$('q-notes').value=meta.note;

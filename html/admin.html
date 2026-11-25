@@ -217,7 +217,7 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
     <section id="t-xref" hidden>
       <div class="panel" style="display:grid;gap:14px">
         <div class="row" style="justify-content:space-between"><h2>Cross-reference</h2><span class="u" id="xcnt"></span></div>
-        <p class="u" style="margin:0">List another maker's burner (or an older Beckett/Wayne model) and what to sell instead. Reps search this from <b>Replacing a burner?</b> on the matrix page and can start an RFQ from it.</p>
+        <p class="u" style="margin:0">List another maker's burner (or an older Beckett/Wayne model) and what to sell instead. Reps search this from <b>Look up an appliance or burner</b> on the matrix page and can start an RFQ from it.</p>
         <form id="xf" class="xform">
           <h3 id="xfh" style="margin:0;font-size:15px">Add a cross-reference</h3>
           <div class="grid">
@@ -241,7 +241,7 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
         <div class="scroll"><table><thead><tr><th>Replaces</th><th>Use instead</th><th>Note</th><th></th></tr></thead><tbody id="xlist"></tbody></table></div>
         <div class="xmiss" id="xmissbox" hidden>
           <h3 style="margin:6px 0 4px;font-size:15px">Searched for but not in the list</h3>
-          <p class="u" style="margin:0 0 8px">What reps typed in <b>Replacing a burner?</b> that found nothing, most asked first. <b>Add</b> fills in the form above; entries drop off once a cross-reference matches them.</p>
+          <p class="u" style="margin:0 0 8px">What reps typed in <b>Look up an appliance or burner</b> that found nothing (no appliance spec or cross-reference), most asked first. <b>Add</b> fills in the form above; entries drop off once a cross-reference matches them.</p>
           <div class="scroll"><table><thead><tr><th>Searched for</th><th>Times</th><th>By</th><th>Last searched</th><th></th></tr></thead><tbody id="xmlist"></tbody></table></div>
         </div>
         <details class="ximp"><summary>Add many at once (paste from a spreadsheet)</summary>
@@ -297,9 +297,33 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
           <div class="row"><button class="btn pri" type="submit">Save</button></div>
         </form>
         <div id="smsg" class="msg" hidden></div>
+        <div id="specs" style="border-top:1px solid var(--rule);padding-top:12px;display:grid;gap:10px">
+          <h2 style="font-size:17px">Appliance specs</h2>
+          <p class="u" style="margin:0">Each brand's guide of which burner setup fits which boiler or furnace model. Reps search it from <b>Look up an appliance or burner</b> on the matrix page and can start an RFQ with the spec filled in. Load it from the guide's CSV export; the columns can be in any order as long as there's an appliance maker, appliance model and burner model column.</p>
+          <div class="scroll"><table><thead><tr><th>Brand</th><th>Specs</th><th>Last updated</th><th></th></tr></thead><tbody id="splist"></tbody></table></div>
+          <form id="spimp" class="xform" style="gap:10px">
+            <h3 style="margin:0;font-size:15px">Load or replace a guide from CSV</h3>
+            <div class="row" style="align-items:flex-end">
+              <label class="f" style="flex:0 1 200px">Brand<select id="spbrand"></select></label>
+              <label class="f" style="flex:1 1 260px">CSV file<input type="file" id="spfile" accept=".csv,text/csv" style="min-height:42px;padding:8px 0"></label>
+              <button class="btn pri" type="submit" id="spgo">Load guide</button>
+            </div>
+            <p class="u" style="margin:0">Replaces that brand's whole guide. The version it replaces is kept, so <b>Restore previous</b> puts it back if the new file is wrong.</p>
+            <div id="spmsg" class="msg" hidden></div>
+          </form>
+          <div id="sped" hidden style="display:grid;gap:10px">
+            <h3 style="margin:0;font-size:15px">Find, change or add a single spec</h3>
+            <div class="xfil"><label>Brand<select id="sprb"></select></label><input type="text" id="sprq" class="xbq" placeholder="Search by appliance maker, model or burner" aria-label="Search appliance specs" autocomplete="off"><button type="button" class="btn" id="spadd">Add a spec</button></div>
+            <form id="spf" class="xform" hidden><h3 id="spfh" style="margin:0;font-size:15px"></h3><div class="grid" id="spfields"></div>
+              <div class="row"><button class="btn pri" type="submit" id="spsave">Save</button><button class="btn" type="button" id="spcancel">Cancel</button><span class="sp" style="flex:1"></span><button class="btn dan" type="button" id="spdel" hidden>Delete this spec</button></div>
+              <div id="spfmsg" class="msg" hidden></div></form>
+            <div class="u" id="sprcnt"></div>
+            <div class="scroll"><table><thead><tr><th>Appliance</th><th>Burner</th><th>Rate</th><th></th></tr></thead><tbody id="sprows"></tbody></table></div>
+          </div>
+        </div>
         <div style="border-top:1px solid var(--rule);padding-top:12px;display:grid;gap:8px">
           <h2 style="font-size:17px">Backups</h2>
-          <p class="u" style="margin:0">Every night at <b>1:00 a.m.</b> (<span id="btz"></span>) the server copies burners, RFQs, users, settings and uploaded photos into <code>backups/</code> inside its data folder, and keeps the last <span id="bkeep"></span>.</p>
+          <p class="u" style="margin:0">Every night at <b>1:00 a.m.</b> (<span id="btz"></span>) the server copies burners, RFQs, users, settings, appliance specs and uploaded photos into <code>backups/</code> inside its data folder, and keeps the last <span id="bkeep"></span>.</p>
           <div id="bstat" class="u"></div>
           <div class="row"><button class="btn" type="button" id="bnow">Back up now</button></div>
         </div>
@@ -554,7 +578,56 @@ function showSettings(s){$('sf').elements.rfqTo.value=s.rfqTo;$('sf').elements.f
   $('btz').textContent=s.tz||'server time';$('bkeep').textContent=s.backupKeep;
   $('bstat').innerHTML=s.lastBackup?`Last backup: <b>${esc(new Date(s.lastBackup.at).toLocaleString())}</b> (${esc(s.lastBackup.why)})`+(s.backups.length?`<br>Newest copies: ${s.backups.map(esc).join(', ')}`:''):'No backup yet. The first one runs at 1:00 a.m., or click Back up now.';$('envto').textContent=s.envRfqTo?` (currently ${s.envRfqTo})`:' (not set)';
   $('mailstat').innerHTML=s.mail?`Email server: <b>set up</b> – sending through ${esc(s.smtpHost)} as ${esc(s.smtpFrom)}. RFQs go to <b>${esc(s.effective||'(no default – reps must type an address)')}</b>.`:'Email server: <b>not set up yet</b>. Add the SMTP variables to the container (see README) before reps can email RFQs.'}
-async function loadSettings(){$('smsg').hidden=true;try{showSettings(await call('GET','/api/settings'))}catch(err){showMsg($('smsg'),'err',esc(err.message))}}
+async function loadSettings(){$('smsg').hidden=true;try{showSettings(await call('GET','/api/settings'))}catch(err){showMsg($('smsg'),'err',esc(err.message))}loadSpecs()}
+/* ---------- appliance specs (one guide per burner brand) ---------- */
+let SP=[],SPR=null,SPED=null;
+const fmtWhen=d=>d?new Date(d).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}):'';
+async function loadSpecs(){let all;try{all=await call('GET','/api/specs')}catch(err){$('splist').innerHTML=`<tr><td colspan="4">${esc(err.message)}</td></tr>`;return}
+  SP=all.filter(s=>!s.removed);const GONE=all.filter(s=>s.removed);
+  if(!list.length)try{list=await call('GET','/api/burners')}catch(e){}
+  const brands=[...new Set(list.map(b=>b.brand).concat(all.map(s=>s.brand)))].sort((a,b)=>a.localeCompare(b));
+  $('splist').innerHTML=brands.map(b=>{const s=SP.find(x=>x.brand.toLowerCase()===b.toLowerCase());
+    const g=!s&&GONE.find(x=>x.brand.toLowerCase()===b.toLowerCase());
+    return`<tr><td><b>${esc(b)}</b></td><td>${s?s.count.toLocaleString()+' specs':g?`<span class="u">Removed (${g.prevCount.toLocaleString()} specs can be restored)</span>`:'<span class="u">No guide loaded</span>'}</td><td>${s?esc(fmtWhen(s.updated))+(s.by?` <span class="u">by ${esc(s.by)}</span>`:''):''}</td>
+    <td style="text-align:right;white-space:nowrap">${s?`<a class="btn" style="display:inline-flex;align-items:center;text-decoration:none" href="/api/specs/export?brand=${encodeURIComponent(s.brand)}" download>Download CSV</a> ${s.hasPrevious?`<button class="btn" type="button" data-sa="restore" data-b="${esc(s.brand)}">Restore previous</button> `:''}<button class="btn dan" type="button" data-sa="clear" data-b="${esc(s.brand)}">Remove</button>`:g?`<button class="btn" type="button" data-sa="restore" data-b="${esc(g.brand)}">Restore</button>`:''}</td></tr>`}).join('');
+  const keep=$('spbrand').value;$('spbrand').innerHTML=brands.map(b=>`<option>${esc(b)}</option>`).join('');if(brands.includes(keep))$('spbrand').value=keep;
+  const k2=$('sprb').value;$('sprb').innerHTML=SP.map(s=>`<option>${esc(s.brand)}</option>`).join('');if(SP.some(s=>s.brand===k2))$('sprb').value=k2;
+  $('sped').hidden=!SP.length;if(SP.length)spRows()}
+$('splist').onclick=async e=>{const b=e.target.closest('button[data-sa]');if(!b)return;
+  if(!b.dataset.armed){b.dataset.armed=1;const t=b.textContent;b.textContent=b.dataset.sa==='clear'?'Click again to remove':'Click again to restore';setTimeout(()=>{delete b.dataset.armed;b.textContent=t},4000);return}
+  try{if(b.dataset.sa==='clear')await call('DELETE','/api/specs',{brand:b.dataset.b});else await call('POST','/api/specs/restore',{brand:b.dataset.b});
+    toast(b.dataset.sa==='clear'?`${b.dataset.b} guide removed`:`Previous ${b.dataset.b} guide restored`);SPED=null;$('spf').hidden=true;loadSpecs()}catch(err){toast(err.message)}};
+$('spimp').onsubmit=async e=>{e.preventDefault();const f=$('spfile').files[0],brand=$('spbrand').value;$('spmsg').hidden=true;
+  if(!f)return showMsg($('spmsg'),'err','Choose the CSV file first.');if(f.size>24*1024*1024)return showMsg($('spmsg'),'err','That file is too big (24 MB max).');
+  const have=SP.find(s=>s.brand===brand);
+  if(have&&!$('spgo').dataset.armed){$('spgo').dataset.armed=1;$('spgo').textContent=`Replace ${have.count.toLocaleString()} ${brand} specs`;setTimeout(()=>{delete $('spgo').dataset.armed;$('spgo').textContent='Load guide'},5000);return}
+  delete $('spgo').dataset.armed;$('spgo').textContent='Loading…';$('spgo').disabled=true;
+  try{const r=await call('POST','/api/specs/import',{brand,csv:await f.text()});
+    showMsg($('spmsg'),'ok',`Loaded <b>${r.count.toLocaleString()}</b> ${esc(r.brand)} specs.${r.skipped?` Skipped ${r.skipped} blank or repeated heading row${r.skipped>1?'s':''}.`:''}${r.warnings&&r.warnings.length?'<ul>'+r.warnings.map(w=>`<li>${esc(w)}</li>`).join('')+'</ul>':''}`);
+    $('spfile').value='';$('sprb').value=r.brand;SPED=null;$('spf').hidden=true;await loadSpecs()}
+  catch(err){showMsg($('spmsg'),'err',esc(err.message))}finally{$('spgo').textContent='Load guide';$('spgo').disabled=false}};
+let sprT=0;$('sprq').oninput=()=>{clearTimeout(sprT);sprT=setTimeout(spRows,200)};$('sprb').onchange=()=>{SPED=null;$('spf').hidden=true;spRows()};
+const spCell=(r,cols,roles,k)=>roles[k]>=0?r.v[roles[k]]||'':'';
+async function spRows(){const brand=$('sprb').value;if(!brand)return;const q=$('sprq').value.trim();
+  try{SPR=await call('GET',`/api/specs/rows?brand=${encodeURIComponent(brand)}&q=${encodeURIComponent(q)}`)}catch(err){$('sprows').innerHTML=`<tr><td colspan="4">${esc(err.message)}</td></tr>`;return}
+  if(brand!==$('sprb').value||q!==$('sprq').value.trim())return;
+  const{cols,roles,rows,total}=SPR;
+  $('sprcnt').textContent=q?(rows.length?`${rows.length}${rows.length>=100?'+':''} of ${total.toLocaleString()} specs match`:'No specs match'):`Showing the first ${rows.length} of ${total.toLocaleString()} specs. Search to find one.`;
+  $('sprows').innerHTML=rows.map(r=>`<tr><td><b>${esc(spCell(r,cols,roles,'mfg'))}</b> ${esc(spCell(r,cols,roles,'model'))}</td><td>${esc(spCell(r,cols,roles,'burner'))}</td><td>${esc(spCell(r,cols,roles,'rate'))}</td><td style="text-align:right"><button class="btn" type="button" data-id="${esc(r.id)}">Edit</button></td></tr>`).join('')}
+function spForm(row){const{cols,roles}=SPR;SPED=row?row.id:'';$('spfmsg').hidden=true;$('spdel').hidden=!row;delete $('spdel').dataset.armed;$('spdel').textContent='Delete this spec';
+  const need=new Set(['mfg','model','burner'].map(k=>roles[k]).filter(i=>i>=0));
+  $('spfh').textContent=row?`Edit ${spCell(row,cols,roles,'mfg')} ${spCell(row,cols,roles,'model')}`:`Add a ${$('sprb').value} spec`;
+  $('spfields').innerHTML=cols.map((c,i)=>{const v=row?row.v[i]||'':'',long=i===roles.note||v.length>60;
+    return`<label class="f"${long?' style="grid-column:1/-1"':''}>${esc(c)}${need.has(i)?' <span class="u">required</span>':''}${long?`<textarea data-i="${i}" rows="2">${esc(v)}</textarea>`:`<input type="text" data-i="${i}" value="${esc(v)}" autocomplete="off">`}</label>`}).join('');
+  $('spf').hidden=false;$('spf').scrollIntoView({block:'nearest'});const first=$('spfields').querySelector('input,textarea');if(first)first.focus({preventScroll:true})}
+$('sprows').onclick=e=>{const b=e.target.closest('button[data-id]');if(!b||!SPR)return;const r=SPR.rows.find(x=>x.id===b.dataset.id);if(r)spForm(r)};
+$('spadd').onclick=()=>{if(SPR)spForm(null)};
+$('spcancel').onclick=()=>{SPED=null;$('spf').hidden=true};
+$('spf').onsubmit=async e=>{e.preventDefault();const v=SPR.cols.map((_,i)=>{const el=$('spfields').querySelector(`[data-i="${i}"]`);return el?el.value:''});
+  try{await call('POST','/api/specs/row',{brand:$('sprb').value,...(SPED?{id:SPED}:{}),v});toast(SPED?'Spec saved':'Spec added');SPED=null;$('spf').hidden=true;await loadSpecs()}
+  catch(err){showMsg($('spfmsg'),'err',esc(err.message))}};
+$('spdel').onclick=async()=>{const b=$('spdel');if(!b.dataset.armed){b.dataset.armed=1;b.textContent='Click again to delete';setTimeout(()=>{delete b.dataset.armed;b.textContent='Delete this spec'},4000);return}
+  try{await call('DELETE','/api/specs/row',{brand:$('sprb').value,id:SPED});toast('Spec deleted');SPED=null;$('spf').hidden=true;await loadSpecs()}catch(err){showMsg($('spfmsg'),'err',esc(err.message))}};
 $('sf').onsubmit=async e=>{e.preventDefault();$('smsg').hidden=true;
   try{const s=await call('PUT','/api/settings',{rfqTo:e.target.elements.rfqTo.value,followUpDays:Number(e.target.elements.followUpDays.value||0),stepDownWarn:e.target.elements.stepDownWarn.checked});showSettings(s);toast('Settings saved')}catch(err){showMsg($('smsg'),'err',esc(err.message))}};
 

@@ -97,7 +97,19 @@ still shows the matrix, photos and your RFQ list, and new RFQs are saved on the 
 the signal is back. *Keep me signed in* on the sign-in page keeps a session for 30 days (`REMEMBER_DAYS`); it's ticked by
 default inside the installed app. Signing out clears everything the app saved on that device.
 
-**Replacing a burner? (cross-reference).** Next to *Biofuel rated* in the matrix filters, reps type another maker's (or an older)
+**Appliance specs.** The same *Look up an appliance or burner* box (next to *Biofuel rated*) searches each brand's
+appliance spec guide, e.g. *Burnham V8H4*. Matches are grouped by appliance, one line per spec (burner, firing rate, nozzle,
+head, pump pressure, insertion depth) with *Details* for every column and the guide's note. *Show in the matrix* shows just that
+burner at the spec's firing rate; *Create RFQ* fills in the appliance, required input, insertion depth, nozzle/head/pump
+(Other Options), fuel and venting where clear, and a note with the spec number. A spec's burner is matched to the matrix
+burner of the same brand by name (AFG → AF/AFG; AFII 150 → AF/AFG); one with no match can be viewed but not quoted from here.
+Admins manage the guides in **Admin → Settings → Appliance specs**: load or replace a brand's guide from its CSV
+export (the previous version is kept for *Restore previous*), download it back as CSV, remove it, or find, edit, add and delete
+single specs. Any brand can have a guide (Beckett now, Wayne later); columns are found by their headings (appliance maker,
+appliance model and burner model are required; rate, nozzle, head, pump, insertion and note are used when present). Stored
+in `specs/` in the data folder (included in backups).
+
+**Replacing a burner? (cross-reference).** Reps type into the same box another maker's (or an older)
 model, e.g. *Carlin 301CRD*, and see the Beckett/Wayne burner(s) to sell instead, plus any note. *Show all in the matrix*
 narrows the chart and table to just that entry's replacements (other filters cleared; a banner offers *Show all burners*); *Create RFQ* starts an RFQ with "Replaces Carlin 301CRD."
 in Notes. Editors and admins keep the list in **Admin → Cross-reference** (the brand box suggests brands already used): add, edit or delete entries one at a time,
@@ -121,7 +133,7 @@ each showing how long it has waited. Quoters land on it by default and their RFQ
 Posting can email the other side: a rep's comment goes to the office people on that RFQ (or the default "Send to"
 address); an office comment goes to the rep. New comments show as 💬 in the RFQ list until opened.
 
-**Searched for but not in the list.** Searches in *Replacing a burner?* that find nothing are logged (once the typing
+**Searched for but not in the list.** Searches in *Look up an appliance or burner* that find nothing (no appliance spec or cross-reference) are logged (once the typing
 settles). Admin → Cross-reference lists them, most asked first, with who searched; *Add* fills the form, *Dismiss*
 hides one, and they drop off automatically once a cross-reference matches.
 

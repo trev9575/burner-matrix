@@ -10,6 +10,7 @@ const Mail = require('./lib/mail.js');
 const { renderPDF } = require('./lib/pdf.js');
 const XLSX = require('./lib/xlsx.js');
 const Push = require('./lib/push.js');
+const Specs = require('./lib/specs.js');
 
 const PORT = +process.env.PORT || 8080;
 const DATA = process.env.DATA_DIR || '/data';
@@ -41,6 +42,7 @@ const F = {
   quotes: path.join(DATA, 'quotes'),
   vapid: path.join(DATA, '.vapid.json'),
   push: path.join(DATA, 'push.json'),
+  specs: path.join(DATA, 'specs'),
 };
 
 // ---------- storage ----------
@@ -70,6 +72,7 @@ function notify(names, data) {
     e => { console.warn(`Push to ${s.user} failed: ${e.message}`); return null; })))
     .then(gone => { const g = new Set(gone.filter(Boolean)); if (g.size) writeJSON(F.push, getSubs().filter(s => !g.has(s.endpoint))); });
 }
+const SPECS = Specs.store(F.specs); // appliance spec guides, one file per burner brand
 const quoters = () => users.filter(u => u.role === 'quoter').map(u => u.name);
 
 // ---------- users ----------
@@ -750,6 +753,12 @@ async function api(req, res, url) {
   }
   if (p === '/api/burners' && m === 'GET') return send(res, 200, getBurners());
   if (p === '/api/xref' && m === 'GET') return send(res, 200, getXref());
+  if (p === '/api/specs/search' && m === 'GET') { // appliance spec lookup for everyone
+    const hits = SPECS.search(String(url.searchParams.get('q') || '').slice(0, 100), 80);
+    return send(res, 200, { brands: SPECS.sets().map(s => s.brand), hits: hits.map(({ set, row }) => { const r = set.roles, v = row.v;
+      return { brand: set.brand, id: row.id, mfg: v[r.mfg], model: v[r.model], burner: v[r.burner], rate: r.rate >= 0 ? v[r.rate] : '', rateCol: r.rate >= 0 ? set.cols[r.rate] : '',
+        f: set.cols.map((c, i) => [c, v[i]]).filter(([, x], i) => x && x !== '0' || i === r.rate) }; }) });
+  }
   if (p === '/api/xref/miss' && m === 'POST') { // any signed-in user: a lookup that matched nothing
     const b = (await readBody(req, 1024)) || {}, q = String(b.q || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80), k = xnorm(q);
     if (k.length < 2 || xrefMatches(q, getXref())) return send(res, 200, { ok: true });
@@ -857,6 +866,44 @@ async function api(req, res, url) {
     return send(res, 200, { ok: true }, undefined, { 'Set-Cookie': cookie(makeToken(me.name, me.ver, life * 1000), life) });
   }
 
+  // ----- admin-only: appliance spec guides -----
+  if (p.startsWith('/api/specs')) {
+    if (me.role !== 'admin') return send(res, 403, { error: 'Admins only' });
+    const brandOk = b => typeof b === 'string' && b.trim() && b.trim().length <= 40;
+    if (p === '/api/specs' && m === 'GET') return send(res, 200, SPECS.sets().map(s => ({ brand: s.brand, count: s.rows.length, cols: s.cols, roles: s.roles, updated: s.updated, by: s.by, hasPrevious: SPECS.hasPrevious(s.brand) })).concat(SPECS.removed().map(r => ({ brand: r.brand, count: 0, removed: true, prevCount: r.count, hasPrevious: true }))));
+    if (p === '/api/specs/import' && m === 'POST') {
+      const b = (await readBody(req, 25 * 1024 * 1024)) || {};
+      if (!brandOk(b.brand)) return send(res, 422, { error: 'Pick the brand these specs are for' });
+      const out = SPECS.importCSV(b.brand.trim(), String(b.csv || ''), me.name);
+      if (out.error) return send(res, 422, { error: out.error });
+      return send(res, 200, { brand: out.set.brand, count: out.set.rows.length, skipped: out.skipped, warnings: out.warnings });
+    }
+    if (p === '/api/specs/export' && m === 'GET') {
+      const s = SPECS.get(url.searchParams.get('brand') || ''); if (!s) return send(res, 404, { error: 'No specs for that brand' });
+      return send(res, 200, Specs.toCSV(s.cols, s.rows.map(r => r.v)), 'text/csv; charset=utf-8', { 'Content-Disposition': `attachment; filename="${Specs.slug(s.brand)}-appliance-specs.csv"` });
+    }
+    if (p === '/api/specs/restore' && m === 'POST') { const b = (await readBody(req, 1024)) || {}; return SPECS.restorePrevious(String(b.brand || '')) ? send(res, 200, { ok: true }) : send(res, 404, { error: 'No previous version to restore' }); }
+    if (p === '/api/specs' && m === 'DELETE') { const b = (await readBody(req, 1024)) || {}; if (!SPECS.get(String(b.brand || ''))) return send(res, 404, { error: 'No specs for that brand' }); SPECS.remove(b.brand); return send(res, 200, { ok: true }); }
+    if (p === '/api/specs/rows' && m === 'GET') { // find rows to edit
+      const s = SPECS.get(url.searchParams.get('brand') || ''); if (!s) return send(res, 404, { error: 'No specs for that brand' });
+      const q = url.searchParams.get('q') || '', hits = q ? SPECS.search(q, 200).filter(h => h.set === s).map(h => h.row) : s.rows.slice(0, 50);
+      return send(res, 200, { cols: s.cols, roles: s.roles, total: s.rows.length, rows: hits.slice(0, 100) });
+    }
+    if (p === '/api/specs/row' && (m === 'POST' || m === 'DELETE')) { // add / change / delete one spec
+      const b = (await readBody(req, 64 * 1024)) || {}, s = SPECS.get(String(b.brand || '')); if (!s) return send(res, 404, { error: 'No specs for that brand' });
+      const i = b.id ? s.rows.findIndex(r => r.id === b.id) : -1;
+      if (b.id && i < 0) return send(res, 404, { error: 'That spec was changed or removed. Search again.' });
+      const cur = { ...s, rows: s.rows.slice(), updated: new Date().toISOString(), by: me.name };
+      if (m === 'DELETE') { cur.rows.splice(i, 1); SPECS.save(cur); return send(res, 200, { ok: true, count: cur.rows.length }); }
+      const v = s.cols.map((_, k) => String(Array.isArray(b.v) && b.v[k] != null ? b.v[k] : '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 1000));
+      const need = ['mfg', 'model', 'burner'].filter(k => s.roles[k] >= 0 && !v[s.roles[k]]);
+      if (need.length) return send(res, 422, { error: `Fill in ${need.map(k => s.cols[s.roles[k]]).join(', ')}.` });
+      const row = { id: i >= 0 ? s.rows[i].id : Specs.rid(), v };
+      if (i >= 0) cur.rows[i] = row; else cur.rows.unshift(row);
+      SPECS.save(cur); return send(res, 200, { ok: true, row, count: cur.rows.length });
+    }
+    return send(res, 404, { error: 'Not found' });
+  }
   // ----- admin-only: settings -----
   if (p === '/api/settings') {
     if (me.role !== 'admin') return send(res, 403, { error: 'Admins only' });
