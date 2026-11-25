@@ -863,15 +863,19 @@ function specBurner(h){const s=xnorm(h.burner),br=String(h.brand).toLowerCase();
 const spRate=h=>{const n=parseFloat(h.rate);if(!(n>0))return null;return h.unit==='btu'?{v:+(n/1000).toFixed(1),u:'mbh'}:{v:n,u:h.unit==='mbh'?'mbh':'gph'}};
 const spRateTxt=h=>{const r=spRate(h);return r?`${r.v.toLocaleString()} ${r.u==='gph'?'GPH':'MBH'}`:''};
 // the few columns worth seeing at a glance, whichever guide (residential/commercial, oil/gas) they come from
-const SPKEY=[[/^beckett spec$/i],[/^nozzle$/i,/alt/i],[/^head/i],[/high.*pump|^pump|psi/i],[/manifold/i],[/^ng orifice/i],[/^lp orifice/i],[/firing mode/i],[/air tube combo/i],[/insertion/i,/weld/i]];
+const SPKEY=[[/^nozzle$/i,/alt/i],[/^head/i],[/high.*pump|^pump|psi/i],[/manifold/i],[/^ng orifice/i],[/^lp orifice/i],[/firing mode/i],[/air tube combo/i],[/insertion/i,/weld/i]];
 const fc=(h,re,not)=>{const p=h.f.find(([c,v])=>re.test(c)&&!(not&&not.test(c))&&String(v).trim()&&!/^(n\/a|-)$/i.test(String(v).trim()));return p?[p[0],String(p[1]).trim()]:null};
 const spKeys=h=>SPKEY.map(([re,not])=>fc(h,re,not)).filter(Boolean);
+// the Beckett spec number linked to this appliance (from the guide's Beckett Spec column), with how sure the link is
+function specNo(h){const n=fv(h,/^beckett spec$/i),m=fv(h,/^spec match$/i),p=fv(h,/^possible specs?$/i);
+  if(n)return`<span><span class="k">Spec</span> <b>${esc(n)}</b>${/inactive/i.test(m)?' <span class="k">(inactive)</span>':/medium/i.test(m)?' <span class="k">(likely)</span>':''}</span>`;
+  return p?`<span><span class="k">Possible spec</span> ${esc(p.split(/,\s*/)[0])}</span>`:''}
 function specHTML(hits){const g=new Map();for(const h of hits){const k=h.gid+'|'+h.mfg+'|'+h.model;if(!g.has(k))g.set(k,[]);g.get(k).push(h)}
   const groups=[...g.values()];
   return groups.slice(0,10).map(vs=>{const h0=vs[0];return`<div class="xr sp" role="option"><div class="from"><span><b>${esc(h0.mfg)} ${esc(h0.model)}</b> · ${esc(h0.guide)} spec${vs.length>1?` (${vs.length} setups)`:''}</span></div>
     ${vs.map(h=>{const x=specBurner(h),key=esc(h.gid+'|'+h.id),rt=spRateTxt(h);
       return`<div class="spv"><div class="spl"><span class="nm ${x?x.f:'un'}">${esc(h.brand)} ${esc(h.burner)}</span>${rt?`<span><b>${esc(rt)}</b></span>`:''}
-        ${spKeys(h).map(([c,v])=>`<span><span class="k">${esc(c)}</span> ${esc(v)}</span>`).join('')}
+        ${specNo(h)}${spKeys(h).map(([c,v])=>`<span><span class="k">${esc(c)}</span> ${esc(v)}</span>`).join('')}
         <span class="bt"><button type="button" class="gh" data-a="spdet" data-s="${key}" aria-expanded="false">Details</button>${x?`<button type="button" data-a="spshow" data-s="${key}">Show in the matrix</button><button type="button" class="pri" data-a="sprfq" data-s="${key}">Create RFQ</button>`:''}</span></div>
         ${x?'':`<div class="spx">${esc(h.burner)} isn’t in the matrix, so an RFQ can’t be started from here.</div>`}<div class="spdh" hidden></div></div>`}).join('')}</div>`}).join('')
    +(groups.length>10?`<div class="xr none">${groups.length-10} more appliances match. Type more of the model number to narrow it down.</div>`:'')}
