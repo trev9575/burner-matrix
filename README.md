@@ -97,7 +97,7 @@ still shows the matrix, photos and your RFQ list, and new RFQs are saved on the 
 the signal is back. *Keep me signed in* on the sign-in page keeps a session for 30 days (`REMEMBER_DAYS`); it's ticked by
 default inside the installed app. Signing out clears everything the app saved on that device.
 
-**Appliance specs.** The same *Look up an appliance or burner* box (next to *Biofuel rated*) searches every loaded spec
+**Appliance specs.** The *Look up an appliance* box (next to *Biofuel rated*, beside *Replacing a burner?*) searches every loaded spec
 guide (e.g. Beckett residential oil, commercial oil, residential gas and commercial gas), e.g. *Burnham V8H4* or *MPC-11*.
 Matches are grouped by appliance and guide, one line per setup: burner, firing rate (GPH, or MBH for gas; BTU/hr guides are
 shown in MBH) and the key columns that guide has (nozzle, head, pump pressure, manifold pressure, NG/LP orifice, firing mode,
@@ -112,7 +112,7 @@ asks for the one burner all its specs are for (CG4 is filled in for it). Guides 
 and single specs found, edited, added and deleted. Columns are found by their headings, so other layouts and brands (Wayne)
 work the same way. Stored in `specs/` in the data folder (included in backups).
 
-**Replacing a burner? (cross-reference).** Reps type into the same box another maker's (or an older)
+**Replacing a burner? (cross-reference).** In the box beside it, reps type another maker's (or an older)
 model, e.g. *Carlin 301CRD*, and see the Beckett/Wayne burner(s) to sell instead, plus any note. *Show all in the matrix*
 narrows the chart and table to just that entry's replacements (other filters cleared; a banner offers *Show all burners*); *Create RFQ* starts an RFQ with "Replaces Carlin 301CRD."
 in Notes. Editors and admins keep the list in **Admin → Cross-reference** (the brand box suggests brands already used): add, edit or delete entries one at a time,
@@ -136,7 +136,7 @@ each showing how long it has waited. Quoters land on it by default and their RFQ
 Posting can email the other side: a rep's comment goes to the office people on that RFQ (or the default "Send to"
 address); an office comment goes to the rep. New comments show as 💬 in the RFQ list until opened.
 
-**Searched for but not in the list.** Searches in *Look up an appliance or burner* that find nothing (no appliance spec or cross-reference) are logged (once the typing
+**Searched for but not in the list.** Searches in *Replacing a burner?* that find nothing are logged (once the typing
 settles). Admin → Cross-reference lists them, most asked first, with who searched; *Add* fills the form, *Dismiss*
 hides one, and they drop off automatically once a cross-reference matches.
 

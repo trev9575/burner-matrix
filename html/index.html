@@ -111,9 +111,9 @@ th .infob{border-color:#cfcfc9;background:transparent;color:#fff;width:16px;heig
 .nqt{display:inline-block;margin-left:6px;background:#2e9d5b;color:#fff;font-size:11px;font-weight:700;border-radius:3px;padding:1px 7px;vertical-align:1px}
 #lbody tr.nqr td{background:#eaf6ee}
 .lq{display:block;font-size:12px;color:var(--mute);margin-top:3px}.wait{display:inline-block;margin-top:3px;font-size:11.5px;font-weight:700;color:#b35c00;background:#fff3e8;border-radius:3px;padding:1px 6px}
-.xbar{flex:1 1 420px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;min-width:0}.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.xbar{flex:1 1 460px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));align-items:end;gap:8px 14px;min-width:0}.xgrp{display:flex;flex-direction:column;gap:4px;min-width:0}.xbar .xonly{grid-column:1/-1}.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .xbar label{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;white-space:nowrap}.xbar label svg{color:var(--red)}
-.xwrap{position:relative;flex:1 1 320px;max-width:560px}.xwrap input{width:100%;font:500 15px Montserrat,Helvetica,Arial,sans-serif;height:44px;padding:0 12px;border-radius:3px;border:1px solid #b9b9b2;background:#fff;color:var(--ink);box-sizing:border-box}.xwrap input:focus{border-color:var(--ink);outline:2px solid var(--ink);outline-offset:-1px}
+.xwrap{position:relative}.xwrap input{width:100%;font:500 15px Montserrat,Helvetica,Arial,sans-serif;height:44px;padding:0 12px;border-radius:3px;border:1px solid #b9b9b2;background:#fff;color:var(--ink);box-sizing:border-box}.xwrap input:focus{border-color:var(--ink);outline:2px solid var(--ink);outline-offset:-1px}
 
 .xres{position:absolute;z-index:20;left:0;right:0;top:100%;margin-top:3px;background:#fff;border:1px solid #b9b9b2;border-radius:4px;box-shadow:0 8px 24px rgba(0,0,0,.14);max-height:min(420px,60vh);overflow:auto}
 .xr{padding:10px 12px;border-bottom:1px solid var(--rule)}.xr:last-child{border-bottom:0}
@@ -127,7 +127,7 @@ th .infob{border-color:#cfcfc9;background:transparent;color:#fff;width:16px;heig
 .xonly button{font:600 13px Montserrat,sans-serif;min-height:32px;padding:4px 12px;border-radius:3px;border:1px solid var(--red);background:#fff;color:var(--red);cursor:pointer}.xonly button:hover{background:var(--red);color:#fff}
 .xnone{margin-top:6px;font-size:13.5px;background:#f0f0ec;border-left:3px solid #8c8c86;padding:6px 10px;border-radius:2px}
 .xr.none{color:var(--mute);font-size:13.5px}
-@media(min-width:760px){.xres{left:auto;width:max(100%,min(660px,calc(100vw - 32px)))}}
+@media(min-width:760px){#ares{right:auto;width:max(100%,min(660px,calc(100vw - 32px)))}#xres{left:auto;width:max(100%,min(560px,calc(100vw - 32px)))}}
 .xg{position:sticky;top:0;z-index:1;background:#f4f4f0;border-bottom:1px solid var(--rule);padding:5px 12px;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#55554f}
 .spv{border-top:1px solid #ecece6;padding:7px 0 2px;margin-top:6px}.spv:first-of-type{border-top:0}
 .spl{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;font-size:13px}.spl .nm{font-weight:700;color:var(--ink)}.spl .nm.oil{color:var(--oil)}.spl .nm.gas{color:var(--gas)}.spl .k{color:var(--mute)}
@@ -491,11 +491,15 @@ tr.fu td{background:#fffaf2 !important}
         <label class="chk"><input type="checkbox" id="bio"> Biofuel rated (B20 or higher)</label>
       </div>
       <div class="xbar" id="xbar">
-        <label for="xq"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h13l-3-3M20 17H7l3 3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Look up an appliance or burner</label>
-        <div class="xwrap"><input type="search" id="xq" autocomplete="off" placeholder="Appliance model or old burner, e.g. Burnham V8H4 or Carlin 301CRD" aria-describedby="xhint" aria-controls="xres" aria-expanded="false">
-          <div class="xres" id="xres" hidden role="listbox" aria-label="Appliance specs and cross-reference matches"></div></div>
+        <div class="xgrp"><label for="aq"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>Look up an appliance</label>
+          <div class="xwrap"><input type="search" id="aq" autocomplete="off" placeholder="e.g. Burnham V8H4" aria-describedby="ahint" aria-controls="ares" aria-expanded="false">
+            <div class="xres" id="ares" hidden role="listbox" aria-label="Appliance specs"></div></div>
+          <span class="vh" id="ahint">Finds the Beckett or Wayne burner spec for a boiler or furnace model.</span></div>
+        <div class="xgrp"><label for="xq"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h13l-3-3M20 17H7l3 3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Replacing a burner?</label>
+          <div class="xwrap"><input type="search" id="xq" autocomplete="off" placeholder="e.g. Carlin 301CRD" aria-describedby="xhint" aria-controls="xres" aria-expanded="false">
+            <div class="xres" id="xres" hidden role="listbox" aria-label="Cross-reference matches"></div></div>
+          <span class="vh" id="xhint">Finds the Beckett or Wayne burner to sell instead of another maker’s or an older model.</span></div>
         <div class="xonly" id="xonly" hidden role="status"></div>
-        <span class="vh" id="xhint">Finds the burner spec for a boiler or furnace model, or the Beckett or Wayne burner to sell instead of another maker’s or an older model.</span>
       </div>
       <div class="acts"><button class="btn" id="o2gb" title="Size a gas burner from the oil nozzle it replaces">Oil-To-Gas<br>Conversion Tool</button><button class="btn" id="reset">Reset</button></div>
     </div>
@@ -847,7 +851,7 @@ function specGet(q){clearTimeout(spT);const k=q.trim();if(xnorm(k).length<2){SPH
   if(SPH.q===k&&SPH.ok)return;const s=++spSeq;
   spT=setTimeout(()=>J('GET','api/specs/search?q='+encodeURIComponent(k)).then(d=>{if(s!==spSeq)return;
     SPH={q:k,hits:Array.isArray(d&&d.hits)?d.hits:[],ok:true};SPBY.clear();SPH.hits.forEach(h=>SPBY.set(h.gid+'|'+h.id,h));
-    if($('xq').value.trim()===k&&document.activeElement===$('xq'))xShow(true)}).catch(()=>{if(s!==spSeq)return;SPH={q:k,hits:[],ok:false};if($('xq').value.trim()===k)xShow(true)}),180)}
+    if($('aq').value.trim()===k&&document.activeElement===$('aq'))aShow(true)}).catch(()=>{if(s!==spSeq)return;SPH={q:k,hits:[],ok:false};if($('aq').value.trim()===k)aShow(true)}),180)}
 // first non-empty value whose column heading matches (works for any brand's guide layout)
 const fv=(h,re,not)=>{const p=h.f.find(([c,v])=>re.test(c)&&!(not&&not.test(c))&&String(v).trim());return p?String(p[1]).trim():''};
 // spec burner name -> matrix burner of the same brand: exact name, one part of "AF/AFG", else the longest name it starts with (AFII 150 -> AF/AFG)
@@ -874,23 +878,28 @@ function specHTML(hits){const g=new Map();for(const h of hits){const k=h.gid+'|'
 function specDetail(h){const note=fv(h,/^note|notes$/i);return`<dl class="spd">${h.f.filter(([c,v])=>String(v).trim()&&!/^(appliance|note$|notes$)/i.test(c)).map(([c,v])=>`<dt>${esc(c)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>${note?`<div class="spn">${esc(note)}</div>`:''}`}
 // a search that finds nothing is reported once it settles, so editors can see what reps look for
 const XLOGGED=new Set();let xMissT=0;
-const xMiss=q=>{clearTimeout(xMissT);const k=xnorm(q);if(k.length<2||XLOGGED.has(k)||xFind(q).length||spMatch(q)||!(SPH.q===q.trim()&&SPH.ok))return;XLOGGED.add(k);J('POST','api/xref/miss',{q}).catch(()=>{})};
-function xShow(fromSpec){const q=$('xq').value.trim(),box=$('xres');clearTimeout(xMissT);if(!q){box.hidden=true;$('xq').setAttribute('aria-expanded','false');return}
-  if(fromSpec!==true)specGet(q);
-  const m=xFind(q),sp=spMatch(q)?SPH.hits:[];if(!m.length&&!sp.length&&XREF_OK)xMissT=setTimeout(()=>xMiss(q),2500);
-  const open=new Set([...box.querySelectorAll('button[data-a="spdet"][aria-expanded="true"]')].map(b=>b.dataset.s));
-  box.innerHTML=(sp.length?`<div class="xg">Appliance specs</div>${specHTML(sp)}`:'')+(sp.length&&m.length?'<div class="xg">Replacing another burner</div>':'')+(m.length?m.map(x=>{const bs=x.to.map(bOf).filter(Boolean);return`<div class="xr" role="option"><div class="from"><span>Replaces <b>${esc(x.brand)} ${esc(x.model)}</b>${x.none?'':' with:'}</span>${bs.length?`<button type="button" class="showall" data-a="showall" data-id="${esc(x.id)}">${bs.length>1?`Show all ${bs.length} in the matrix`:'Show in the matrix'}</button>`:''}</div>
+const xMiss=q=>{clearTimeout(xMissT);const k=xnorm(q);if(k.length<2||XLOGGED.has(k)||xFind(q).length)return;XLOGGED.add(k);J('POST','api/xref/miss',{q}).catch(()=>{})};
+function xShow(){const q=$('xq').value.trim(),box=$('xres');clearTimeout(xMissT);if(!q){box.hidden=true;$('xq').setAttribute('aria-expanded','false');return}
+  const m=xFind(q);if(!m.length&&XREF_OK)xMissT=setTimeout(()=>xMiss(q),2500);
+  box.innerHTML=m.length?m.map(x=>{const bs=x.to.map(bOf).filter(Boolean);return`<div class="xr" role="option"><div class="from"><span>Replaces <b>${esc(x.brand)} ${esc(x.model)}</b>${x.none?'':' with:'}</span>${bs.length?`<button type="button" class="showall" data-a="showall" data-id="${esc(x.id)}">${bs.length>1?`Show all ${bs.length} in the matrix`:'Show in the matrix'}</button>`:''}</div>
     ${bs.map(b=>`<div class="to"><div class="tline"><span class="nm ${b.f}">${esc(b.b+' '+b.n)}</span><span class="sm" style="color:var(--mute)">${esc(fmt(b))}</span><span style="flex:1"></span>
       <button type="button" class="pri" data-a="rfq" data-k="${esc((b.b+'|'+b.n).toLowerCase())}" data-from="${esc(x.brand+' '+x.model)}">Create RFQ</button></div></div>`).join('')||(x.none?'<div class="xnone"><b>No current Beckett or Wayne replacement.</b> Nothing in the line replaces this model yet.</div>':'<div class="sm">The replacement burner is no longer in the list. Ask an admin to update this entry.</div>')}
     ${x.note?`<div class="xn">${esc(x.note)}</div>`:''}</div>`}).join('')
-    :sp.length?'':`<div class="xr none">${SPH.q!==q?'Searching…':`No appliance spec or cross-reference for “${esc(q)}”. Try just the model number, or ask an editor or admin to add it. You can still use the filters below.`}</div>`);
-  open.forEach(k=>{const b=box.querySelector(`button[data-a="spdet"][data-s="${CSS.escape(k)}"]`);if(b)spToggle(b)});
+    :`<div class="xr none">No match for “${esc(q)}”. ${XREF.length?'Try just the model number, or':'The cross-reference list is empty, so'} ask an editor or admin to add it. You can still use the filters below.</div>`;
   box.hidden=false;$('xq').setAttribute('aria-expanded','true')}
+function aShow(fromSpec){const q=$('aq').value.trim(),box=$('ares');if(!q){box.hidden=true;$('aq').setAttribute('aria-expanded','false');return}
+  if(fromSpec!==true)specGet(q);
+  const sp=spMatch(q)?SPH.hits:[],open=new Set([...box.querySelectorAll('button[data-a="spdet"][aria-expanded="true"]')].map(b=>b.dataset.s));
+  box.innerHTML=sp.length?specHTML(sp):`<div class="xr none">${xnorm(q).length<2?'Type at least 2 letters or numbers.':SPH.q!==q?'Searching…':SPH.ok?`No appliance spec for “${esc(q)}”. Try just the model number (e.g. V8H4), or the maker and model.`:'Couldn’t search the appliance specs. Check your connection and try again.'}</div>`;
+  open.forEach(k=>{const b=box.querySelector(`button[data-a="spdet"][data-s="${CSS.escape(k)}"]`);if(b)spToggle(b)});
+  box.hidden=false;$('aq').setAttribute('aria-expanded','true')}
+$('aq').addEventListener('input',()=>aShow());$('aq').addEventListener('focus',()=>aShow());
+$('aq').addEventListener('keydown',e=>{if(e.key==='Escape'){$('ares').hidden=true;$('aq').setAttribute('aria-expanded','false')}});
 $('xonly').addEventListener('click',e=>{if(e.target.closest('#xonlyx')){S.only=null;S.onlyLbl='';S.onlyKind='';render()}});
 $('xq').addEventListener('input',xShow);$('xq').addEventListener('focus',()=>{if(!XREF.length)loadXref().then(xShow);else xShow()});
 $('xq').addEventListener('blur',()=>{const q=$('xq').value.trim();if(q&&XREF_OK&&!xFind(q).length)xMiss(q)});
 $('xq').addEventListener('keydown',e=>{if(e.key==='Enter'){const q=$('xq').value.trim();if(q&&XREF_OK&&!xFind(q).length)xMiss(q)}if(e.key==='Escape'){$('xres').hidden=true;$('xq').setAttribute('aria-expanded','false')}});
-document.addEventListener('click',e=>{if(!e.target.closest('.xwrap')){$('xres').hidden=true;$('xq').setAttribute('aria-expanded','false')}});
+document.addEventListener('click',e=>{const w=e.target.closest('.xwrap');for(const[i,b]of[['xq','xres'],['aq','ares']])if(!w||!w.contains($(i))){$(b).hidden=true;$(i).setAttribute('aria-expanded','false')}});
 function spToggle(b){const d=b.closest('.spv').querySelector('.spdh'),h=SPBY.get(b.dataset.s);if(!d||!h)return;const on=d.hidden;d.hidden=!on;if(on&&!d.innerHTML)d.innerHTML=specDetail(h);b.setAttribute('aria-expanded',String(on));b.textContent=on?'Hide details':'Details'}
 async function specRFQ(h,b){const x=specBurner(h);if(!x)return;const xfmr=stepDownNote(x);if(xfmr&&!await stepDownOK(x))return;
   const r=spRate(h),rate=!r?'':r.u==='gph'?`${r.v} GPH (≈ ${Math.round(r.v*G).toLocaleString()} MBH)`:`${r.v.toLocaleString()} MBH${x.f==='oil'?` (≈ ${(r.v/G).toFixed(2)} GPH)`:''}`;
@@ -904,9 +913,9 @@ async function specRFQ(h,b){const x=specBurner(h);if(!x)return;const xfmr=stepDo
   b.disabled=true;
   try{await newRFQ(x,{...(xfmr?{xfmr}:{}),note:`Per the ${h.guide} spec for the ${h.mfg} ${h.model}${ids?` (${ids})`:''}.${fm&&!mode?` Firing mode: ${fm}.`:''}${note&&!/^none$/i.test(note)?' Spec note: '+note:''}`,
     pre:{'q-app':`${h.mfg} ${h.model}`,'q-rate':rate,'q-ins':ins,'q-opt':opt,'q-fuel':fuel,'q-vent':vent,'q-m':mode}})}catch(err){toast(err.message)}finally{b.disabled=false}}
-$('xres').addEventListener('click',async e=>{const b=e.target.closest('button[data-a]');if(!b)return;
+async function lookClick(e){const b=e.target.closest('button[data-a]');if(!b)return;
   if(b.dataset.a==='spdet'){spToggle(b);return}
-  if(b.dataset.a==='spshow'||b.dataset.a==='sprfq'){const h=SPBY.get(b.dataset.s),x=h&&specBurner(h);if(!x)return;$('xres').hidden=true;$('xq').setAttribute('aria-expanded','false');
+  if(b.dataset.a==='spshow'||b.dataset.a==='sprfq'){const h=SPBY.get(b.dataset.s),x=h&&specBurner(h);if(!x)return;$('ares').hidden=true;$('aq').setAttribute('aria-expanded','false');
     if(b.dataset.a==='sprfq')return specRFQ(h,b);
     S={...JSON.parse(JSON.stringify(DEF)),only:[(x.b+'|'+x.n).toLowerCase()],onlyLbl:`${h.mfg} ${h.model}`,onlyKind:'spec',rate:spRate(h)?String(spRate(h).v):'',unit:spRate(h)?spRate(h).u:'gph'};CONV=null;sync();
     requestAnimationFrame(()=>{if(!hiBurner(x.n,'Spec')){const lad=$('lad');const bx=lad&&(lad.closest('.ladder')||lad);if(bx)bx.scrollIntoView({block:'start'})}});return}
@@ -916,7 +925,8 @@ $('xres').addEventListener('click',async e=>{const b=e.target.closest('button[da
     const lad=$('lad');const box=lad&&(lad.closest('.ladder')||lad);if(box)box.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'start'});return}
   const x=bOf(b.dataset.k);if(!x)return;$('xres').hidden=true;
   const xfmr=stepDownNote(x);if(xfmr&&!await stepDownOK(x))return;b.disabled=true;
-  newRFQ(x,{...(xfmr?{xfmr}:{}),note:`Replaces ${b.dataset.from}.`}).catch(err=>toast(err.message)).finally(()=>b.disabled=false)});
+  newRFQ(x,{...(xfmr?{xfmr}:{}),note:`Replaces ${b.dataset.from}.`}).catch(err=>toast(err.message)).finally(()=>b.disabled=false)}
+$('xres').addEventListener('click',lookClick);$('ares').addEventListener('click',lookClick);
 
 // mark one burner in the chart and the table, and scroll its table row into view
 function hiBurner(n,label='Selected'){const t=$('r-'+n.replace(/\W/g,''));if(!t)return false;const row=[...document.querySelectorAll('#lad .lr')].find(r=>r.dataset.n===n);
