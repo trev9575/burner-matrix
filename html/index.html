@@ -863,7 +863,7 @@ function specBurner(h){const s=xnorm(h.burner),br=String(h.brand).toLowerCase();
 const spRate=h=>{const n=parseFloat(h.rate);if(!(n>0))return null;return h.unit==='btu'?{v:+(n/1000).toFixed(1),u:'mbh'}:{v:n,u:h.unit==='mbh'?'mbh':'gph'}};
 const spRateTxt=h=>{const r=spRate(h);return r?`${r.v.toLocaleString()} ${r.u==='gph'?'GPH':'MBH'}`:''};
 // the few columns worth seeing at a glance, whichever guide (residential/commercial, oil/gas) they come from
-const SPKEY=[[/^nozzle$/i,/alt/i],[/^head/i],[/high.*pump|^pump|psi/i],[/manifold/i],[/^ng orifice/i],[/^lp orifice/i],[/firing mode/i],[/air tube combo/i],[/insertion/i,/weld/i]];
+const SPKEY=[[/^beckett spec$/i],[/^nozzle$/i,/alt/i],[/^head/i],[/high.*pump|^pump|psi/i],[/manifold/i],[/^ng orifice/i],[/^lp orifice/i],[/firing mode/i],[/air tube combo/i],[/insertion/i,/weld/i]];
 const fc=(h,re,not)=>{const p=h.f.find(([c,v])=>re.test(c)&&!(not&&not.test(c))&&String(v).trim()&&!/^(n\/a|-)$/i.test(String(v).trim()));return p?[p[0],String(p[1]).trim()]:null};
 const spKeys=h=>SPKEY.map(([re,not])=>fc(h,re,not)).filter(Boolean);
 function specHTML(hits){const g=new Map();for(const h of hits){const k=h.gid+'|'+h.mfg+'|'+h.model;if(!g.has(k))g.set(k,[]);g.get(k).push(h)}
@@ -904,8 +904,8 @@ function spToggle(b){const d=b.closest('.spv').querySelector('.spdh'),h=SPBY.get
 async function specRFQ(h,b){const x=specBurner(h);if(!x)return;const xfmr=stepDownNote(x);if(xfmr&&!await stepDownOK(x))return;
   const r=spRate(h),rate=!r?'':r.u==='gph'?`${r.v} GPH (≈ ${Math.round(r.v*G).toLocaleString()} MBH)`:`${r.v.toLocaleString()} MBH${x.f==='oil'?` (≈ ${(r.v/G).toFixed(2)} GPH)`:''}`;
   const keys=spKeys(h),ins=(keys.find(([c])=>/insertion/i.test(c))||[])[1]||'';
-  const alt=fc(h,/alt.*nozzle/i),opt=keys.filter(([c])=>!/insertion|firing mode/i.test(c)).concat(alt?[alt]:[]).map(([c,v])=>`${c}: ${v}`).join(', ');
-  const ids=[['spec',fv(h,/atc|spec\s*(no|#|number)/i)],['chassis',fv(h,/chassis/i)],['universal assy',fv(h,/universal/i)]].filter(o=>o[1]).map(o=>`${o[0]} ${o[1]}`).join(', ');
+  const alt=fc(h,/alt.*nozzle/i),opt=keys.filter(([c])=>!/insertion|firing mode|beckett spec/i.test(c)).concat(alt?[alt]:[]).map(([c,v])=>`${c}: ${v}`).join(', ');
+  const ids=[['Beckett spec',fv(h,/^beckett spec$/i)],['air tube combo',fv(h,/atc/i)],['chassis',fv(h,/chassis/i)],['universal assy',fv(h,/universal/i)]].filter(o=>o[1]).map(o=>`${o[0]} ${o[1]}`).join(', ');
   const note=fv(h,/^note|notes$/i),ft=fv(h,/fuel/i).toLowerCase(),vt=fv(h,/vent/i).toLowerCase(),fm=(fc(h,/firing mode/i)||[])[1]||'';
   // only the clear cases are carried over; anything else is left for the rep to pick
   const fuel=x.f==='oil'?(/^#?2\b/.test(ft)?DD.oil[0]:''):/\bLP\b/.test(h.model)?DD.gas[1]:/\bnat(ural)?\b/i.test(h.model)?DD.gas[0]:'',vent=vt==='chimney'?DD.vent[0]:/^direct/.test(vt)?DD.vent[2]:'';
