@@ -385,7 +385,7 @@ const rfqSummary = (r, me) => ({ id: r.id, no: r.no, date: r.date, by: r.by, byF
 // Emailed or Quoted RFQs with no activity for N days need a follow-up. Activity = last email, status change or "followed up".
 function followUp(r) {
   const st = r.status || ((r.sends || []).length ? 'sent' : 'draft'), days = followUpDays();
-  if (!(st === 'sent' || st === 'quoted')) return { followUp: false, idleDays: 0, followedUpAt: r.followedUpAt || '' };
+  if (!(st === 'sent' || st === 'quoted') || r.archived) return { followUp: false, idleDays: 0, followedUpAt: r.followedUpAt || '' }; // archived RFQs never nag
   const t = [((r.sends || []).slice(-1)[0] || {}).at, r.statusAt, r.followedUpAt].filter(Boolean).map(Date.parse).filter(isFinite);
   const idle = t.length ? Math.floor((Date.now() - Math.max(...t)) / 864e5) : 0;
   return { followUp: days > 0 && idle >= days, idleDays: idle, followedUpAt: r.followedUpAt || '' };
@@ -491,7 +491,8 @@ function dataCheck() {
   if (!Mail.configured()) add('Settings', 'error', 'Email isn’t set up', ['RFQs, quotes and comments can’t be emailed'], 'Set the SMTP_* variables on the container (see the README).');
   else if (!rfqTo()) add('Settings', 'warn', 'No “Send completed RFQs to” address', ['Reps have to type the office address on every RFQ'], 'Set it in Settings.');
   const lb = (getSettings().lastBackup || {}).at;
-  if (!lb || now - Date.parse(lb) > 2 * day) add('Settings', 'error', lb ? 'No backup for more than 2 days' : 'No backup yet', [lb ? `Last backup ${new Date(lb).toLocaleString()}` : 'The nightly backup hasn’t run'], 'Click “Back up now” in Settings, and check the container is running overnight.');
+  if (!lb) add('Settings', 'info', 'No backup yet', ['The first nightly backup runs at 1:00 a.m.'], 'Or click “Back up now” in Settings.');
+  else if (now - Date.parse(lb) > 2 * day) add('Settings', 'error', 'No backup for more than 2 days', [`Last backup ${new Date(lb).toLocaleString()}`], 'Click “Back up now” in Settings, and check the container is running overnight.');
   const order = { error: 0, warn: 1, info: 2 };
   return { at: new Date().toISOString(), issues: out.sort((a, b) => order[a.level] - order[b.level]) };
 }
@@ -654,7 +655,9 @@ async function api(req, res, url) {
     if (!rf.length && i < 0) return send(res, 404, { error: 'No such customer' });
     if (rf.length && !canEditData(me)) return send(res, 403, { error: `${co} has ${rf.length} RFQ${rf.length > 1 ? 's' : ''}. Only an editor or admin can delete it.` });
     if (!rf.length && me.role === 'rep' && list[i].by !== me.name) return send(res, 403, { error: 'Only the person who added this customer, an editor or an admin can delete it.' });
-    const to = String(b.moveTo || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 120), tk = custKey(to);
+    let to = String(b.moveTo || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 120); const tk = custKey(to);
+    if (tk) { const ex = list.find(c => custKey(c.company) === tk); const exR = !ex && allRfqs().filter(r => custKey(r.fields['q-co']) === tk).sort((a, c) => String(c.date).localeCompare(String(a.date)))[0];
+      if (ex) to = ex.company; else if (exR) to = String(exR.fields['q-co']).trim(); } // keep the target's own spelling
     if (to && tk === k) return send(res, 422, { error: 'Pick a different customer to move the RFQs to.' });
     let moved = 0;
     if (to) {
@@ -778,6 +781,7 @@ async function api(req, res, url) {
     if (rm[2] === '/claim' && m === 'POST') { // a quoter says "I'm on it" (or lets it go), so two people don't quote the same RFQ
       if (!canQuote(me)) return send(res, 403, { error: 'Only quoters and admins can take an RFQ' });
       const b = (await readBody(req, 1024)) || {}; reloadRfq(r);
+      if (b.on && r.quote) return send(res, 409, { error: 'This RFQ already has a quote' });
       if (b.on) { if (r.claim && r.claim.by !== me.name && !b.force) return send(res, 409, { error: `${r.claim.byFull || r.claim.by} is already on it` }); r.claim = { by: me.name, byFull: me.full || me.name, at: new Date().toISOString() }; }
       else { if (r.claim && r.claim.by !== me.name && me.role !== 'admin') return send(res, 403, { error: 'Only the person who took it (or an admin) can let it go' }); delete r.claim; }
       writeJSON(rfqFile(r.id), r); return send(res, 200, rfqSummary(r, me));
@@ -1117,7 +1121,7 @@ async function api(req, res, url) {
       const i = s.rows.findIndex(x => x.id === b.id); if (i < 0) return send(res, 404, { error: 'That spec was changed or removed. Reload the list.' });
       if (!['confirm', 'reject', 'undo'].includes(b.action)) return send(res, 422, { error: 'Unknown action' });
       const spec = String(b.spec || '').trim().toUpperCase().slice(0, 40);
-      if (b.action === 'confirm' && !/^[A-Z0-9-]{2,40}$/.test(spec)) return send(res, 422, { error: 'Give the spec number to confirm' });
+      if (b.action === 'confirm' && !/^[A-Z0-9][A-Z0-9 ._\/-]{1,39}$/.test(spec)) return send(res, 422, { error: 'Give the spec number to confirm' });
       const cur = { ...s, cols: s.cols.slice(), rows: s.rows.map(x => ({ ...x, v: x.v.slice() })), updated: new Date().toISOString(), by: me.name };
       const L = SPECS.linkCols(cur), row = cur.rows[i];
       if (b.action === 'confirm') { row.v[L.spec] = spec; row.v[L.match] = 'Confirmed'; }

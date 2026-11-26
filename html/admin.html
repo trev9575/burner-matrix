@@ -645,6 +645,8 @@ const fmtWhen=d=>d?new Date(d).toLocaleDateString(undefined,{year:'numeric',mont
 // same naming the server uses: "Residential_Gas_Specifications_Guide_SQL.csv" -> "Residential gas"
 const guideName=f=>{let n=String(f||'').replace(/\.[a-z0-9]+$/i,'').replace(/^[0-9a-f]{6,}[-_]/i,'').replace(/_+/g,' ').replace(/\b(spec(ification)?s?|guide|sql|export|csv)\b/gi,' ').replace(/\s+/g,' ').trim().toLowerCase();return n?(n[0].toUpperCase()+n.slice(1)).slice(0,40):''};
 const UNIT={gph:'GPH',mbh:'MBH',btu:'BTU/hr'};
+// Excel's plain "CSV (Comma delimited)" is Windows-1252, not UTF-8: decode as UTF-8 if it is valid, otherwise as Windows-1252 (keeps °, ½, ¾ …)
+async function csvText(f){const b=await f.arrayBuffer();try{return new TextDecoder('utf-8',{fatal:true}).decode(b)}catch(e){return new TextDecoder('windows-1252').decode(b)}}
 async function loadSpecs(){let all;try{all=await call('GET','/api/specs')}catch(err){$('splist').innerHTML=`<div class="msg err">${esc(err.message)}</div>`;return}
   SP=all.filter(s=>!s.removed);
   if(!list.length)try{list=await call('GET','/api/burners')}catch(e){}
@@ -712,11 +714,11 @@ const diffTxt=r=>{const d=r.diff;if(!d)return`${r.count.toLocaleString()} specs`
 const spPvKey=q=>$('spbrand').value+'|'+q.name.trim().toLowerCase()+'|'+(q.burner||'');
 async function spPreview(){for(const q of SPQ){if(q.done)continue;const ex=SP.find(s=>s.brand===$('spbrand').value&&s.name.toLowerCase()===q.name.trim().toLowerCase());
     if(!ex||(q.pv&&q.pv.key===spPvKey(q))||(q.needBurner&&!q.burner))continue;const key=spPvKey(q);q.pvBusy=true;spQueue();
-    try{const r=await call('POST','/api/specs/import',{brand:$('spbrand').value,name:q.name.trim(),file:q.file.name,burner:q.burner||'',csv:await q.file.text(),dryRun:true});q.pv={key,r};q.err=''}
+    try{const r=await call('POST','/api/specs/import',{brand:$('spbrand').value,name:q.name.trim(),file:q.file.name,burner:q.burner||'',csv:await csvText(q.file),dryRun:true});q.pv={key,r};q.err=''}
     catch(err){q.err=err.message}finally{q.pvBusy=false}spQueue()}}
 // a file whose headings have no burner column needs the one burner all its specs are for (Beckett's residential gas guide is all CG4)
 $('spfile').onchange=async()=>{SPQ=[...$('spfile').files].map(f=>({file:f,name:guideName(f.name)||'Specs',burner:''}));$('spmsg').hidden=true;spQueue();
-  for(const q of SPQ){try{const head=(await q.file.slice(0,4096).text()).split(/\r?\n/)[0].toLowerCase();
+  for(const q of SPQ){try{const head=(await csvText(q.file.slice(0,4096))).split(/\r?\n/)[0].toLowerCase();
     if(!/burner/.test(head)){q.needBurner=true;if(/resid.*gas/i.test(q.name)&&$('spbrand').value==='Beckett')q.burner='CG4'}}catch(e){}}
   spQueue();spPreview()};
 $('spbrand').onchange=()=>{spQueue();spPreview()};
@@ -726,7 +728,7 @@ $('spimp').onsubmit=async e=>{e.preventDefault();$('spmsg').hidden=true;const br
   const names=todo.map(q=>q.name.trim().toLowerCase());if(new Set(names).size<names.length)return showMsg($('spmsg'),'err','Two files have the same guide name, so the second would replace the first. Give each its own name.');
   $('spgo').disabled=true;$('spgo').textContent='Loading…';let ok=0;
   for(const q of todo){q.err='';if(!q.name.trim()){q.err='Give this guide a name.';continue}if(q.file.size>24*1024*1024){q.err='This file is too big (24 MB max).';continue}
-    try{const r=await call('POST','/api/specs/import',{brand,name:q.name.trim(),file:q.file.name,burner:q.burner||'',csv:await q.file.text()});
+    try{const r=await call('POST','/api/specs/import',{brand,name:q.name.trim(),file:q.file.name,burner:q.burner||'',csv:await csvText(q.file)});
       q.done=`Loaded ${r.count.toLocaleString()} specs as ${r.title}${r.diff?` (${diffTxt(r)})`:''}${r.skipped?` (skipped ${r.skipped} blank or heading row${r.skipped>1?'s':''})`:''}${r.warnings&&r.warnings.length?'. '+r.warnings.join(' '):''}`;ok++}
     catch(err){q.err=err.message;if(/no burner model column/i.test(err.message))q.needBurner=true}}
   spQueue();if(ok){toast(`${ok} guide${ok>1?'s':''} loaded`);await loadSpecs();spQueue()}

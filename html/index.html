@@ -1221,7 +1221,7 @@ function didYouMean(typed,cands,what='customer'){return new Promise(ok=>{const d
   $('dyml').innerHTML=cands.map((c,i)=>`<button type="button" data-i="${i}">Use <b>${esc(c.name)}</b>${c.sub?`<small>${esc(c.sub)}</small>`:''}</button>`).join('');
   $('dymno').textContent=`No, “${typed}” is a different ${what}`;
   let done=false;const fin=v=>{if(done)return;done=true;d.close();ok(v)};
-  $('dyml').onclick=e=>{const b=e.target.closest('button[data-i]');if(b)fin(cands[+b.dataset.i].name)};$('dymno').onclick=()=>fin(null);d.oncancel=e=>{e.preventDefault();fin(null)};
+  $('dyml').onclick=e=>{const b=e.target.closest('button[data-i]');if(b)fin(cands[+b.dataset.i].name)};$('dymno').onclick=()=>fin(null);d.oncancel=e=>{e.preventDefault();fin(undefined)};
   d.showModal();const f=$('dyml').querySelector('button');if(f)f.focus()})}
 const coSub=c=>[c.rfqs?`${c.rfqs} RFQ${c.rfqs>1?'s':''}`:'',(c.contacts||[]).slice(0,2).map(x=>x.name).filter(Boolean).join(', '),c.address||''].filter(Boolean).join(' · ');
 // on the RFQ: when the company typed isn't a customer we have but is close to one, ask once per spelling
@@ -1233,7 +1233,7 @@ async function rfqCoCheck(){const el=$('q-co');if(!el||el.readOnly||!RFQ||RFQ.ro
   // asked even when this exact spelling was used before, if another spelling of the same company exists (offered first: the one with more RFQs)
   const cur=findCo(v),c=similarCos(v,CUST.map(x=>x.company)).map(x=>({...x,n:(CUST.find(y=>y.company===x.name)||{}).rfqs||0})).filter(x=>!cur||x.n>=(cur.rfqs||0)).sort((a,b)=>b.n-a.n||a.d-b.d);if(!c.length)return;
   const pick=await didYouMean(v,c.map(x=>({...x,sub:coSub(CUST.find(y=>y.company===x.name)||{})})));
-  if(pick){el.value=pick;el.dispatchEvent(new Event('input',{bubbles:true}));fitText(el);bookCo(false);toast(`Using ${pick}`)}else dymKeep(v)}
+  if(pick){el.value=pick;el.dispatchEvent(new Event('input',{bubbles:true}));fitText(el);bookCo(false);toast(`Using ${pick}`)}else if(pick===null)dymKeep(v)}
 $('sheet').addEventListener('change',e=>{if(e.target.id==='q-co')setTimeout(rfqCoCheck,150)});
 // fill a box only if it's empty or was filled by the address book (never over what the rep typed)
 function bookFill(id,val){const el=$(id);if(!el||el.readOnly||!val)return;if(el.value&&!el.dataset.auto)return;el.value=val;el.dataset.auto='1';fitText(el)}
@@ -1417,7 +1417,7 @@ const money=v=>typeof v==='number'?v.toLocaleString(undefined,{style:'currency',
 function quoteBadge(){const b=$('rfqsb'),n=LIST.filter(r=>r.newQuote).length;let q=b.querySelector('.nq');
   if(!n){if(q)q.remove();return}if(!q){q=document.createElement('span');q.className='nb nq';b.insertBefore(q,b.querySelector('.nb'))}
   q.textContent=n;q.title=`${n} RFQ${n>1?'s have':' has'} a new quote`;q.setAttribute('aria-label',q.title)}
-const waiting=r=>!!r.sent&&!r.status&&!r.quote; // emailed to the office, no quote yet
+const waiting=r=>!!r.sent&&!r.status&&!r.quote&&!r.archived; // emailed to the office, no quote yet (archived ones are set aside)
 let NQSEEN=null; // new-quote ids already announced this session
 async function refreshFollow(){if(!ME)return;try{LIST=await J('GET','api/rfqs');followBadge();
   const nq=LIST.filter(r=>r.newQuote);if(NQSEEN){const fresh=nq.filter(r=>!NQSEEN.has(r.id));
@@ -1457,7 +1457,7 @@ function renderList(){const staff=ME&&ME.role!=='rep',mine=!staff||$('lwho').val
   // every word must appear somewhere in the RFQ (number, customer, job, burner, rep, appliance, address, notes with spec numbers, quote #…)
   const qw=q.split(/\s+/).filter(Boolean),hit=r=>{const h=[r.no,r.company,r.contact,r.job,r.burner,r.by,r.byFull,r.app,r.find,r.quote&&r.quote.no].join(' ').toLowerCase();return qw.every(w=>h.includes(w))};
   let rows=base.filter(r=>(!LST||LST==='archived'||(LST==='follow'?r.followUp:LST==='wait'?waiting(r):LST==='newq'?r.newQuote:stOf(r)===LST))&&(!qw.length||hit(r)));
-  LSHOWN=rows.map(r=>r.id);for(const id of[...LSEL])if(!LIST.some(r=>r.id===id))LSEL.delete(id);
+  LSHOWN=rows.map(r=>r.id);const shown=new Set(LSHOWN);for(const id of[...LSEL])if(!shown.has(id))LSEL.delete(id); // a bulk change only ever touches RFQs you can see
   if(LST==='wait')rows=rows.sort((a,b)=>String(a.sent.at).localeCompare(String(b.sent.at)));
   $('lbody').innerHTML=rows.map(r=>{const st=stOf(r),can=ME&&(r.by===ME.name||ME.role!=='rep');
     return`<tr data-id="${esc(r.id)}"${r.newQuote?' class="nqr"':r.followUp?' class="fu"':''}><td class="lck">${can?`<input type="checkbox" class="lsel" aria-label="Select ${esc(r.no)}"${LSEL.has(r.id)?' checked':''}>`:''}</td><td class="no">${esc(r.no)}${r.archived?'<span class="arch">Archived</span>':''}${r.newQuote?'<span class="nqt">New quote</span>':''}${r.unread?`<span class="cnew" title="${r.unread} new comment${r.unread>1?'s':''}">💬 ${r.unread}</span>`:r.comments?`<span class="sm" title="${r.comments} comment${r.comments>1?'s':''}" style="margin-left:6px">💬 ${r.comments}</span>`:''}${waiting(r)?`<br><span class="wait" title="Emailed ${fmtD(r.sent.at)}, no quote yet">Waiting for quote · ${daysSince(r.sent.at)?daysSince(r.sent.at)+' day'+(daysSince(r.sent.at)===1?'':'s'):'since today'}</span>`:''}${r.claim&&!r.quote?`<br><span class="claimt" title="Since ${fmtD(r.claim.at)}">${ME&&r.claim.by===ME.name?'You’re on it':esc(r.claim.byFull||r.claim.by)+' is on it'}</span>`:''}${r.followUp?`<br><span class="fub" title="No activity for ${r.idleDays} days">Follow up · ${r.idleDays} days</span>`:''}</td><td style="white-space:nowrap">${fmtD(r.date)}</td><td>${r.company?`<a href="#" class="colink" data-co="${esc(r.company)}">${esc(r.company)}</a>`:''}${r.contact?`<div class="sm">${esc(r.contact)}</div>`:''}</td><td>${esc(r.job)}${r.app?`<div class="sm">${esc(r.app)}</div>`:''}</td>
@@ -1810,6 +1810,7 @@ $('custf').onsubmit=async e=>{e.preventDefault();$('cuerr').hidden=true;
   if((!CUED||coKey(CUED.company)!==coKey(body.company)||CUED.company.toLowerCase()!==body.company.toLowerCase())&&!DYM_OK.has(body.company.toLowerCase())){
     const all=(CLIST.length?CLIST:await loadCust()).filter(c=>!CUED||c.company.toLowerCase()!==CUED.company.toLowerCase()),cand=similarCos(body.company,all.map(c=>c.company));
     if(cand.length){$('custd').close();const pick=await didYouMean(body.company,cand.map(x=>({...x,sub:coSub(all.find(y=>y.company===x.name)||{})})));
+      if(pick===undefined){$('custd').showModal();$('cu-co').focus();return} // Escape: back to the form, nothing saved
       if(pick){const ex=all.find(c=>c.company===pick);toast(`Opened ${pick}. Add the new details there.`);
         if(ex){openCustDlg(ex);// carry over what was typed that the existing customer doesn't have yet
           if(!$('cu-addr').value&&body.address)$('cu-addr').value=body.address;if(!$('cu-notes').value&&body.notes)$('cu-notes').value=body.notes;
