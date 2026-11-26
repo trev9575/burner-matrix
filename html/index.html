@@ -1228,10 +1228,11 @@ const coSub=c=>[c.rfqs?`${c.rfqs} RFQ${c.rfqs>1?'s':''}`:'',(c.contacts||[]).sli
 // answers are remembered on this device, so a spelling someone said is a different customer isn't asked about again
 const DYM_OK=new Set((()=>{try{return JSON.parse(localStorage.getItem('bm-dym')||'[]')}catch(e){return[]}})());
 const dymKeep=v=>{DYM_OK.add(v.toLowerCase());try{localStorage.setItem('bm-dym',JSON.stringify([...DYM_OK].slice(-300)))}catch(e){}};
-async function rfqCoCheck(){const el=$('q-co');if(!el||el.readOnly||!RFQ||RFQ.ro)return;const v=el.value.trim();if(!v||DYM_OK.has(v.toLowerCase()))return;
+async function rfqCoCheck(){const el=$('q-co');if(!el||el.readOnly||!RFQ||RFQ.ro||$('dymd').open)return;const v=el.value.trim();if(!v||DYM_OK.has(v.toLowerCase()))return;
   await loadCust();if(el.value.trim()!==v)return;
   // asked even when this exact spelling was used before, if another spelling of the same company exists (offered first: the one with more RFQs)
   const cur=findCo(v),c=similarCos(v,CUST.map(x=>x.company)).map(x=>({...x,n:(CUST.find(y=>y.company===x.name)||{}).rfqs||0})).filter(x=>!cur||x.n>=(cur.rfqs||0)).sort((a,b)=>b.n-a.n||a.d-b.d);if(!c.length)return;
+  if($('dymd').open||el.value.trim()!==v)return;
   const pick=await didYouMean(v,c.map(x=>({...x,sub:coSub(CUST.find(y=>y.company===x.name)||{})})));
   if(pick){el.value=pick;el.dispatchEvent(new Event('input',{bubbles:true}));fitText(el);bookCo(false);toast(`Using ${pick}`)}else if(pick===null)dymKeep(v)}
 $('sheet').addEventListener('change',e=>{if(e.target.id==='q-co')setTimeout(rfqCoCheck,150)});
@@ -1315,7 +1316,7 @@ function burnerFacts(x){const[a,b]=mb(x),dims=Array.isArray(x.dim)?x.dim.map(n=>
   return[['Fuel',(x.f==='oil'?'Oil':'Gas')+(x.lp?` (LP: ${x.lp})`:'')],['Firing range',`${fmt(x)}${x.f==='oil'?` (${Math.round(a).toLocaleString()}–${Math.round(b).toLocaleString()} MBH)`:''}`],
     ['Power',pk.map(k=>vlabel(k)+(x.std===k&&pk.length>1?' (std)':'')).join(', ')],['Firing modes',x.m.map(m=>MODEW[m]).join(', ')],
     x.td!=null&&!(x.td===1&&x.tdx)?['Turndown',n2(x.td)+':1']:null,x.fl!=null||x.fw!=null?['Flame size',`${x.fl!=null?n2(x.fl):'?'} × ${x.fw!=null?n2(x.fw):'?'} in (L × W)`]:null,
-    x.op!=null?['Max overfire',`${n2(x.op)} in. WC`]:null,dims?['Chassis dimensions',dims]:null,x.tubes.length?['Air tube lengths',x.tubes.map(tubeLbl).join(', ')]:x.vt?null:null,
+    x.op!=null?['Max overfire',`${n2(x.op)} in. WC`]:null,dims?['Chassis dimensions',dims]:null,x.tubes.length?['Air tube lengths',x.tubes.map(tubeLbl).join(', ')]:null,
     x.bio?['Fuel ratings',x.bio]:null,['Applications',x.a.map(k=>APPS[k]).join(', ')],x.note?['Notes',x.note]:null].filter(Boolean)}
 function shareText(x){const me=[repName(),repPhone(),repEmail()].filter(Boolean).join(' · ');
   return[`${x.b} ${x.n} ${x.f==='oil'?'oil':'gas'} burner`,...burnerFacts(x).filter(([k])=>k!=='Notes').map(([k,v])=>`${k}: ${v}`),x.u?`Product page: ${x.u}`:'',me?`\n${me}`:''].filter(Boolean).join('\n')}
@@ -1407,7 +1408,7 @@ async function openList(){hideMain();$('listv').hidden=false;scrollTo(0,0);
   const staff=ME&&ME.role!=='rep';$('lwho').hidden=!staff;$('lrepth').hidden=!staff;
   $('lbody').innerHTML='<tr><td colspan="11" class="sm">Loading…</td></tr>';
   if(ME&&ME.role==='quoter'&&!openList.seen){openList.seen=1;LST='wait'}
-  try{LIST=await J('GET','api/rfqs');renderList()}catch(e){$('lbody').innerHTML=`<tr><td colspan="9">${esc(e.message)}</td></tr>`}}
+  try{LIST=await J('GET','api/rfqs');renderList()}catch(e){$('lbody').innerHTML=`<tr><td colspan="11">${esc(e.message)}</td></tr>`}}
 const STL={draft:'Draft',sent:'Emailed',quoted:'Quoted',won:'Won',lost:'Lost'};
 const stOf=r=>r.status||(r.sent?'sent':'draft');
 let LST='';
@@ -1466,7 +1467,7 @@ function renderList(){const staff=ME&&ME.role!=='rep',mine=!staff||$('lwho').val
     <td>${can?`<select class="st st-${st}" aria-label="Status of ${esc(r.no)}">${['','quoted','won','lost'].map(v=>`<option value="${v}"${(r.status||'')===v?' selected':''}>${v?STL[v]:(r.sent?'Emailed':'Draft')}</option>`).join('')}</select>`:`<span class="st st-${st}">${STL[st]}</span>`}${r.status==='lost'&&r.lostReason?`<div class="sm" style="margin-top:3px">${esc(r.lostReason)}</div>`:''}${r.quote?`<span class="lq">Quote ${esc(r.quote.no||'')}${r.quote.file?' · PDF':''}</span>`:''}</td>
     <td>${(r.status==='quoted'||r.status==='won')&&can?`<button type="button" class="lval${r.value==null?' add':''}" title="Change the quote value">${money(r.value)||'+ Add value'}</button>`:money(r.value)||'—'}</td>
     <td style="white-space:nowrap">${r.followUp&&can?'<button class="btn lmini lfu" title="Restart the follow-up clock">Followed up</button> ':''}${canDel({by:r.by,sent:r.sent})?'<button class="btn ldel lmini" style="color:#b3141f">Delete</button>':''}</td></tr>`}).join('')||`<tr><td colspan="11" class="sm" style="padding:24px 8px">${LIST.length?'No RFQs match.':'No saved RFQs yet. Use “Create RFQ” in the matrix, then Save or Email PDF.'}</td></tr>`;
-  $('lall').checked=rows.length>0&&rows.every(r=>!$('lbody').querySelector(`tr[data-id="${CSS.escape(r.id)}"] .lsel`)||LSEL.has(r.id));bulkBar();
+  const selRows=rows.filter(r=>$('lbody').querySelector(`tr[data-id="${CSS.escape(r.id)}"] .lsel`));$('lall').checked=selRows.length>0&&selRows.every(r=>LSEL.has(r.id));$('lall').disabled=!selRows.length;bulkBar();
   followBadge()}
 // ----- several RFQs at once -----
 let LSEL=new Set(),LSHOWN=[];
@@ -1483,7 +1484,7 @@ function bulkBar(){const n=LSEL.size,b=$('lbulk');b.hidden=!n;if(!n)return;const
 async function bulkDo(action,extra={}){const ids=[...LSEL];if(!ids.length)return;
   try{const r=await J('POST','api/rfqs/bulk',{ids,action,...extra});const ch=new Map(r.changed.map(x=>[x.id,x]));LIST=LIST.map(x=>ch.get(x.id)||x);LSEL.clear();renderList();
     toast(`${r.changed.length} RFQ${r.changed.length===1?'':'s'} ${{lost:'marked lost',followup:'marked followed up',archive:'archived',unarchive:'unarchived'}[action]}${r.skipped?` · ${r.skipped} skipped (already ${action==='lost'?'won or lost':action==='followup'?'up to date':'that way'})`:''}`)}
-  catch(err){toast(err.message)}}
+  catch(err){toast(err.message);bulkBar()}}
 $('lbulk').addEventListener('click',e=>{const b=e.target.closest('[data-b]');if(!b)return;if(b.dataset.b==='clear'){LSEL.clear();renderList();return}bulkDo(b.dataset.b)});
 $('lbulk').addEventListener('change',e=>{if(e.target.id==='lbl'&&e.target.value){const n=LSEL.size;if(confirmLost(n,e.target.value))bulkDo('lost',{lostReason:e.target.value});else e.target.value=''}});
 const confirmLost=(n,why)=>n<5||window.confirm(`Mark ${n} RFQs as lost (${why})?`);
@@ -1524,7 +1525,7 @@ function rxRender(){const box=$('rfqx');if(!RFQ||PDFMODE||!ME||RFQ.offline){box.
     if(!RFQ.id)h+='<p class="qmsg">Save and email the RFQ. The office’s quote will show up here.</p>';
     else if(sent){const c=RFQ.claim,mineC=c&&c.by===ME.name;
       h+=`<p class="qmsg">Emailed to the office ${fmtD(sent.at)} (${agoTxt(sent.at)}). ${cq?'':'The quote will show up here as soon as it’s ready.'}</p>`;
-      if(c)h+=`<div class="qclaim"><span>${mineC?'<b>You’re</b> on it':`<b>${esc(c.byFull||c.by)}</b> is on it`} · since ${fmtD(c.at)}</span>${cq?`<button type="button" class="qlink" id="qclaim" data-on="${mineC||ME.role==='admin'?'0':'force'}">${mineC?'Let it go':'Take over'}</button>`:''}</div>`;
+      if(c)h+=`<div class="qclaim"><span>${mineC?'<b>You’re</b> on it':`<b>${esc(c.byFull||c.by)}</b> is on it`} · since ${fmtD(c.at)}</span>${cq?`<button type="button" class="qlink" id="qclaim" data-on="${mineC?'0':'force'}">${mineC?'Let it go':'Take over'}</button>`:''}</div>`;
       else if(cq)h+=`<div class="qclaim free"><span>Nobody has taken this one yet.</span><button type="button" class="qlink" id="qclaim" data-on="1">I’m on it</button></div>`;
       if(cq)h+='<button type="button" class="btn pri qbig" id="qedit">+ Add quote</button>'}
     else h+=`<p class="qmsg">This RFQ hasn’t been emailed yet. Once it is, the office’s quote will show up here.</p>${cq?'<button type="button" class="qlink" id="qedit">Add a quote anyway</button>':''}`}
