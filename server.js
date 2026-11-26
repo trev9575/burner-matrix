@@ -43,6 +43,9 @@ const F = {
   vapid: path.join(DATA, '.vapid.json'),
   push: path.join(DATA, 'push.json'),
   specs: path.join(DATA, 'specs'),
+  smiss: path.join(DATA, 'specs-misses.json'),
+  qtpl: path.join(DATA, 'quote-templates.json'),
+  activity: path.join(DATA, 'activity.jsonl'),
 };
 
 // ---------- storage ----------
@@ -73,6 +76,16 @@ function notify(names, data) {
     .then(gone => { const g = new Set(gone.filter(Boolean)); if (g.size) writeJSON(F.push, getSubs().filter(s => !g.has(s.endpoint))); });
 }
 const SPECS = Specs.store(F.specs); // appliance spec guides, any number per burner brand
+// ---------- activity log: who changed what (one JSON line per change; trimmed to the newest 5,000) ----------
+function logAct(who, text) {
+  try {
+    fs.appendFileSync(F.activity, JSON.stringify({ at: new Date().toISOString(), by: who, t: String(text).slice(0, 300) }) + '\n');
+    if (fs.statSync(F.activity).size > 1.5e6) { const l = fs.readFileSync(F.activity, 'utf8').trim().split('\n').slice(-5000); fs.writeFileSync(F.activity + '.tmp', l.join('\n') + '\n'); fs.renameSync(F.activity + '.tmp', F.activity); }
+  } catch (e) { console.warn('Activity log:', e.message); }
+}
+const readAct = () => { try { return fs.readFileSync(F.activity, 'utf8').trim().split('\n').filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean); } catch { return []; } };
+const getTpl = () => { const l = readJSON(F.qtpl, []); return Array.isArray(l) ? l : []; };
+const getSMiss = () => { const m = readJSON(F.smiss, {}); return m && typeof m === 'object' && !Array.isArray(m) ? m : {}; };
 const quoters = () => users.filter(u => u.role === 'quoter').map(u => u.name);
 
 // ---------- users ----------
@@ -360,6 +373,9 @@ const rfqSummary = (r, me) => ({ id: r.id, no: r.no, date: r.date, by: r.by, byF
   sent: (r.sends || []).slice(-1)[0] || null, status: r.status || '', statusAt: r.statusAt || '',
   value: typeof r.value === 'number' ? r.value : null, lostReason: r.status === 'lost' ? r.lostReason || '' : '', lostNote: r.status === 'lost' ? r.lostNote || '' : '',
   quote: quoteInfo(r.quote), comments: (r.comments || []).length, unread: unreadFor(r, me), ...turnaround(r),
+  app: r.fields['q-app'] || '', archived: !!r.archived, claim: r.claim && !r.quote ? { by: r.claim.by, byFull: r.claim.byFull, at: r.claim.at } : null,
+  // everything the RFQ search box looks through besides the columns shown
+  find: [r.fields['q-app'], r.fields['q-addr'], r.fields['q-em'], r.fields['q-ph'], r.fields['q-po'], r.fields['q-notes'], r.fields['q-opt'], r.quote && r.quote.no].filter(Boolean).join(' ').slice(0, 1500),
   // the rep hasn't opened or acted on it since it was quoted (marking it Won or Lost settles it)
   newQuote: !!(me && r.quote && r.by === me.name && r.status !== 'won' && r.status !== 'lost' && r.quote.at > ((r.seen || {})[me.name] || '')),
   ...followUp(r) });
@@ -393,6 +409,39 @@ const rfqPdf = (r, me) => renderPDF({
 });
 const pdfName = r => `RFQ-${r.no}.pdf`.replace(/[^A-Za-z0-9._-]/g, '');
 
+// ---------- data check: things that are missing or don't line up ----------
+// a guide's burner name -> matrix burner of the same brand (same rule the matrix page uses: exact, one part of "AF/AFG", else longest prefix)
+function specBurnerKey(brand, burner, list) {
+  const nrm = x => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, ''), s = nrm(burner), br = String(brand).toLowerCase(); if (!s) return null;
+  const c = list.filter(b => b.brand.toLowerCase() === br).map(b => ({ b, parts: [b.name, ...b.name.split(/[\/,]/)].map(nrm).filter(Boolean) }));
+  const ex = c.find(o => o.parts.includes(s)); if (ex) return keyOf(ex.b);
+  let best = null, len = 0; for (const o of c) for (const p of o.parts) if (p.length >= 2 && s.startsWith(p) && p.length > len) { best = o.b; len = p.length; }
+  return best ? keyOf(best) : null;
+}
+function dataCheck() {
+  const list = getBurners(), keys = new Set(list.map(keyOf)), out = [];
+  const add = (area, level, title, items, fix) => { if (items.length) out.push({ area, level, title, count: items.length, items: items.slice(0, 200), fix }); };
+  const nm = b => `${b.brand} ${b.name}`;
+  add('Burners', 'warn', 'No photo', list.filter(b => !b.image).map(nm), 'Add a photo in the Burners tab.');
+  add('Burners', 'warn', 'No dimensions', list.filter(b => !Array.isArray(b.dims)).map(b => nm(b) + (typeof b.dims === 'string' && b.dims ? ` (${b.dims})` : '')), 'Add H × W × D in the Burners tab, so the "Fits in" filters can use it.');
+  add('Burners', 'info', 'No air tube lengths for the RFQ dropdown', list.filter(b => b.fuel === 'oil' && !(Array.isArray(b.airTubes) && b.airTubes.length)).map(nm), 'Add the available lengths in the Burners tab.');
+  add('Burners', 'info', 'No flame size', list.filter(b => b.flameLength == null && b.flameWidth == null).map(nm), 'Add flame length and width, so the "Flame must fit" filter can use it.');
+  add('Burners', 'warn', 'No product page link', list.filter(b => !b.link).map(nm), 'Add the product page in the Burners tab.');
+  const xs = getXref();
+  add('Cross-reference', 'error', 'Points at a burner that’s no longer in the matrix', xs.filter(x => x.to.some(k => !keys.has(k))).map(x => `${x.brand} ${x.model} → ${x.to.filter(k => !keys.has(k)).join(', ')}`), 'Edit the entry in the Cross-reference tab.');
+  add('Cross-reference', 'warn', 'No replacement picked (and not marked “no current replacement”)', xs.filter(x => !x.to.length && !x.none).map(x => `${x.brand} ${x.model}`), 'Pick a replacement or tick “No current replacement”.');
+  for (const set of SPECS.sets()) {
+    const t = Specs.title(set), miss = new Map();
+    for (const row of set.rows) { const bn = Specs.burnerOf(set, row); if (!specBurnerKey(set.brand, bn, list)) miss.set(bn || '(blank)', (miss.get(bn || '(blank)') || 0) + 1); }
+    add('Spec guides', 'error', `${t}: burner not in the matrix (these specs can’t start an RFQ)`, [...miss].map(([b, n]) => `${b} (${n} spec${n > 1 ? 's' : ''})`), 'Add the burner in the Burners tab, or correct the burner name in the guide.');
+    const cm = set.cols.findIndex(c => c.toLowerCase() === 'spec match'), cs = set.cols.findIndex(c => c.toLowerCase() === 'beckett spec');
+    if (cs < 0) add('Spec guides', 'info', `${t}: no Beckett Spec column`, ['Reps won’t see spec numbers for this guide'], 'Load a copy of the guide with Beckett Spec / Spec Match columns.');
+    else add('Spec guides', 'warn', `${t}: linked to an inactive spec`, set.rows.filter(r => /inactive/i.test(r.v[cm] || '')).map(r => `${r.v[set.roles.mfg]} ${r.v[set.roles.model]} → ${r.v[cs]}`), 'Reject it in Settings → Review spec links, or load a guide linked to active specs only.');
+  }
+  const order = { error: 0, warn: 1, info: 2 };
+  return { at: new Date().toISOString(), issues: out.sort((a, b) => order[a.level] - order[b.level]) };
+}
+
 // ---------- API ----------
 async function api(req, res, url) {
   const p = url.pathname, m = req.method;
@@ -413,6 +462,7 @@ async function api(req, res, url) {
   if (p === '/api/logout' && m === 'POST') return send(res, 200, { ok: true }, undefined, { 'Set-Cookie': cookie('', 0) });
 
   const me = readSession(req);
+  const act = t => { if (me) req.act = { by: me.name, t }; }; // recorded in the activity log once the change succeeds
   const meInfo = u => ({ ...pub(u), setup: true, mail: Mail.configured(), rfqTo: rfqTo(), followUpDays: followUpDays(), stepDownWarn: stepDownWarn(), lostReasons: LOST_REASONS });
   if (p === '/api/me') return me ? send(res, 200, meInfo(me)) : send(res, 401, { error: 'Not signed in', setup: users.length > 0 });
   if (!me) return send(res, 401, { error: 'Not signed in' });
@@ -538,7 +588,7 @@ async function api(req, res, url) {
     const b = (await readBody(req, 4096)) || {}, list = getCustomers(), k = custKey(b.company), i = list.findIndex(c => custKey(c.company) === k);
     if (i < 0) return send(res, 404, { error: 'No saved details for that customer' });
     if (me.role === 'rep' && list[i].by !== me.name && !allRfqs().some(r => r.by === me.name && custKey(r.fields['q-co']) === k)) return send(res, 403, { error: 'Only the person who added this customer, a rep who has quoted it, an editor or an admin can remove it.' });
-    list.splice(i, 1); saveCustomers(list); return send(res, 200, { ok: true });
+    act(`Removed saved details for customer ${list[i].company}`); list.splice(i, 1); saveCustomers(list); return send(res, 200, { ok: true });
   }
   if (p === '/api/customers/history' && m === 'GET') { // every RFQ for one customer; others' RFQs are summary-only for reps
     const k = custKey(url.searchParams.get('company'));
@@ -570,7 +620,42 @@ async function api(req, res, url) {
     writeJSON(rfqFile(r.id), r);
     return send(res, 200, r);
   }
-  const rm = /^\/api\/rfqs\/([a-f0-9]{12})(\/pdf|\/send|\/status|\/followup|\/quote|\/comments|\/seen)?$/.exec(p);
+  if (p === '/api/rfqs/bulk' && m === 'POST') { // the same change to several RFQs at once: mark lost, followed up, archive / unarchive
+    const b = (await readBody(req, 64 * 1024)) || {}, ids = Array.isArray(b.ids) ? b.ids.filter(x => typeof x === 'string').slice(0, 500) : [];
+    if (!['lost', 'followup', 'archive', 'unarchive'].includes(b.action)) return send(res, 422, { error: 'Unknown action' });
+    if (b.action === 'lost' && !LOST_REASONS.includes(b.lostReason)) return send(res, 422, { error: 'Pick a lost reason' });
+    const now = new Date().toISOString(), out = []; let skipped = 0;
+    for (const id of ids) {
+      const r = /^[\w-]+$/.test(id) ? getRfq(id) : null;
+      if (!canSee(me, r) || (me.role === 'rep' && r.by !== me.name)) { skipped++; continue; }
+      if (b.action === 'followup') { if (!followUp(r).followUp) { skipped++; continue; } r.followedUpAt = now; (r.followLog = r.followLog || []).push({ at: now, by: me.name }); }
+      else if (b.action === 'lost') { if (r.status === 'won' || r.status === 'lost') { skipped++; continue; } r.status = 'lost'; r.lostReason = b.lostReason; r.lostNote = String(b.lostNote || '').trim().slice(0, 500); r.statusAt = now; r.statusBy = me.name;
+        (r.statusLog = r.statusLog || []).push({ at: now, by: me.name, status: 'lost', value: r.value, lostReason: r.lostReason }); }
+      else { if (!!r.archived === (b.action === 'archive')) { skipped++; continue; } r.archived = b.action === 'archive'; }
+      if (r.by === me.name) r.seen = { ...(r.seen || {}), [me.name]: now };
+      writeJSON(rfqFile(r.id), r); out.push(rfqSummary(r, me));
+    }
+    if (out.length) act(`${{ lost: 'Marked lost (' + b.lostReason + ')', followup: 'Marked followed up', archive: 'Archived', unarchive: 'Unarchived' }[b.action]}: ${out.map(x => x.no).join(', ')}`);
+    return send(res, 200, { changed: out, skipped });
+  }
+  if (p === '/api/quote-templates') { // saved price + note for common quotes (quoters and admins)
+    if (!canQuote(me)) return send(res, 403, { error: 'Only quoters and admins use quote templates' });
+    if (m === 'GET') return send(res, 200, getTpl());
+    const b = (await readBody(req, 16 * 1024)) || {}, list = getTpl();
+    if (m === 'DELETE') { const i = list.findIndex(t => t.id === b.id); if (i < 0) return send(res, 404, { error: 'Template not found' }); act(`Deleted quote template "${list[i].name}"`); list.splice(i, 1); writeJSON(F.qtpl, list); return send(res, 200, { ok: true }); }
+    if (m === 'POST') {
+      const name = String(b.name || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 60);
+      if (!name) return send(res, 422, { error: 'Give the template a name' });
+      let value = null;
+      if (b.value !== undefined && b.value !== null && String(b.value).trim() !== '') { value = Number(String(b.value).replace(/[$,\s]/g, '')); if (!isFinite(value) || value < 0 || value > 1e9) return send(res, 422, { error: 'Price must be a dollar amount' }); value = Math.round(value * 100) / 100; }
+      const t = { id: crypto.randomBytes(5).toString('hex'), name, burner: String(b.burner || '').toLowerCase().slice(0, 80), value,
+        note: String(b.note || '').replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, ' ').trim().slice(0, 1000), by: me.name, at: new Date().toISOString() };
+      const i = list.findIndex(x => x.id === b.id || x.name.toLowerCase() === name.toLowerCase()); if (i >= 0) { t.id = list[i].id; list[i] = t; } else list.push(t);
+      list.sort((a, c) => a.name.localeCompare(c.name)); writeJSON(F.qtpl, list); act(`${i >= 0 ? 'Updated' : 'Added'} quote template "${name}"`); return send(res, 200, t);
+    }
+    return send(res, 405, { error: 'Method not allowed' });
+  }
+  const rm = /^\/api\/rfqs\/([a-f0-9]{12})(\/pdf|\/send|\/status|\/followup|\/quote|\/comments|\/seen|\/claim)?$/.exec(p);
   if (rm) {
     const r = getRfq(rm[1]);
     if (!canSee(me, r)) return send(res, 404, { error: 'RFQ not found' });
@@ -606,6 +691,13 @@ async function api(req, res, url) {
       writeJSON(rfqFile(r.id), r);
       return send(res, 200, rfqSummary(r, me));
     }
+    if (rm[2] === '/claim' && m === 'POST') { // a quoter says "I'm on it" (or lets it go), so two people don't quote the same RFQ
+      if (!canQuote(me)) return send(res, 403, { error: 'Only quoters and admins can take an RFQ' });
+      const b = (await readBody(req, 1024)) || {}; reloadRfq(r);
+      if (b.on) { if (r.claim && r.claim.by !== me.name && !b.force) return send(res, 409, { error: `${r.claim.byFull || r.claim.by} is already on it` }); r.claim = { by: me.name, byFull: me.full || me.name, at: new Date().toISOString() }; }
+      else { if (r.claim && r.claim.by !== me.name && me.role !== 'admin') return send(res, 403, { error: 'Only the person who took it (or an admin) can let it go' }); delete r.claim; }
+      writeJSON(rfqFile(r.id), r); return send(res, 200, rfqSummary(r, me));
+    }
     if (rm[2] === '/followup' && m === 'POST') { // "I followed up": restarts the follow-up clock
       if (r.by !== me.name && me.role === 'rep') return send(res, 403, { error: 'Only the rep who made it can do this' });
       r.followedUpAt = new Date().toISOString();
@@ -632,9 +724,9 @@ async function api(req, res, url) {
         if (!r.quote) return send(res, 404, { error: 'No quote on this RFQ' });
         if (old) fs.rmSync(old, { force: true });
         (r.quoteLog = r.quoteLog || []).push({ at: new Date().toISOString(), by: me.name, removed: true });
-        delete r.quote; writeJSON(rfqFile(r.id), r); return send(res, 200, rfqSummary(r, me));
+        delete r.quote; writeJSON(rfqFile(r.id), r); act(`Removed the quote on ${r.no}`); return send(res, 200, rfqSummary(r, me));
       }
-      const b = (await readBody(req, 16 * 1024 * 1024)) || {}, now = new Date().toISOString(); reloadRfq(r);
+      const b = (await readBody(req, 16 * 1024 * 1024)) || {}, now = new Date().toISOString(); reloadRfq(r); delete r.claim; act(`Quoted ${r.no}`);
       const qno = String(b.no || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 40), note = String(b.note || '').replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, ' ').trim().slice(0, 1000);
       let value = null;
       if (b.value !== undefined && b.value !== null && String(b.value).trim() !== '') {
@@ -743,7 +835,7 @@ async function api(req, res, url) {
         if ((r.sends || []).length) return send(res, 409, { error: 'Emailed RFQs can only be deleted by an admin' });
       }
       if (r.quote && r.quote.file) fs.rmSync(path.join(F.quotes, path.basename(r.quote.file)), { force: true });
-      fs.unlinkSync(rfqFile(r.id));
+      fs.unlinkSync(rfqFile(r.id)); act(`Deleted RFQ ${r.no}${(r.sends || []).length ? ' (emailed)' : ''}`);
       return send(res, 200, { ok: true });
     }
     return send(res, 405, { error: 'Not allowed' });
@@ -759,6 +851,21 @@ async function api(req, res, url) {
       return { brand: set.brand, guide: Specs.title(set), gid: set.id, id: row.id, mfg: v[r.mfg], model: v[r.model], burner: Specs.burnerOf(set, row), rate: r.rate >= 0 && parseFloat(v[r.rate]) > 0 ? v[r.rate] : '',
         rateCol: r.rate >= 0 ? set.cols[r.rate] : '', unit: set.rateUnit || '',
         f: set.cols.map((c, i) => [c, v[i]]).filter(([, x]) => x && x !== '0' && x !== '-').concat(r.burner < 0 && set.burner ? [['Burner', set.burner]] : []) }; }) });  }
+  if (p === '/api/specs/miss' && m === 'POST') { // any signed-in user: an appliance lookup that found no spec
+    const b = (await readBody(req, 1024)) || {}, q = String(b.q || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80), k = Specs.norm(q);
+    if (k.length < 2 || SPECS.search(q, 1).length) return send(res, 200, { ok: true });
+    const mm = getSMiss(), now = new Date().toISOString(), e = mm[k] || { q, n: 0, users: [], first: now };
+    e.q = q; e.n++; e.last = now; delete e.dismissed; if (!e.users.includes(me.name)) e.users = [...e.users, me.name].slice(-20); mm[k] = e;
+    const keys = Object.keys(mm); if (keys.length > 500) keys.sort((a, c) => String(mm[a].last).localeCompare(String(mm[c].last))).slice(0, keys.length - 500).forEach(x => delete mm[x]);
+    writeJSON(F.smiss, mm); return send(res, 200, { ok: true });
+  }
+  if (p === '/api/burners/sheet.pdf' && m === 'GET') { // one-page spec sheet for a burner, to send to a contractor
+    const k = String(url.searchParams.get('k') || '').toLowerCase(), b = getBurners().find(x => keyOf(x) === k);
+    if (!b) return send(res, 404, { error: 'No such burner' });
+    let pdf; try { pdf = await renderPDF({ url: `http://127.0.0.1:${PORT}/?sheet=${encodeURIComponent(k)}&pdf=1`, cookie: { name: 'bm_s', value: makeToken(me.name, me.ver || 0, 120e3) } }); }
+    catch (e) { console.error('PDF:', e.message); return send(res, 502, { error: 'Could not build the PDF: ' + e.message }); }
+    return send(res, 200, pdf, 'application/pdf', { 'Content-Disposition': `attachment; filename="${(b.brand + '-' + b.name + '-spec-sheet.pdf').replace(/[^A-Za-z0-9._-]+/g, '-')}"` });
+  }
   if (p === '/api/xref/miss' && m === 'POST') { // any signed-in user: a lookup that matched nothing
     const b = (await readBody(req, 1024)) || {}, q = String(b.q || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80), k = xnorm(q);
     if (k.length < 2 || xrefMatches(q, getXref())) return send(res, 200, { ok: true });
@@ -769,6 +876,12 @@ async function api(req, res, url) {
   }
 
   if (!canEditData(me) && p !== '/api/password') return send(res, 403, { error: me.role === 'quoter' ? 'Quoters can’t change burner data' : 'Your account can view the matrix only' });
+  if (p === '/api/activity' && m === 'GET') { // who changed what, newest first
+    const q = String(url.searchParams.get('q') || '').toLowerCase().trim(), who = url.searchParams.get('who') || '', names = new Map(users.map(u => [u.name, u.full || u.name]));
+    const all = readAct().reverse(), list = all.filter(a => (!who || a.by === who) && (!q || (a.t + ' ' + (names.get(a.by) || a.by)).toLowerCase().includes(q)));
+    return send(res, 200, { total: all.length, people: [...new Set(all.map(a => a.by))].map(n => ({ name: n, full: names.get(n) || n })), rows: list.slice(0, 300).map(a => ({ ...a, byFull: names.get(a.by) || a.by })) });
+  }
+  if (p === '/api/data-check' && m === 'GET') return send(res, 200, dataCheck());
   if (p === '/api/xref/misses' && m === 'GET') { // still-unmatched searches, most asked first
     const xs = getXref(), names = new Map(users.map(u => [u.name, u.full || u.name]));
     return send(res, 200, Object.entries(getMisses()).filter(([, e]) => !e.dismissed && !xrefMatches(e.q, xs))
@@ -788,7 +901,7 @@ async function api(req, res, url) {
       const ex = list.find(x => xrefKey(x) === xrefKey(v));
       if (ex) return send(res, 409, { error: `${ex.brand} ${ex.model} is already in the list.` });
       const x = { id: crypto.randomBytes(5).toString('hex'), ...v, by: me.name, added: now, updated: now };
-      list.push(x); writeJSON(F.xref, list, true); return send(res, 201, x);
+      list.push(x); writeJSON(F.xref, list, true); act(`Added cross-reference ${x.brand} ${x.model}`); return send(res, 201, x);
     }
     const i = xm[1] ? list.findIndex(x => x.id === xm[1]) : -1;
     if (i < 0) return send(res, 404, { error: 'Not found' });
@@ -796,9 +909,9 @@ async function api(req, res, url) {
       const v = cleanXref(body); if (v.error) return send(res, 422, v);
       const ex = list.find((x, j) => j !== i && xrefKey(x) === xrefKey(v));
       if (ex) return send(res, 409, { error: `${ex.brand} ${ex.model} is already in the list.` });
-      list[i] = { ...list[i], ...v, updated: now, updatedBy: me.name }; writeJSON(F.xref, list, true); return send(res, 200, list[i]);
+      list[i] = { ...list[i], ...v, updated: now, updatedBy: me.name }; writeJSON(F.xref, list, true); act(`Edited cross-reference ${list[i].brand} ${list[i].model}`); return send(res, 200, list[i]);
     }
-    if (m === 'DELETE') { list.splice(i, 1); writeJSON(F.xref, list, true); return send(res, 200, { ok: true }); }
+    if (m === 'DELETE') { act(`Deleted cross-reference ${list[i].brand} ${list[i].model}`); list.splice(i, 1); writeJSON(F.xref, list, true); return send(res, 200, { ok: true }); }
     return send(res, 405, { error: 'Method not allowed' });
   }
   if (p === '/api/burners' && m === 'PUT') { // save one burner (add or replace); body {original?:key, burner}
@@ -811,7 +924,7 @@ async function api(req, res, url) {
     const dup = list.findIndex(b => keyOf(b) === keyOf(burner));
     if (dup >= 0 && dup !== i) return send(res, 422, { errors: [`${burner.brand} ${burner.name} already exists`] });
     if (i >= 0) list[i] = burner; else list.push(burner);
-    const e = saveBurners(list, me.name, (i >= 0 ? 'Edited ' : 'Added ') + burner.brand + ' ' + burner.name);
+    const e = saveBurners(list, me.name, (i >= 0 ? 'Edited ' : 'Added ') + burner.brand + ' ' + burner.name); if (!e) act((i >= 0 ? 'Edited burner ' : 'Added burner ') + burner.brand + ' ' + burner.name);
     if (!e && i >= 0 && keyOf(burner) !== String(original).toLowerCase()) { // renamed: keep cross-references pointing at it
       const xs = getXref(), ok = String(original).toLowerCase(), nk = keyOf(burner); let ch = false;
       for (const x of xs) if (x.to.includes(ok)) { x.to = [...new Set(x.to.map(k => k === ok ? nk : k))]; ch = true; }
@@ -825,7 +938,7 @@ async function api(req, res, url) {
     const list = getBurners(); const i = list.findIndex(b => keyOf(b) === String(key).toLowerCase());
     if (i < 0) return send(res, 404, { error: 'Not found' });
     const [gone] = list.splice(i, 1);
-    saveBurners(list, me.name, 'Deleted ' + gone.brand + ' ' + gone.name);
+    saveBurners(list, me.name, 'Deleted ' + gone.brand + ' ' + gone.name); act('Deleted burner ' + gone.brand + ' ' + gone.name);
     return send(res, 200, { ok: true });
   }
   if (p === '/api/history' && m === 'GET') {
@@ -839,7 +952,7 @@ async function api(req, res, url) {
     if (!/^[\w-]+$/.test(String(id))) return send(res, 400, { error: 'Bad id' });
     const h = readJSON(path.join(F.history, id + '.json'), null);
     if (!h) return send(res, 404, { error: 'Not found' });
-    const e = saveBurners(h.burners, me.name, `Undid "${h.action}" (${h.at.slice(0, 16).replace('T', ' ')})`);
+    const e = saveBurners(h.burners, me.name, `Undid "${h.action}" (${h.at.slice(0, 16).replace('T', ' ')})`); if (!e) act(`Undid burner change "${h.action}"`);
     return e ? send(res, 422, { errors: e }) : send(res, 200, { ok: true });
   }
   if (p === '/api/photos/localize' && m === 'POST') return send(res, 200, await localizePhotos(me.name));
@@ -879,6 +992,7 @@ async function api(req, res, url) {
       const out = SPECS.importCSV(b.brand.trim(), name, String(b.csv || ''), me.name, typeof b.burner === 'string' ? b.burner : '', b.dryRun === true);
       if (out.error) return send(res, 422, { error: out.error, needBurner: !!out.needBurner });
       const m = b.dryRun === true ? { id: out.set.id, title: Specs.title(out.set), count: out.set.rows.length } : meta(out.set);
+      if (b.dryRun !== true) act(`Loaded the ${Specs.title(out.set)} spec guide (${out.set.rows.length} specs${out.diff ? `: ${out.diff.added} added, ${out.diff.removed} removed, ${out.diff.changed} changed` : ''})`);
       return send(res, 200, { ...m, dryRun: b.dryRun === true, skipped: out.skipped, warnings: out.warnings, diff: out.diff, kept: out.kept, replaces: out.replaces });
     }
     const one = id => SPECS.get(String(id || ''));
@@ -886,13 +1000,19 @@ async function api(req, res, url) {
       const s = one(url.searchParams.get('id')); if (!s) return send(res, 404, { error: 'No such spec guide' });
       return send(res, 200, Specs.toCSV(s.cols, s.rows.map(r => r.v)), 'text/csv; charset=utf-8', { 'Content-Disposition': `attachment; filename="${s.id}-specs.csv"` });
     }
-    if (p === '/api/specs/restore' && m === 'POST') { const b = (await readBody(req, 1024)) || {}; return SPECS.restorePrevious(String(b.id || '')) ? send(res, 200, { ok: true }) : send(res, 404, { error: 'No previous version to restore' }); }
-    if (p === '/api/specs' && m === 'DELETE') { const b = (await readBody(req, 1024)) || {}; if (!one(b.id)) return send(res, 404, { error: 'No such spec guide' }); SPECS.remove(b.id); return send(res, 200, { ok: true }); }
+    if (p === '/api/specs/restore' && m === 'POST') { const b = (await readBody(req, 1024)) || {}; act(`Restored the previous version of spec guide ${String(b.id || '')}`); return SPECS.restorePrevious(String(b.id || '')) ? send(res, 200, { ok: true }) : send(res, 404, { error: 'No previous version to restore' }); }
+    if (p === '/api/specs' && m === 'DELETE') { const b = (await readBody(req, 1024)) || {}; if (!one(b.id)) return send(res, 404, { error: 'No such spec guide' }); act(`Removed the ${Specs.title(one(b.id))} spec guide`); SPECS.remove(b.id); return send(res, 200, { ok: true }); }
     if (p === '/api/specs/rows' && m === 'GET') { // find rows to edit
       const s = one(url.searchParams.get('id')); if (!s) return send(res, 404, { error: 'No such spec guide' });
       const q = String(url.searchParams.get('q') || '').slice(0, 100), hits = q ? SPECS.search(q, 200, s).map(h => h.row) : s.rows.slice(0, 50);
       return send(res, 200, { cols: s.cols, roles: s.roles, burner: s.burner || '', total: s.rows.length, rows: hits.slice(0, 100) });
     }
+    if (p === '/api/specs/misses' && m === 'GET') { // appliance lookups that found nothing, most asked first (drop off once a spec matches)
+      const names = new Map(users.map(u => [u.name, u.full || u.name]));
+      return send(res, 200, Object.entries(getSMiss()).filter(([, e]) => !e.dismissed && !SPECS.search(e.q, 1).length)
+        .map(([k, e]) => ({ k, q: e.q, n: e.n, last: e.last, users: e.users.map(u => names.get(u) || u) })).sort((a, c) => c.n - a.n || String(c.last).localeCompare(String(a.last))));
+    }
+    if (p === '/api/specs/misses' && m === 'DELETE') { const b = (await readBody(req, 1024)) || {}, mm = getSMiss(); if (!mm[b.k]) return send(res, 404, { error: 'Not found' }); mm[b.k].dismissed = true; mm[b.k].n = 0; writeJSON(F.smiss, mm); return send(res, 200, { ok: true }); }
     if (p === '/api/specs/review' && m === 'GET') { // spec links that still need a person to look at them
       const s = one(url.searchParams.get('id')); if (!s) return send(res, 404, { error: 'No such spec guide' });
       const ix = n => s.cols.findIndex(c => c.toLowerCase() === n), cS = ix('beckett spec'), cM = ix('spec match'), cP = ix('possible specs'), cW = ix('matched on');
@@ -921,6 +1041,7 @@ async function api(req, res, url) {
         const was = row.v[L.spec] || spec, ps = String(row.v[L.poss] || '').split(/\s*,\s*/).filter(x => x && x !== was);
         if (was) row.v[L.poss] = [was, ...ps].join(', '); row.v[L.spec] = ''; row.v[L.match] = 'Rejected'; }
       else { row.v[L.match] = row.v[L.spec] ? 'Medium' : ''; }
+      act(`${{ confirm: 'Confirmed spec ' + spec + ' for', reject: 'Rejected the spec link for', undo: 'Reopened the spec link for' }[b.action]} ${row.v[s.roles.mfg]} ${row.v[s.roles.model]} (${Specs.title(s)})`);
       SPECS.save(cur); return send(res, 200, { ok: true, spec: row.v[L.spec], match: row.v[L.match] });
     }
     if (p === '/api/specs/row' && (m === 'POST' || m === 'DELETE')) { // add / change / delete one spec
@@ -928,13 +1049,13 @@ async function api(req, res, url) {
       const i = b.id ? s.rows.findIndex(r => r.id === b.id) : -1;
       if (b.id && i < 0) return send(res, 404, { error: 'That spec was changed or removed. Search again.' });
       const cur = { ...s, rows: s.rows.slice(), updated: new Date().toISOString(), by: me.name };
-      if (m === 'DELETE') { cur.rows.splice(i, 1); SPECS.save(cur); return send(res, 200, { ok: true, count: cur.rows.length }); }
+      if (m === 'DELETE') { act(`Deleted spec ${s.rows[i].v[s.roles.mfg]} ${s.rows[i].v[s.roles.model]} from ${Specs.title(s)}`); cur.rows.splice(i, 1); SPECS.save(cur); return send(res, 200, { ok: true, count: cur.rows.length }); }
       const v = s.cols.map((_, k) => String(Array.isArray(b.v) && b.v[k] != null ? b.v[k] : '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 1000));
       const need = ['mfg', 'model', 'burner'].filter(k => s.roles[k] >= 0 && !v[s.roles[k]]);
       if (need.length) return send(res, 422, { error: `Fill in ${need.map(k => s.cols[s.roles[k]]).join(', ')}.` });
       const row = { id: i >= 0 ? s.rows[i].id : Specs.rid(), v };
       if (i >= 0) cur.rows[i] = row; else cur.rows.unshift(row);
-      SPECS.save(cur); return send(res, 200, { ok: true, row, count: cur.rows.length });
+      act(`${i >= 0 ? 'Edited' : 'Added'} spec ${v[s.roles.mfg]} ${v[s.roles.model]} in ${Specs.title(s)}`); SPECS.save(cur); return send(res, 200, { ok: true, row, count: cur.rows.length });
     }
     return send(res, 404, { error: 'Not found' });
   }
@@ -959,6 +1080,7 @@ async function api(req, res, url) {
         s.followUpDays = d;
       }
       if (b.stepDownWarn !== undefined) s.stepDownWarn = b.stepDownWarn === true;
+      act('Changed settings');
       s.updated = new Date().toISOString(); s.updatedBy = me.name;
       writeJSON(F.settings, s);
       return send(res, 200, info());
@@ -980,7 +1102,7 @@ async function api(req, res, url) {
       if (users.some(u => u.name === name)) return send(res, 422, { error: 'That username exists' });
       if (String(b.password || '').length < 8) return send(res, 422, { error: 'Password must be at least 8 characters' });
       const nu = { name, role: normRole(b.role), hash: hashPw(String(b.password)), created: new Date().toISOString() }; contact(nu, b); if (!nu.email && Mail.isEmail(name)) nu.email = name; users.push(nu);
-      saveUsers(); return send(res, 200, { ok: true });
+      saveUsers(); act(`Added user ${name} (${nu.role})`); return send(res, 200, { ok: true });
     }
     const u = users.find(x => x.name === name);
     if (!u) return send(res, 404, { error: 'No such user' });
@@ -990,12 +1112,12 @@ async function api(req, res, url) {
       if (b.role) { if (u.role === 'admin' && b.role !== 'admin' && users.filter(x => x.role === 'admin').length < 2) return send(res, 422, { error: 'Keep at least one admin' });
         u.role = normRole(b.role); }
       contact(u, b);
-      saveUsers(); return send(res, 200, { ok: true });
+      saveUsers(); act(`Changed user ${u.name}${b.role ? ' (role ' + u.role + ')' : ''}${b.password !== undefined ? ' (password reset)' : ''}`); return send(res, 200, { ok: true });
     }
     if (m === 'DELETE') {
       if (u.name === me.name) return send(res, 422, { error: "You can't remove yourself" });
       if (u.role === 'admin' && users.filter(x => x.role === 'admin').length < 2) return send(res, 422, { error: 'Keep at least one admin' });
-      users = users.filter(x => x !== u); saveUsers(); writeJSON(F.push, getSubs().filter(s => s.user !== u.name)); return send(res, 200, { ok: true });
+      users = users.filter(x => x !== u); saveUsers(); act(`Removed user ${u.name}`); writeJSON(F.push, getSubs().filter(s => s.user !== u.name)); return send(res, 200, { ok: true });
     }
   }
   return send(res, 404, { error: 'Not found' });
@@ -1006,7 +1128,7 @@ const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://x');
     let p; try { p = decodeURIComponent(url.pathname); } catch { return send(res, 400, 'Bad request', 'text/plain'); }
-    if (p.startsWith('/api/')) return await api(req, res, url);
+    if (p.startsWith('/api/')) { await api(req, res, url); if (req.act && res.statusCode < 400) logAct(req.act.by, req.act.t); return; }
     if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, 'Method not allowed', 'text/plain');
     // public bits: the sign-in page and what it needs
     if (p === '/login' || p === '/login/') return sendPage(res, path.join(HTML, 'login.html'));

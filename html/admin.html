@@ -82,7 +82,10 @@ input.xbq:focus{border-color:var(--ink);outline:2px solid var(--ink);outline-off
 .ximp summary{cursor:pointer;font-weight:700;font-size:14px}
 .rvlist{display:grid;gap:8px}.rvi{display:grid;gap:6px;background:#fff;border:1px solid var(--rule);border-radius:4px;padding:10px 12px}.rvi .t{font-size:14px}.rvi .t .u{margin-left:6px}
 .rvi .f{display:flex;flex-wrap:wrap;gap:2px 14px;font-size:12.5px;color:var(--mute)}.rvi .f b{color:var(--ink);font-weight:600}.rvi .acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.rvi .btn{min-height:34px;padding:4px 12px;font-size:13px}.rvi .why{font-size:12px;color:var(--mute)}
-.btn.ok{background:#1d7a3a;color:#fff}.splist{display:grid;border-top:1px solid var(--rule)}.spg{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:10px 2px;border-bottom:1px solid var(--rule)}.spg .who{flex:1 1 260px;min-width:0;font-size:14px;overflow-wrap:anywhere}.spg .who .u{display:block;margin-top:2px}.spg .acts{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;margin-left:auto}.spg .btn{min-height:34px;padding:4px 10px;font-size:13px}.spg.gone .who b{color:var(--mute)}
+.btn.ok{background:#1d7a3a;color:#fff}.chklist{display:grid;gap:10px}.chk1{border:1px solid var(--rule);border-left:4px solid #8c8c86;border-radius:4px;padding:10px 12px;background:#fff}.chk1.error{border-left-color:var(--red)}.chk1.warn{border-left-color:#e0a800}
+.chk1 summary{cursor:pointer;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;font-size:14px}.chk1 summary b{font-size:14.5px}.chk1 .lvl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mute)}.chk1.error .lvl{color:var(--red)}.chk1.warn .lvl{color:#9a6b00}
+.chk1 ul{margin:8px 0 4px;padding-left:20px;columns:2 260px;font-size:13px}.chk1 .fix{font-size:12.5px;color:var(--mute)}
+.splist{display:grid;border-top:1px solid var(--rule)}.spg{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:10px 2px;border-bottom:1px solid var(--rule)}.spg .who{flex:1 1 260px;min-width:0;font-size:14px;overflow-wrap:anywhere}.spg .who .u{display:block;margin-top:2px}.spg .acts{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;margin-left:auto}.spg .btn{min-height:34px;padding:4px 10px;font-size:13px}.spg.gone .who b{color:var(--mute)}
 .confirm{background:#fff3e8;border-left:4px solid #d9480f;padding:10px 14px;border-radius:3px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .dirty{color:#b35c00;font-size:13px;font-weight:700}
 /* tables */
@@ -103,6 +106,11 @@ details.ms[open] summary{border-color:var(--ink)}
 details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2px;background:#fff;border:1px solid #b9b9b2;border-radius:3px;padding:6px 10px;box-shadow:0 6px 18px rgba(0,0,0,.12)}
 @media(max-width:860px){.ed{grid-template-columns:minmax(0,1fr)}.list{position:static;max-height:none}.items{max-height:300px}}
 </style>
+<script>/* dark mode: the saved choice, else the device setting */try{const t=localStorage.getItem('bm-theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch(e){}</script>
+<style>/* Dark mode inverts the light theme on screen (never on paper or PDFs), then turns photos and the already-dark or brand-red bars back */
+@media screen{html.dark{filter:invert(1) hue-rotate(180deg);background:#fff;color-scheme:dark;--panel:#f1f1ee}
+html.dark img,html.dark .util,html.dark .brand,html.dark footer.band,html.dark .top,html.dark #pic,html.dark .sh-top .lg,html.dark .tabs,html.dark .band.hero{filter:invert(1) hue-rotate(180deg) saturate(1.9)}
+html.dark .util img,html.dark .brand img,html.dark .top img,html.dark footer.band img,html.dark #pic img,html.dark .sh-top .lg img{filter:none}}</style>
 </head>
 <body>
 <div id="login" class="login" hidden>
@@ -123,6 +131,7 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
     <span class="sp"></span>
     <span id="who" class="u" style="color:#ddd"></span>
     <a href="/">← Burner Matrix</a>
+    <button class="link" id="darkb">Dark mode</button>
     <button class="link" id="pwb">Change password</button>
     <button class="link" id="out">Sign out</button>
   </header>
@@ -130,6 +139,8 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
     <button role="tab" data-t="burners" aria-selected="true">Burners</button>
     <button role="tab" data-t="xref" aria-selected="false">Cross-reference</button>
     <button role="tab" data-t="history" aria-selected="false">History &amp; undo</button>
+    <button role="tab" data-t="activity" aria-selected="false">Activity</button>
+    <button role="tab" data-t="check" aria-selected="false">Data check</button>
     <button role="tab" data-t="users" aria-selected="false" id="usertab">Users</button>
     <button role="tab" data-t="settings" aria-selected="false" id="settab">Settings</button>
   </nav>
@@ -266,6 +277,22 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
       </div>
     </section>
 
+    <section id="t-activity" hidden>
+      <div class="panel" style="display:grid;gap:12px">
+        <div class="row" style="justify-content:space-between"><h2>Activity</h2><span class="u" id="actcnt"></span></div>
+        <p class="u" style="margin:0">Who changed what: burners, cross-references, spec guides and spec links, quotes, quote templates, customers, users, settings, deleted RFQs and bulk RFQ changes. Burner changes can be undone in <b>History &amp; undo</b>, and spec guides with <b>Restore previous</b> in Settings.</p>
+        <div class="xfil"><input type="text" id="actq" class="xbq" placeholder="Search, e.g. AFG or Weil" aria-label="Search activity" autocomplete="off"><label>Who<select id="actwho"><option value="">Everyone</option></select></label></div>
+        <div class="scroll"><table><thead><tr><th style="width:150px">When</th><th style="width:160px">Who</th><th>What</th></tr></thead><tbody id="actlist"></tbody></table></div>
+      </div>
+    </section>
+    <section id="t-check" hidden>
+      <div class="panel" style="display:grid;gap:12px">
+        <div class="row" style="justify-content:space-between"><h2>Data check</h2><button class="btn" type="button" id="chkgo">Check again</button></div>
+        <p class="u" style="margin:0">Things that are missing or don't line up, most important first. Fixing them makes the filters, RFQs and appliance lookup more complete.</p>
+        <div id="chklist" class="chklist"></div>
+      </div>
+    </section>
+
     <!-- USERS -->
     <section id="t-users" hidden>
       <div class="panel" style="display:grid;gap:16px">
@@ -321,6 +348,11 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
             <div class="xfil"><label>Guide<select id="rvg"></select></label><div class="xsegw"><span>Show</span><div class="xseg" role="group" aria-label="Which links" id="rvk"></div></div></div>
             <div id="rvlist" class="rvlist"></div><div class="row"><button class="btn" type="button" id="rvmore" hidden>Show more</button></div>
           </div>
+          <div id="spmissbox" hidden style="display:grid;gap:8px;border-top:1px solid var(--rule);padding-top:12px">
+            <h3 style="margin:0;font-size:15px">Appliances searched for but not in any guide</h3>
+            <p class="u" style="margin:0">What reps typed in <b>Look up an appliance</b> that found nothing, most asked first. They drop off once a guide has a match.</p>
+            <div class="scroll"><table><thead><tr><th>Searched for</th><th>Times</th><th>By</th><th>Last searched</th><th></th></tr></thead><tbody id="spmiss"></tbody></table></div>
+          </div>
           <div id="sped" hidden style="display:grid;gap:10px">
             <h3 style="margin:0;font-size:15px">Find, change or add a single spec</h3>
             <div class="xfil"><label>Guide<select id="sprb"></select></label><input type="text" id="sprq" class="xbq" placeholder="Search by appliance maker, model or burner" aria-label="Search appliance specs" autocomplete="off"><button type="button" class="btn" id="spadd">Add a spec</button></div>
@@ -360,6 +392,8 @@ details.ms>div{position:absolute;z-index:5;left:0;right:0;top:100%;margin-top:2p
 {
 const $=id=>document.getElementById(id);
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const darkLbl=()=>{$('darkb').textContent=document.documentElement.classList.contains('dark')?'Light mode':'Dark mode'};
+$('darkb').onclick=()=>{const on=!document.documentElement.classList.contains('dark');document.documentElement.classList.toggle('dark',on);try{localStorage.setItem('bm-theme',on?'dark':'light')}catch(e){}darkLbl()};darkLbl();
 const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),2200)};
 const call=async(method,url,body)=>{const r=await fetch(url,{method,headers:body!==undefined?{'Content-Type':'application/json','X-BM':'1'}:{'X-BM':'1'},body:body!==undefined?JSON.stringify(body):undefined,credentials:'same-origin'});
   let j={};try{j=await r.json()}catch(e){}
@@ -380,7 +414,7 @@ function start(){if(me.role!=='editor'&&me.role!=='admin'){location.replace('/')
 
 /* ---------- tabs ---------- */
 function tab(t){if(t!=='burners'&&!leaveOk())return;document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));
-  ['burners','xref','history','users','settings'].forEach(x=>$('t-'+x).hidden=x!==t);if(t==='xref')loadXref();if(t==='history')loadHistory();if(t==='users')loadUsers();if(t==='settings')loadSettings()}
+  ['burners','xref','history','activity','check','users','settings'].forEach(x=>$('t-'+x).hidden=x!==t);if(t==='xref')loadXref();if(t==='history')loadHistory();if(t==='activity')loadAct();if(t==='check')loadCheck();if(t==='users')loadUsers();if(t==='settings')loadSettings()}
 document.querySelector('.tabs').onclick=e=>{const b=e.target.closest('button');if(b)tab(b.dataset.t)};
 
 /* ---------- burner list ---------- */
@@ -589,6 +623,22 @@ function showSettings(s){$('sf').elements.rfqTo.value=s.rfqTo;$('sf').elements.f
   $('bstat').innerHTML=s.lastBackup?`Last backup: <b>${esc(new Date(s.lastBackup.at).toLocaleString())}</b> (${esc(s.lastBackup.why)})`+(s.backups.length?`<br>Newest copies: ${s.backups.map(esc).join(', ')}`:''):'No backup yet. The first one runs at 1:00 a.m., or click Back up now.';$('envto').textContent=s.envRfqTo?` (currently ${s.envRfqTo})`:' (not set)';
   $('mailstat').innerHTML=s.mail?`Email server: <b>set up</b> – sending through ${esc(s.smtpHost)} as ${esc(s.smtpFrom)}. RFQs go to <b>${esc(s.effective||'(no default – reps must type an address)')}</b>.`:'Email server: <b>not set up yet</b>. Add the SMTP variables to the container (see README) before reps can email RFQs.'}
 async function loadSettings(){$('smsg').hidden=true;try{showSettings(await call('GET','/api/settings'))}catch(err){showMsg($('smsg'),'err',esc(err.message))}loadSpecs()}
+/* ---------- activity log ---------- */
+let ACT=null,actT=0;
+async function loadAct(){const q=$('actq').value.trim(),who=$('actwho').value;
+  try{ACT=await call('GET',`/api/activity?q=${encodeURIComponent(q)}&who=${encodeURIComponent(who)}`)}catch(err){$('actlist').innerHTML=`<tr><td colspan="3">${esc(err.message)}</td></tr>`;return}
+  const keep=$('actwho').value;$('actwho').innerHTML='<option value="">Everyone</option>'+ACT.people.map(p=>`<option value="${esc(p.name)}">${esc(p.full)}</option>`).join('');$('actwho').value=keep;
+  $('actcnt').textContent=ACT.total?`${ACT.total.toLocaleString()} change${ACT.total>1?'s':''} recorded`:'';
+  $('actlist').innerHTML=ACT.rows.length?ACT.rows.map(a=>`<tr><td style="white-space:nowrap">${esc(new Date(a.at).toLocaleString(undefined,{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}))}</td><td>${esc(a.byFull)}</td><td>${esc(a.t)}</td></tr>`).join('')
+    :`<tr><td colspan="3" class="u">${ACT.total?'Nothing matches.':'Nothing recorded yet. Changes made from now on show up here.'}</td></tr>`}
+$('actq').oninput=()=>{clearTimeout(actT);actT=setTimeout(loadAct,250)};$('actwho').onchange=loadAct;
+/* ---------- data check ---------- */
+async function loadCheck(){$('chklist').innerHTML='<div class="u">Checking…</div>';let r;try{r=await call('GET','/api/data-check')}catch(err){$('chklist').innerHTML=`<div class="msg err">${esc(err.message)}</div>`;return}
+  const L={error:'Fix',warn:'Missing',info:'Nice to have'};
+  $('chklist').innerHTML=r.issues.length?r.issues.map(i=>`<details class="chk1 ${i.level}"${i.level==='error'?' open':''}><summary><span class="lvl">${L[i.level]}</span><b>${esc(i.title)}</b><span class="u">${i.area} · ${i.count.toLocaleString()}</span></summary>
+      <ul>${i.items.map(x=>`<li>${esc(x)}</li>`).join('')}${i.count>i.items.length?`<li class="u">…and ${(i.count-i.items.length).toLocaleString()} more</li>`:''}</ul>${i.fix?`<div class="fix">${esc(i.fix)}</div>`:''}</details>`).join('')
+    :'<div class="msg ok">Everything checks out.</div>'}
+$('chkgo').onclick=loadCheck;
 /* ---------- appliance specs (any number of guides per burner brand) ---------- */
 let SP=[],SPR=null,SPED=null,SPQ=[];
 const fmtWhen=d=>d?new Date(d).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}):'';
@@ -611,7 +661,10 @@ async function loadSpecs(){let all;try{all=await call('GET','/api/specs')}catch(
   else if(SP.length){ // first time: open the guide with the most links left to review
     let best=null,n=-1;for(const g of SP){try{const r=await call('GET',`/api/specs/review?id=${encodeURIComponent(g.id)}&kind=none`);const c=r.counts||{},t=(c.likely||0)+(c.possible||0);if(t>n){n=t;best=g.id}}catch(e){}}
     if(best)$('rvg').value=best}
-  $('sprev').hidden=!SP.length;if(SP.length)rvLoad()}
+  $('sprev').hidden=!SP.length;if(SP.length)rvLoad();spMissLoad()}
+async function spMissLoad(){let l;try{l=await call('GET','/api/specs/misses')}catch(e){return}$('spmissbox').hidden=!l.length;
+  $('spmiss').innerHTML=l.slice(0,100).map(x=>`<tr><td><b>${esc(x.q)}</b></td><td>${x.n}</td><td>${esc(x.users.join(', '))}</td><td style="white-space:nowrap">${esc(fmtWhen(x.last))}</td><td style="text-align:right"><button class="btn" type="button" data-k="${esc(x.k)}">Dismiss</button></td></tr>`).join('')}
+$('spmiss').onclick=async e=>{const b=e.target.closest('button[data-k]');if(!b)return;try{await call('DELETE','/api/specs/misses',{k:b.dataset.k});b.closest('tr').remove();if(!$('spmiss').children.length)$('spmissbox').hidden=true}catch(err){toast(err.message)}};
 /* review: confirm or reject which Beckett spec goes with each appliance */
 let RV=null,RVK='likely',RVN=25;
 const RVL={likely:'Likely',possible:'Possible',confirmed:'Confirmed',rejected:'Rejected'};

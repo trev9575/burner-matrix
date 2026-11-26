@@ -36,6 +36,11 @@ button:disabled{opacity:.6}
 .err{background:#fde8ea;color:#8a1020;padding:8px 10px;border-radius:3px;font-size:14px}
 [hidden]{display:none !important}
 </style>
+<script>/* dark mode: the saved choice, else the device setting */try{const t=localStorage.getItem('bm-theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch(e){}</script>
+<style>/* Dark mode inverts the light theme on screen (never on paper or PDFs), then turns photos and the already-dark or brand-red bars back */
+@media screen{html.dark{filter:invert(1) hue-rotate(180deg);background:#fff;color-scheme:dark;--panel:#f1f1ee}
+html.dark img,html.dark .util,html.dark .brand,html.dark footer.band,html.dark .top,html.dark #pic,html.dark .sh-top .lg,html.dark .tabs,html.dark .band.hero{filter:invert(1) hue-rotate(180deg) saturate(1.9)}
+html.dark .util img,html.dark .brand img,html.dark .top img,html.dark footer.band img,html.dark #pic img,html.dark .sh-top .lg img{filter:none}}</style>
 </head>
 <body>
 <div class="brand" role="banner">

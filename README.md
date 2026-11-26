@@ -126,6 +126,31 @@ or paste many rows from a spreadsheet (Brand, Model, Replacement(s) separated by
 flame size, footprint, biofuel, air tube, insertion depth, mounting, oil supply, venting, altitude, gas pressure,
 controls, and the table's fit tags) opens a plain-English explanation. They're hidden on printouts and PDFs.
 
+**Finding RFQs.** The search box in RFQs looks through the RFQ number, customer, contact, job, burner, rep, appliance, site
+address, email, phone, PO, notes (so a spec number like BCB7703 finds RFQs started from that spec) and the quote number; every word
+must match. Searches also find archived RFQs.
+
+**Several RFQs at once.** Tick the boxes in the RFQ list (or the box in the heading for everything shown) to mark them lost with
+one reason, mark them followed up, or archive them. Archived RFQs drop out of the lists and counts, and show under *Archived*
+(unarchive them the same way).
+
+**Share a burner.** *Share* under a burner in the matrix table opens the burner's specs as text to copy, send as a text message
+or email (edit it first if you like), and *Download spec sheet (PDF)*: a one-page sheet with the burner's details, photo and your
+contact info, built by the server like the RFQ PDF.
+
+**Quote templates and "I'm on it".** In the quote form, quoters can *Save as template* (price + note, remembered with the burner)
+and *Start from a template* on the next one; templates for the RFQ's burner are listed first. On an emailed RFQ with no quote,
+*I'm on it* tells the other quoters (and the rep) who is working on it; it shows in the RFQ list too, and clears when the quote is added.
+
+**Activity and data check (Admin).** *Activity* lists who changed what (burners, cross-references, spec guides and links,
+quotes and templates, customers, users, settings, deleted RFQs and bulk changes), searchable and by person; stored in
+`activity.jsonl` (newest 5,000). *Data check* lists burners missing a photo, dimensions, air tube lengths, flame size or product
+page, cross-references pointing at missing burners, spec-guide burners that aren't in the matrix, and spec links to inactive specs.
+Appliance lookups that find nothing are listed in Settings → Appliance specs (*Appliances searched for but not in any guide*).
+
+**Dark mode.** *Dark mode* in the account menu (and at the top of Admin) switches the screen to a dark theme on that device;
+until it's used, the device's own light/dark setting decides. Printouts and PDFs are always light.
+
 **Quotes from the office.** Under every saved RFQ there's a **Quote** panel. Quoters and admins click *Add quote*
 and enter the quote number, price and the quote PDF (up to 10 MB), plus an optional note; the RFQ moves to **Quoted**
 with that value, and (if email is set up) the rep gets an email with the PDF attached. The rep sees the price, note and

@@ -103,6 +103,9 @@ th .infob{border-color:#cfcfc9;background:transparent;color:#fff;width:16px;heig
 .qdt{font-size:13.5px;line-height:1.35;min-width:0;overflow-wrap:anywhere}.qdt small{color:var(--mute);font-size:12px}
 .qdrop:focus-within{outline:2px solid var(--ink);outline-offset:2px}
 .qchk{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600}
+.qclaim{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:13.5px;background:#e8f0fb;border-radius:4px;padding:8px 10px;margin:0 0 10px}.qclaim.free{background:#f3f3ef}
+.qtplrow{display:flex;gap:8px;align-items:center}.qtplrow select{flex:1;min-width:0;font:500 14px Montserrat,sans-serif;min-height:40px;border:1px solid #b9b9b2;border-radius:3px;padding:0 8px;background:#fff}
+.qbtns{align-items:center;flex-wrap:wrap}#qtsave{white-space:nowrap}
 .qbtns{display:flex;gap:8px;justify-content:flex-end}.qbtns .btn{min-height:42px}
 .clist{display:grid;gap:10px;margin-bottom:12px}.cm{display:grid;gap:3px;max-width:85%;padding:8px 12px;border-radius:6px;background:#f1f1ed;font-size:14px;justify-self:start}.cm.me{justify-self:end;background:#fde3e5}
 .cm .ch{font-size:12px;color:var(--mute);display:flex;gap:8px;align-items:baseline}.cm .ch b{color:var(--ink)}.cm .ct{white-space:pre-wrap;word-break:break-word}.cm .cdel{border:0;background:none;color:var(--mute);font-size:12px;cursor:pointer;padding:0;margin-left:auto;text-decoration:underline}
@@ -110,6 +113,10 @@ th .infob{border-color:#cfcfc9;background:transparent;color:#fff;width:16px;heig
 .cnew{display:inline-block;background:var(--red);color:#fff;font-size:11px;font-weight:700;border-radius:10px;padding:1px 7px;margin-left:6px;vertical-align:1px}
 .nqt{display:inline-block;margin-left:6px;background:#2e9d5b;color:#fff;font-size:11px;font-weight:700;border-radius:3px;padding:1px 7px;vertical-align:1px}
 #lbody tr.nqr td{background:#eaf6ee}
+th.lck,td.lck{width:28px;padding-right:0}td.lck input,th.lck input{width:17px;height:17px;accent-color:var(--red)}
+.lbulk{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;background:#fff7e0;border-left:4px solid #e0a800;padding:8px 12px;border-radius:3px;margin:0 0 10px}.lbulk>*{flex:none}.lbulk select{width:auto;max-width:220px;font:600 13px Montserrat,sans-serif;min-height:32px;border:1px solid #b9b9b2;border-radius:3px;padding:0 8px;background:#fff}
+.arch{display:inline-block;margin-left:6px;background:#e8e8e4;color:#55554f;font-size:11px;font-weight:700;border-radius:3px;padding:1px 6px;vertical-align:1px}
+.claimt{display:inline-block;margin-top:3px;font-size:11.5px;font-weight:700;color:#1d4e89;background:#e8f0fb;border-radius:3px;padding:1px 6px}
 .lq{display:block;font-size:12px;color:var(--mute);margin-top:3px}.wait{display:inline-block;margin-top:3px;font-size:11.5px;font-weight:700;color:#b35c00;background:#fff3e8;border-radius:3px;padding:1px 6px}
 .xbar{flex:1 1 460px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));align-items:end;gap:8px 14px;min-width:0}.xgrp{display:flex;flex-direction:column;gap:4px;min-width:0}.xbar .xonly{grid-column:1/-1}.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .xbar label{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;white-space:nowrap}.xbar label svg{color:var(--red)}
@@ -257,7 +264,8 @@ footer p{margin:0 0 6px;max-width:100ch}
 #pic.err span::after{content:" (photo unavailable)";font-weight:500;color:var(--mute)}
 a.bn[data-img]{cursor:zoom-in}
 .rfqb{margin-top:6px;font:600 12px Montserrat,sans-serif;padding:4px 10px;min-height:30px;border-radius:3px;border:1px solid var(--red);background:#fff;color:var(--red);cursor:pointer;white-space:nowrap}
-.rfqb:hover{background:var(--red);color:#fff}
+.shacts{display:flex;flex-wrap:wrap;gap:8px}.shacts .btn{display:inline-flex;align-items:center;text-decoration:none}
+.rfqb:hover{background:var(--red);color:#fff}.rfqb.shb{border-color:#b9b9b2;color:var(--ink)}.rfqb.shb:hover{background:var(--ink);border-color:var(--ink);color:#fff}
 #rfqv{padding:16px max(3vw,16px) 40px}
 .rfqbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;max-width:8.5in;margin:0 auto 14px}
 #rfqst{font-size:13px;color:var(--mute)}
@@ -436,6 +444,11 @@ tr.fu td{background:#fffaf2 !important}
 @media(max-width:600px){.util .ext,.um .nm,.um .car{display:none}.util .nav button{padding:0 9px;font-size:13px}.brand .div{display:none}.axis,.lr{grid-template-columns:140px minmax(0,1fr)}.lr .nm small{display:none}.axis span:nth-child(even){display:none}table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--rule)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:7.5em;background:none !important}.stack td::before{content:attr(data-l);float:inline-start;width:7em;margin-inline-start:-7.5em;color:var(--mute);font-size:12.5px}.stack td:empty{display:none}}
 @media(prefers-reduced-motion:reduce){.toast{transition:none}}
 </style>
+<script>/* dark mode: the saved choice, else the device setting */try{const t=localStorage.getItem('bm-theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch(e){}</script>
+<style>/* Dark mode inverts the light theme on screen (never on paper or PDFs), then turns photos and the already-dark or brand-red bars back */
+@media screen{html.dark{filter:invert(1) hue-rotate(180deg);background:#fff;color-scheme:dark;--panel:#f1f1ee}
+html.dark img,html.dark .util,html.dark .brand,html.dark footer.band,html.dark .top,html.dark #pic,html.dark .sh-top .lg,html.dark .tabs,html.dark .band.hero{filter:invert(1) hue-rotate(180deg) saturate(1.9)}
+html.dark .util img,html.dark .brand img,html.dark .top img,html.dark footer.band img,html.dark #pic img,html.dark .sh-top .lg img{filter:none}}</style>
 </head>
 <body>
 <nav class="util" aria-label="Main">
@@ -443,7 +456,7 @@ tr.fu td{background:#fffaf2 !important}
   <span class="sp"></span>
   <div class="ext"><a href="https://www.beckettcorp.com" target="_blank" rel="noopener">beckettcorp.com</a><a href="https://waynecombustion.com/products" target="_blank" rel="noopener">waynecombustion.com</a></div>
   <details class="um" id="um" hidden><summary aria-label="Account menu"><span class="av" id="av"></span><span class="nm" id="whoami"></span><span class="car" aria-hidden="true"></span></summary>
-    <div class="menu"><div class="who" id="whomenu"></div><button type="button" id="instb" hidden>Install app</button><button type="button" id="pushb" hidden>Phone notifications</button><button type="button" id="profb">My profile</button><button type="button" class="out" id="outb">Sign out</button></div></details>
+    <div class="menu"><div class="who" id="whomenu"></div><button type="button" id="instb" hidden>Install app</button><button type="button" id="pushb" hidden>Phone notifications</button><button type="button" id="profb">My profile</button><button type="button" id="darkb">Dark mode</button><button type="button" class="out" id="outb">Sign out</button></div></details>
 </nav>
 <div class="brand" role="banner" id="home" title="Back to the burner matrix" tabindex="0">
   <img src="logos/beckett.png" alt="Beckett" onerror="this.outerHTML='<span class=bk>Beckett</span>'">
@@ -627,10 +640,11 @@ tr.fu td{background:#fffaf2 !important}
   <div class="panel">
     <div class="lbar"><button class="btn" id="lback">← Back to matrix</button><h2 id="ltitle" style="margin:0 8px">My RFQs</h2><span style="flex:1"></span>
       <select id="lwho" aria-label="Whose RFQs" hidden><option value="all">Everyone's RFQs</option><option value="mine">Only mine</option></select>
-      <input id="lq" type="search" placeholder="Search number, customer, job, burner…" aria-label="Search RFQs" style="min-width:260px"><button type="button" class="btn" id="lxls">Export to Excel</button></div>
+      <input id="lq" type="search" placeholder="Search customer, appliance, spec #, quote #…" aria-label="Search RFQs by number, customer, contact, job, burner, appliance, address, spec or quote number" title="Searches RFQ #, customer, contact, job, burner, rep, appliance, site address, email, phone, PO, notes (spec numbers) and quote #" style="min-width:280px"><button type="button" class="btn" id="lxls">Export to Excel</button></div>
     <div class="lout" id="lout" hidden></div>
     <div class="stats" id="lstats"></div>
-    <div style="overflow-x:auto"><table><thead><tr><th>RFQ #</th><th>Date</th><th>Customer</th><th>Job</th><th>Burner</th><th id="lrepth" hidden>Rep</th><th>Emailed</th><th>Status</th><th>Value</th><th></th></tr></thead><tbody id="lbody"></tbody></table></div>
+    <div class="lbulk" id="lbulk" hidden role="region" aria-label="Change the selected RFQs"></div>
+    <div style="overflow-x:auto"><table><thead><tr><th class="lck"><input type="checkbox" id="lall" aria-label="Select all RFQs shown"></th><th>RFQ #</th><th>Date</th><th>Customer</th><th>Job</th><th>Burner</th><th id="lrepth" hidden>Rep</th><th>Emailed</th><th>Status</th><th>Value</th><th></th></tr></thead><tbody id="lbody"></tbody></table></div>
   </div>
 </section>
 <dialog id="o2g"><form id="o2gf" method="dialog">
@@ -689,6 +703,13 @@ tr.fu td{background:#fffaf2 !important}
   <div id="cuerr" class="msg err" hidden></div>
   <div class="row"><button type="button" class="btn danger" id="cudel" hidden>Remove</button><span style="flex:1"></span><button type="button" class="btn" id="cux">Cancel</button><button class="btn pri" type="submit" id="cugo">Save</button></div>
 </form></dialog>
+<dialog id="shd" aria-labelledby="shh"><div style="display:grid;gap:12px">
+  <h2 id="shh" style="font-size:20px;margin:0"></h2>
+  <p style="margin:0;font-size:13.5px;color:var(--mute)">Send this burner’s specs to a contractor or customer. Edit the text first if you like; the spec sheet PDF has the same details on one page.</p>
+  <textarea id="sht" rows="11" aria-label="Text to send" style="width:100%;box-sizing:border-box;font:500 13.5px/1.45 Montserrat,sans-serif;padding:10px;border:1px solid #b9b9b2;border-radius:3px;resize:vertical"></textarea>
+  <div class="shacts"><button type="button" class="btn" id="shcopy">Copy text</button><a class="btn" id="shsms">Text message</a><a class="btn" id="shmail">Email</a><button type="button" class="btn pri" id="shpdf">Download spec sheet (PDF)</button></div>
+  <div class="row" style="justify-content:flex-end"><button type="button" class="btn" id="shx">Close</button></div>
+</div></dialog>
 <dialog id="sdd" aria-labelledby="sdh"><div style="display:grid;gap:12px">
   <h2 id="sdh" style="font-size:20px;display:flex;gap:10px;align-items:center"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 1 21h22L12 2z" fill="#f2b705"/><path d="M12 9v5m0 3v.5" stroke="#1c1c1c" stroke-width="2.2" stroke-linecap="round"/></svg>Step-down transformer required</h2>
   <p id="sdtxt" style="margin:0;font-size:14.5px;line-height:1.5"></p>
@@ -776,7 +797,7 @@ function render(){
   const req=r!=null?`<div class="req" style="left:${pos(Math.min(Math.max(r,15),15000))}%"></div>`:'';
   $('lad').innerHTML=list.length?list.map(x=>{const[a,b]=mb(x);const fz=fit(x,r);return`<div class="lr" data-n="${esc(x.n)}" title="${esc(x.b+' '+x.n)}: ${fmt(x)}"><div class="nm">${esc(x.n)}<small>${x.prev?'Preview':esc(x.b)}</small></div><div class="track">${gl}${req}<div class="bar ${x.f}${x.disc?' off':''}${fz==='edge'?' edgebar':''}" style="left:${pos(a)}%;width:${Math.max(pos(b)-pos(a),.8)}%"></div></div></div>`}).join(''):'<div class="empty">No burner meets every filter. Loosen the footprint or power limits, or check the firing rate unit.</div>';
   $('tb').innerHTML=list.map(x=>{const fz=fit(x,r);const d=Array.isArray(x.dim)?x.dim.map(n=>+n.toFixed(2)).join(' × '):x.dim==='spec'?'See spec sheet':'Not published';
-    return`<tr id="r-${x.n.replace(/\W/g,'')}" class="${fz==='edge'?'edge':''}"><td><b class="nm-${x.f}"><a class="bn" href="${esc(x.u)}"${x.img?` data-img="${esc(x.img)}"`:''} target="_blank" rel="noopener">${esc(x.n)}</a></b><br><span class="note">${esc(x.b)}${x.disc?' · discontinued':''}${x.prev?' · <b class=pv>preview, not saved</b>':''}</span><br><button type="button" class="rfqb" data-k="${esc((x.b+'|'+x.n).toLowerCase())}">Create RFQ</button></td><td><span class="fuel ${x.f}">${x.f==='oil'?'Oil':'Gas'}</span>${x.bio?`<br><span class="tag">${esc(x.bio)}</span>`:''}${x.lp?`<br><span class="tag">LP: ${esc(x.lp)}</span>`:''}</td><td class="n">${fmt(x)}${sub(x)?`<br><span class="note">${sub(x)}</span>`:''}${fz==='ok'?`<br><span class="fit ok">Sweet spot</span>`:fz==='edge'?`<br><span class="fit edge">${where(x,r)==='max'?`Near MAX · ${pctOf(x,r)}% of max`:`Near MIN · ${Math.round((r/mb(x)[0]-1)*100)}% above min`}</span>`:''}</td><td><div class="pws">${['12dc','24dc','120','240','3p240','3p480','none'].filter(k=>x.v.includes(k)).map(k=>`<span class="pw ${PCH[k][1]}">${PCH[k][0]}${x.std===k&&x.v.length>1?' <i>Std</i>':''}</span>`).join('')}</div></td><td>${x.m.map(m=>`<span class="tag">${MODES[m]}</span>`).join('')}</td><td class="n">${x.fl!=null||x.fw!=null?`${x.fl!=null?n2(x.fl):'?'} × ${x.fw!=null?n2(x.fw):'?'}`:NS}</td><td class="n">${x.td!=null?(x.td===1&&x.tdx?'':n2(x.td)+':1'):NS}</td><td class="n">${x.op!=null?'up to '+n2(x.op):NS}</td><td>${x.parts?`<span class="rate p-${x.parts}">${CAP(x.parts)}</span>`:'<span class="note" style="white-space:nowrap">Not set</span>'}</td><td>${x.svc?`<span class="rate s-${x.svc}">${CAP(x.svc)}</span>`:'<span class="note" style="white-space:nowrap">Not set</span>'}</td><td class="n">${d}</td><td>${x.a.map(a=>`<span class="tag">${APPS[a]}</span>`).join('')}</td><td>${esc(x.note)}</td></tr>`}).join('');
+    return`<tr id="r-${x.n.replace(/\W/g,'')}" class="${fz==='edge'?'edge':''}"><td><b class="nm-${x.f}"><a class="bn" href="${esc(x.u)}"${x.img?` data-img="${esc(x.img)}"`:''} target="_blank" rel="noopener">${esc(x.n)}</a></b><br><span class="note">${esc(x.b)}${x.disc?' · discontinued':''}${x.prev?' · <b class=pv>preview, not saved</b>':''}</span><br><button type="button" class="rfqb" data-k="${esc((x.b+'|'+x.n).toLowerCase())}">Create RFQ</button> <button type="button" class="rfqb shb" data-share="${esc((x.b+'|'+x.n).toLowerCase())}" title="Text or email this burner's specs, or download a spec sheet">Share</button></td><td><span class="fuel ${x.f}">${x.f==='oil'?'Oil':'Gas'}</span>${x.bio?`<br><span class="tag">${esc(x.bio)}</span>`:''}${x.lp?`<br><span class="tag">LP: ${esc(x.lp)}</span>`:''}</td><td class="n">${fmt(x)}${sub(x)?`<br><span class="note">${sub(x)}</span>`:''}${fz==='ok'?`<br><span class="fit ok">Sweet spot</span>`:fz==='edge'?`<br><span class="fit edge">${where(x,r)==='max'?`Near MAX · ${pctOf(x,r)}% of max`:`Near MIN · ${Math.round((r/mb(x)[0]-1)*100)}% above min`}</span>`:''}</td><td><div class="pws">${['12dc','24dc','120','240','3p240','3p480','none'].filter(k=>x.v.includes(k)).map(k=>`<span class="pw ${PCH[k][1]}">${PCH[k][0]}${x.std===k&&x.v.length>1?' <i>Std</i>':''}</span>`).join('')}</div></td><td>${x.m.map(m=>`<span class="tag">${MODES[m]}</span>`).join('')}</td><td class="n">${x.fl!=null||x.fw!=null?`${x.fl!=null?n2(x.fl):'?'} × ${x.fw!=null?n2(x.fw):'?'}`:NS}</td><td class="n">${x.td!=null?(x.td===1&&x.tdx?'':n2(x.td)+':1'):NS}</td><td class="n">${x.op!=null?'up to '+n2(x.op):NS}</td><td>${x.parts?`<span class="rate p-${x.parts}">${CAP(x.parts)}</span>`:'<span class="note" style="white-space:nowrap">Not set</span>'}</td><td>${x.svc?`<span class="rate s-${x.svc}">${CAP(x.svc)}</span>`:'<span class="note" style="white-space:nowrap">Not set</span>'}</td><td class="n">${d}</td><td>${x.a.map(a=>`<span class="tag">${APPS[a]}</span>`).join('')}</td><td>${esc(x.note)}</td></tr>`}).join('');
   const TH=[...document.querySelectorAll('#tbl thead th')].map(t=>t.dataset.t||t.textContent);$('tb').querySelectorAll('tr').forEach(tr=>[...tr.cells].forEach((c,i)=>c.dataset.l=TH[i]));
   facets();
   const xo=$('xonly');if(xo){const n=S.only?S.only.length:0;xo.hidden=!S.only;
@@ -904,12 +925,17 @@ function xShow(){const q=$('xq').value.trim(),box=$('xres');clearTimeout(xMissT)
     ${x.note?`<div class="xn">${esc(x.note)}</div>`:''}</div>`}).join('')
     :`<div class="xr none">No match for “${esc(q)}”. ${XREF.length?'Try just the model number, or':'The cross-reference list is empty, so'} ask an editor or admin to add it. You can still use the filters below.</div>`;
   box.hidden=false;$('xq').setAttribute('aria-expanded','true')}
-function aShow(fromSpec){const q=$('aq').value.trim(),box=$('ares');if(!q){box.hidden=true;$('aq').setAttribute('aria-expanded','false');return}
+// an appliance lookup that settles on nothing is reported once, so admins can see which models are missing from the guides
+const SPLOGGED=new Set();let spMissT=0;
+const spMiss=q=>{clearTimeout(spMissT);const k=xnorm(q);if(k.length<2||SPLOGGED.has(k)||!(SPH.q===q&&SPH.ok&&!SPH.hits.length))return;SPLOGGED.add(k);J('POST','api/specs/miss',{q}).catch(()=>{})};
+function aShow(fromSpec){const q=$('aq').value.trim(),box=$('ares');clearTimeout(spMissT);if(!q){box.hidden=true;$('aq').setAttribute('aria-expanded','false');return}
   if(fromSpec!==true)specGet(q);
+  if(SPH.q===q&&SPH.ok&&!SPH.hits.length)spMissT=setTimeout(()=>spMiss(q),2500);
   const sp=spMatch(q)?SPH.hits:[],sug=SPH.q===q&&SPH.suggest||[];
   box.innerHTML=sp.length?specHTML(sp):`<div class="xr none">${xnorm(q).length<2?'Type at least 2 letters or numbers.':SPH.q!==q?'Searching…':SPH.ok?`No appliance spec for “${esc(q)}”.${sug.length?'':' Try just the model number (e.g. V8H4), or the maker and model.'}`:'Couldn’t search the appliance specs. Check your connection and try again.'}
     ${sug.length?`<div class="sug"><span>Did you mean</span>${sug.map(o=>`<button type="button" data-a="spsug" data-q="${esc(o.mfg.split(/[ /]/)[0]+' '+o.model)}">${esc(o.mfg)} <b>${esc(o.model)}</b></button>`).join('')}</div>`:''}</div>`;
   box.hidden=false;$('aq').setAttribute('aria-expanded','true')}
+$('aq').addEventListener('blur',()=>{const q=$('aq').value.trim();if(q)spMiss(q)});
 $('aq').addEventListener('input',()=>aShow());$('aq').addEventListener('focus',()=>aShow());
 $('aq').addEventListener('keydown',e=>{if(e.key==='Escape'){$('ares').hidden=true;$('aq').setAttribute('aria-expanded','false')}});
 $('xonly').addEventListener('click',e=>{if(e.target.closest('#xonlyx')){S.only=null;S.onlyLbl='';S.onlyKind='';render()}});
@@ -970,7 +996,7 @@ const MODEW={onoff:'On/Off',hilo:'Lo-Hi-Lo',mod:'Modulating'};
 const vlabel=k=>({'12dc':'12 VDC','24dc':'24 VDC','120':'120 VAC','240':'208–240 VAC 1Φ','3p240':'208–240 VAC 3Φ','3p480':'480 VAC 3Φ','none':'No power needed'}[k]);
 let rfqB=null,ME=null;
 const repName=()=>ME?(ME.full||ME.name):'',repPhone=()=>ME&&ME.phone||'',repEmail=()=>ME&&ME.email||'';
-const PDFMODE=new URLSearchParams(location.search).get('pdf')==='1';
+const PDFMODE=new URLSearchParams(location.search).get('pdf')==='1',SHEET_Q=(new URLSearchParams(location.search).get('sheet')||'').toLowerCase();
 const ymd=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return`${String(d.getFullYear()).slice(2)}${p(d.getMonth()+1)}${p(d.getDate())}`};
 let seqMem={};
 // Daily RFQ sequence: shared counter on the server when available, otherwise per-browser.
@@ -1214,8 +1240,40 @@ async function saveRFQ(quiet){if(!ME||!RFQ)return null;if(RFQ.offline){if(RFQ.di
   const first=!RFQ.id;RFQ.id=rec.id;RFQ.dirty=false;RFQ.date=rec.date;rfqStatus();if(first)rxRender();if(!quiet)toast('RFQ saved');return RFQ.id}
 async function closeRFQ(){if(RFQ&&RFQ.dirty&&ME){try{await saveRFQ(true);toast('RFQ saved')}catch(e){toast('Could not save: '+e.message);return}}
   $('rfqv').hidden=true;if(RFQ&&RFQ.from==='list'){RFQ=null;return openList()}if(RFQ&&RFQ.from==='won'){RFQ=null;return openWon()}if(RFQ&&RFQ.from==='hist'&&HIST){RFQ=null;return openHistory(HIST.company)}RFQ=null;$('matrixv').hidden=false;if(rfqB){const t=$('r-'+rfqB.n.replace(/\W/g,''));if(t)t.scrollIntoView({block:'center'})}}
-$('tb').addEventListener('click',async e=>{const b=e.target.closest('.rfqb');if(!b)return;const x=D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===b.dataset.k);if(!x)return;
+$('tb').addEventListener('click',async e=>{const sh=e.target.closest('[data-share]');if(sh){const x=D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===sh.dataset.share);if(x)openShare(x);return}
+  const b=e.target.closest('.rfqb');if(!b)return;const x=D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===b.dataset.k);if(!x)return;
   const xfmr=stepDownNote(x);if(xfmr&&!await stepDownOK(x))return;b.disabled=true;newRFQ(x,xfmr?{xfmr}:{}).catch(err=>toast(err.message)).finally(()=>b.disabled=false)});
+/* ---------- share a burner (text, email, or a one-page spec sheet) ---------- */
+function burnerFacts(x){const[a,b]=mb(x),dims=Array.isArray(x.dim)?x.dim.map(n=>+n.toFixed(2)).join(' × ')+' in (H × W × D)':'';
+  const pk=['12dc','24dc','120','240','3p240','3p480','none'].filter(k=>x.v.includes(k));
+  return[['Fuel',(x.f==='oil'?'Oil':'Gas')+(x.lp?` (LP: ${x.lp})`:'')],['Firing range',`${fmt(x)}${x.f==='oil'?` (${Math.round(a).toLocaleString()}–${Math.round(b).toLocaleString()} MBH)`:''}`],
+    ['Power',pk.map(k=>vlabel(k)+(x.std===k&&pk.length>1?' (std)':'')).join(', ')],['Firing modes',x.m.map(m=>MODEW[m]).join(', ')],
+    x.td!=null&&!(x.td===1&&x.tdx)?['Turndown',n2(x.td)+':1']:null,x.fl!=null||x.fw!=null?['Flame size',`${x.fl!=null?n2(x.fl):'?'} × ${x.fw!=null?n2(x.fw):'?'} in (L × W)`]:null,
+    x.op!=null?['Max overfire',`${n2(x.op)} in. WC`]:null,dims?['Chassis dimensions',dims]:null,x.tubes.length?['Air tube lengths',x.tubes.map(tubeLbl).join(', ')]:x.vt?null:null,
+    x.bio?['Fuel ratings',x.bio]:null,['Applications',x.a.map(k=>APPS[k]).join(', ')],x.note?['Notes',x.note]:null].filter(Boolean)}
+function shareText(x){const me=[repName(),repPhone(),repEmail()].filter(Boolean).join(' · ');
+  return[`${x.b} ${x.n} ${x.f==='oil'?'oil':'gas'} burner`,...burnerFacts(x).filter(([k])=>k!=='Notes').map(([k,v])=>`${k}: ${v}`),x.u?`Product page: ${x.u}`:'',me?`\n${me}`:''].filter(Boolean).join('\n')}
+let SHX=null;
+function openShare(x){SHX=x;$('shh').textContent=`Share ${x.b} ${x.n}`;$('sht').value=shareText(x);shLinks();$('shd').showModal();$('shcopy').focus()}
+function shLinks(){const t=$('sht').value,subj=SHX?`${SHX.b} ${SHX.n} burner specs`:'Burner specs';
+  $('shsms').href='sms:?&body='+encodeURIComponent(t);$('shmail').href=`mailto:?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(t)}`}
+$('sht').addEventListener('input',shLinks);$('shx').onclick=()=>$('shd').close();
+$('shcopy').onclick=async()=>{try{await navigator.clipboard.writeText($('sht').value);toast('Copied')}catch(e){$('sht').select();document.execCommand('copy');toast('Copied')}};
+$('shpdf').onclick=async e=>{if(!SHX)return;const b=e.currentTarget,t=b.textContent;b.disabled=true;b.textContent='Building PDF…';
+  try{const r=await fetch('api/burners/sheet.pdf?k='+encodeURIComponent((SHX.b+'|'+SHX.n).toLowerCase()),{credentials:'same-origin'});if(r.status===401)return location.replace('login');
+    if(!r.ok){let m='HTTP '+r.status;try{m=(await r.json()).error||m}catch(x){}throw new Error(m)}
+    const url=URL.createObjectURL(await r.blob()),a=document.createElement('a');a.href=url;a.download=`${SHX.b}-${SHX.n}-spec-sheet.pdf`.replace(/[^A-Za-z0-9._-]+/g,'-');document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000)}
+  catch(err){toast(navigator.onLine?'Couldn’t build the PDF: '+err.message:'You’re offline. The spec sheet needs a connection.')}finally{b.disabled=false;b.textContent=t}};
+// ?sheet=<brand|name>&pdf=1: the one-page burner spec sheet the server prints to PDF
+async function renderSheetPdf(){const x=D.concat(PREV).find(o=>(o.b+'|'+o.n).toLowerCase()===SHEET_Q);if(!x){window.RFQ_ERROR='No such burner';return}await ME_P.catch(()=>{});
+  hideMain();$('rfqv').hidden=false;$('rfqx').hidden=true;document.querySelectorAll('#rfqv .rfqbar').forEach(e=>e.hidden=true);
+  const logos=[...document.querySelectorAll('.brand img')].map(i=>`<img src="${i.currentSrc||i.src}" alt="${esc(i.alt)}">`).join(''),me=[repName(),repPhone(),repEmail()].filter(Boolean);
+  $('sheet').innerHTML=`<div class="sh-top">${logos?`<div class="lg">${logos}</div>`:''}<div><h1>${esc(x.b)} ${esc(x.n)}</h1><div style="font-size:12px;color:#66665f">Burner specification sheet</div></div><div class="meta">${fmtD(new Date().toISOString())}</div></div>
+    <h3>Burner</h3><div class="sh-burner"><div class="kv" style="grid-template-columns:minmax(0,1fr)">${burnerFacts(x).map(([k,v])=>ro(esc(k),esc(v))).join('')}${x.u?ro('Product page',`<a href="${esc(x.u)}">${esc(x.u.replace(/^https?:\/\//,'').replace(/\/$/,''))}</a>`):''}</div>${x.img?`<img src="${esc(x.img)}" alt="${esc(x.n)}" onerror="this.remove()">`:''}</div>
+    ${me.length?`<h3>Your contact</h3><div class="kv" style="grid-template-columns:minmax(0,1fr)">${ro('Sales rep',esc(me.join(' · ')))}</div>`:''}
+    <div class="sh-foot">From the Beckett / Wayne Burner Selection Matrix (${fmtD(new Date().toISOString())}). Confirm against the current manufacturer spec sheet and the appliance maker's burner specification before ordering.</div>`;
+  await document.fonts.ready;await Promise.all([...document.querySelectorAll('#sheet img')].map(i=>i.complete?(i.naturalWidth||i.remove()):new Promise(r=>{i.addEventListener('load',r);i.addEventListener('error',()=>{i.remove();r()});setTimeout(()=>{if(!i.naturalWidth)i.remove();r()},8000)})));
+  window.RFQ_READY=true}
 // Step-down transformer warning: burner has it switched on (Admin → Burners), the master switch is on (Admin → Settings),
 // and the Power filter has only voltages above 120 V ticked (no 120 VAC)
 const HIV=['240','3p240','3p480'];
@@ -1281,7 +1339,7 @@ $('sendf').onsubmit=async e=>{e.preventDefault();const g=$('sendgo');g.disabled=
 let LIST=[];
 async function openList(){hideMain();$('listv').hidden=false;scrollTo(0,0);
   const staff=ME&&ME.role!=='rep';$('lwho').hidden=!staff;$('lrepth').hidden=!staff;
-  $('lbody').innerHTML='<tr><td colspan="9" class="sm">Loading…</td></tr>';
+  $('lbody').innerHTML='<tr><td colspan="11" class="sm">Loading…</td></tr>';
   if(ME&&ME.role==='quoter'&&!openList.seen){openList.seen=1;LST='wait'}
   try{LIST=await J('GET','api/rfqs');renderList()}catch(e){$('lbody').innerHTML=`<tr><td colspan="9">${esc(e.message)}</td></tr>`}}
 const STL={draft:'Draft',sent:'Emailed',quoted:'Quoted',won:'Won',lost:'Lost'};
@@ -1321,27 +1379,49 @@ $('stf').onsubmit=async e=>{e.preventDefault();if(!STR)return;const{r,status}=ST
 function renderList(){const staff=ME&&ME.role!=='rep',mine=!staff||$('lwho').value==='mine';
   $('ltitle').textContent=mine?'My RFQs':'All RFQs';
   const q=$('lq').value.trim().toLowerCase();
-  const base=LIST.filter(r=>!mine||r.by===ME.name);
+  const all=LIST.filter(r=>!mine||r.by===ME.name),narch=all.filter(r=>r.archived).length;
+  if(LST==='archived'&&!narch)LST='';
+  // archived RFQs only show under Archived, or when searching
+  const base=all.filter(r=>LST==='archived'?r.archived:(q||!r.archived));
   const cnt={};base.forEach(r=>cnt[stOf(r)]=(cnt[stOf(r)]||0)+1);const dec=(cnt.won||0)+(cnt.lost||0),nfu=base.filter(r=>r.followUp).length,nw=base.filter(waiting).length;
   const nnq=base.filter(r=>r.newQuote).length;
   $('lstats').innerHTML=`<button class="stat" data-s="" aria-pressed="${!LST}"><b>${base.length}</b>All</button>`+(nnq||LST==='newq'?`<button class="stat nqs" data-s="newq" aria-pressed="${LST==='newq'}" title="Quoted by the office since you last opened them"><b>${nnq}</b>New quote${nnq===1?'':'s'}</button>`:'')+(staff?`<button class="stat wq" data-s="wait" aria-pressed="${LST==='wait'}" title="Emailed and not quoted yet, oldest first"><b>${nw}</b>Waiting for quote</button>`:'')+(ME&&ME.followUpDays?`<button class="stat fu" data-s="follow" aria-pressed="${LST==='follow'}" title="Emailed or Quoted with no activity for ${ME.followUpDays}+ days"><b>${nfu}</b>Follow up</button>`:'')+Object.entries(STL).filter(([k])=>!(k==='draft'&&ME&&ME.role==='quoter')).map(([k,l])=>`<button class="stat" data-s="${k}" aria-pressed="${LST===k}"><b>${cnt[k]||0}</b>${l}</button>`).join('')+
+    (narch||LST==='archived'?`<button class="stat" data-s="archived" aria-pressed="${LST==='archived'}" title="Hidden from the other lists"><b>${narch}</b>Archived</button>`:'')+
     `<span class="stat wr" title="Won ÷ (won + lost)"><b>${dec?Math.round((cnt.won||0)/dec*100)+'%':'—'}</b>win rate</span>`;
-  let rows=base.filter(r=>(!LST||(LST==='follow'?r.followUp:LST==='wait'?waiting(r):LST==='newq'?r.newQuote:stOf(r)===LST))&&(!q||[r.no,r.company,r.contact,r.job,r.burner,r.by,r.byFull].join(' ').toLowerCase().includes(q)));
+  // every word must appear somewhere in the RFQ (number, customer, job, burner, rep, appliance, address, notes with spec numbers, quote #…)
+  const qw=q.split(/\s+/).filter(Boolean),hit=r=>{const h=[r.no,r.company,r.contact,r.job,r.burner,r.by,r.byFull,r.app,r.find,r.quote&&r.quote.no].join(' ').toLowerCase();return qw.every(w=>h.includes(w))};
+  let rows=base.filter(r=>(!LST||LST==='archived'||(LST==='follow'?r.followUp:LST==='wait'?waiting(r):LST==='newq'?r.newQuote:stOf(r)===LST))&&(!qw.length||hit(r)));
+  LSHOWN=rows.map(r=>r.id);for(const id of[...LSEL])if(!LIST.some(r=>r.id===id))LSEL.delete(id);
   if(LST==='wait')rows=rows.sort((a,b)=>String(a.sent.at).localeCompare(String(b.sent.at)));
   $('lbody').innerHTML=rows.map(r=>{const st=stOf(r),can=ME&&(r.by===ME.name||ME.role!=='rep');
-    return`<tr data-id="${esc(r.id)}"${r.newQuote?' class="nqr"':r.followUp?' class="fu"':''}><td class="no">${esc(r.no)}${r.newQuote?'<span class="nqt">New quote</span>':''}${r.unread?`<span class="cnew" title="${r.unread} new comment${r.unread>1?'s':''}">💬 ${r.unread}</span>`:r.comments?`<span class="sm" title="${r.comments} comment${r.comments>1?'s':''}" style="margin-left:6px">💬 ${r.comments}</span>`:''}${waiting(r)?`<br><span class="wait" title="Emailed ${fmtD(r.sent.at)}, no quote yet">Waiting for quote · ${daysSince(r.sent.at)?daysSince(r.sent.at)+' day'+(daysSince(r.sent.at)===1?'':'s'):'since today'}</span>`:''}${r.followUp?`<br><span class="fub" title="No activity for ${r.idleDays} days">Follow up · ${r.idleDays} days</span>`:''}</td><td style="white-space:nowrap">${fmtD(r.date)}</td><td>${r.company?`<a href="#" class="colink" data-co="${esc(r.company)}">${esc(r.company)}</a>`:''}${r.contact?`<div class="sm">${esc(r.contact)}</div>`:''}</td><td>${esc(r.job)}</td>
+    return`<tr data-id="${esc(r.id)}"${r.newQuote?' class="nqr"':r.followUp?' class="fu"':''}><td class="lck">${can?`<input type="checkbox" class="lsel" aria-label="Select ${esc(r.no)}"${LSEL.has(r.id)?' checked':''}>`:''}</td><td class="no">${esc(r.no)}${r.archived?'<span class="arch">Archived</span>':''}${r.newQuote?'<span class="nqt">New quote</span>':''}${r.unread?`<span class="cnew" title="${r.unread} new comment${r.unread>1?'s':''}">💬 ${r.unread}</span>`:r.comments?`<span class="sm" title="${r.comments} comment${r.comments>1?'s':''}" style="margin-left:6px">💬 ${r.comments}</span>`:''}${waiting(r)?`<br><span class="wait" title="Emailed ${fmtD(r.sent.at)}, no quote yet">Waiting for quote · ${daysSince(r.sent.at)?daysSince(r.sent.at)+' day'+(daysSince(r.sent.at)===1?'':'s'):'since today'}</span>`:''}${r.claim&&!r.quote?`<br><span class="claimt" title="Since ${fmtD(r.claim.at)}">${ME&&r.claim.by===ME.name?'You’re on it':esc(r.claim.byFull||r.claim.by)+' is on it'}</span>`:''}${r.followUp?`<br><span class="fub" title="No activity for ${r.idleDays} days">Follow up · ${r.idleDays} days</span>`:''}</td><td style="white-space:nowrap">${fmtD(r.date)}</td><td>${r.company?`<a href="#" class="colink" data-co="${esc(r.company)}">${esc(r.company)}</a>`:''}${r.contact?`<div class="sm">${esc(r.contact)}</div>`:''}</td><td>${esc(r.job)}${r.app?`<div class="sm">${esc(r.app)}</div>`:''}</td>
     <td><span style="color:${r.fuel==='gas'?'var(--gas)':'var(--oil)'};font-weight:600">${esc(r.burner)}</span></td>${staff?`<td${$('lrepth').hidden?' hidden':''}>${esc(r.byFull||r.by)}</td>`:''}
     <td class="sm">${r.sent?`${fmtD(r.sent.at)}<br>${esc(r.sent.to.join(', '))}`:'—'}</td>
     <td>${can?`<select class="st st-${st}" aria-label="Status of ${esc(r.no)}">${['','quoted','won','lost'].map(v=>`<option value="${v}"${(r.status||'')===v?' selected':''}>${v?STL[v]:(r.sent?'Emailed':'Draft')}</option>`).join('')}</select>`:`<span class="st st-${st}">${STL[st]}</span>`}${r.status==='lost'&&r.lostReason?`<div class="sm" style="margin-top:3px">${esc(r.lostReason)}</div>`:''}${r.quote?`<span class="lq">Quote ${esc(r.quote.no||'')}${r.quote.file?' · PDF':''}</span>`:''}</td>
     <td>${(r.status==='quoted'||r.status==='won')&&can?`<button type="button" class="lval${r.value==null?' add':''}" title="Change the quote value">${money(r.value)||'+ Add value'}</button>`:money(r.value)||'—'}</td>
-    <td style="white-space:nowrap">${r.followUp&&can?'<button class="btn lmini lfu" title="Restart the follow-up clock">Followed up</button> ':''}${canDel({by:r.by,sent:r.sent})?'<button class="btn ldel lmini" style="color:#b3141f">Delete</button>':''}</td></tr>`}).join('')||`<tr><td colspan="10" class="sm" style="padding:24px 8px">${LIST.length?'No RFQs match.':'No saved RFQs yet. Use “Create RFQ” in the matrix, then Save or Email PDF.'}</td></tr>`;
+    <td style="white-space:nowrap">${r.followUp&&can?'<button class="btn lmini lfu" title="Restart the follow-up clock">Followed up</button> ':''}${canDel({by:r.by,sent:r.sent})?'<button class="btn ldel lmini" style="color:#b3141f">Delete</button>':''}</td></tr>`}).join('')||`<tr><td colspan="11" class="sm" style="padding:24px 8px">${LIST.length?'No RFQs match.':'No saved RFQs yet. Use “Create RFQ” in the matrix, then Save or Email PDF.'}</td></tr>`;
+  $('lall').checked=rows.length>0&&rows.every(r=>!$('lbody').querySelector(`tr[data-id="${CSS.escape(r.id)}"] .lsel`)||LSEL.has(r.id));bulkBar();
   followBadge()}
+// ----- several RFQs at once -----
+let LSEL=new Set(),LSHOWN=[];
+function bulkBar(){const n=LSEL.size,b=$('lbulk');b.hidden=!n;if(!n)return;const sel=LIST.filter(r=>LSEL.has(r.id)),arch=sel.length&&sel.every(r=>r.archived),nfu=sel.filter(r=>r.followUp).length;
+  b.innerHTML=`<b>${n} selected</b><select id="lbl" aria-label="Mark the selected RFQs lost"><option value="">Mark lost…</option>${(ME.lostReasons||[]).map(x=>`<option>${esc(x)}</option>`).join('')}</select>
+    ${nfu?`<button type="button" class="btn lmini" data-b="followup">Followed up (${nfu})</button>`:''}<button type="button" class="btn lmini" data-b="${arch?'unarchive':'archive'}">${arch?'Unarchive':'Archive'}</button><button type="button" class="btn lmini" data-b="clear">Clear selection</button>`}
+async function bulkDo(action,extra={}){const ids=[...LSEL];if(!ids.length)return;
+  try{const r=await J('POST','api/rfqs/bulk',{ids,action,...extra});const ch=new Map(r.changed.map(x=>[x.id,x]));LIST=LIST.map(x=>ch.get(x.id)||x);LSEL.clear();renderList();
+    toast(`${r.changed.length} RFQ${r.changed.length===1?'':'s'} ${{lost:'marked lost',followup:'marked followed up',archive:'archived',unarchive:'unarchived'}[action]}${r.skipped?` · ${r.skipped} skipped (already ${action==='lost'?'won or lost':action==='followup'?'up to date':'that way'})`:''}`)}
+  catch(err){toast(err.message)}}
+$('lbulk').addEventListener('click',e=>{const b=e.target.closest('[data-b]');if(!b)return;if(b.dataset.b==='clear'){LSEL.clear();renderList();return}bulkDo(b.dataset.b)});
+$('lbulk').addEventListener('change',e=>{if(e.target.id==='lbl'&&e.target.value){const n=LSEL.size;if(confirmLost(n,e.target.value))bulkDo('lost',{lostReason:e.target.value});else e.target.value=''}});
+const confirmLost=(n,why)=>n<5||window.confirm(`Mark ${n} RFQs as lost (${why})?`);
+$('lbody').addEventListener('click',e=>{const c=e.target.closest('.lsel');if(!c)return;const id=c.closest('tr').dataset.id;c.checked?LSEL.add(id):LSEL.delete(id);$('lall').checked=false;bulkBar()});
+$('lall').onchange=e=>{for(const id of LSHOWN){if(!$('lbody').querySelector(`tr[data-id="${CSS.escape(id)}"] .lsel`))continue;e.target.checked?LSEL.add(id):LSEL.delete(id)}renderList()};
 async function goHome(){if(!$('rfqv').hidden&&RFQ&&RFQ.dirty&&ME){try{await saveRFQ(true);toast('RFQ saved')}catch(e){toast('Could not save: '+e.message);return}}
   RFQ=null;hideMain();$('matrixv').hidden=false;scrollTo(0,0)}
 $('home').onclick=goHome;$('home').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();goHome()}};
 $('lwho').onchange=renderList;
 $('rfqsb').addEventListener('click',e=>{if(e.target.closest('.nq'))LST='newq'},true);
-$('lstats').onclick=e=>{const b=e.target.closest('button.stat');if(!b)return;LST=b.dataset.s;renderList()};
+$('lstats').onclick=e=>{const b=e.target.closest('button.stat');if(!b)return;LST=b.dataset.s;LSEL.clear();renderList()};
 $('lbody').addEventListener('change',async e=>{const sel=e.target.closest('select.st');if(!sel)return;const id=sel.closest('tr').dataset.id,r=LIST.find(x=>x.id===id);
   if(['quoted','won','lost'].includes(sel.value))return openStatus(r,sel.value);
   try{await postStatus(id,{status:sel.value})}catch(err){toast(err.message);renderList()}});$('lq').oninput=renderList;
@@ -1369,9 +1449,15 @@ function rxRender(){const box=$('rfqx');if(!RFQ||PDFMODE||!ME||RFQ.offline){box.
     ${cq?'<div class="qacts"><button type="button" class="qlink" id="qedit">Replace quote</button><button type="button" class="qlink danger" id="qdel">Remove</button></div>':''}</div>`}
   else if(!q&&!QEDIT){
     if(!RFQ.id)h+='<p class="qmsg">Save and email the RFQ. The office’s quote will show up here.</p>';
-    else if(sent)h+=`<p class="qmsg">Emailed to the office ${fmtD(sent.at)} (${agoTxt(sent.at)}). ${cq?'':'The quote will show up here as soon as it’s ready.'}</p>${cq?'<button type="button" class="btn pri qbig" id="qedit">+ Add quote</button>':''}`;
+    else if(sent){const c=RFQ.claim,mineC=c&&c.by===ME.name;
+      h+=`<p class="qmsg">Emailed to the office ${fmtD(sent.at)} (${agoTxt(sent.at)}). ${cq?'':'The quote will show up here as soon as it’s ready.'}</p>`;
+      if(c)h+=`<div class="qclaim"><span>${mineC?'<b>You’re</b> on it':`<b>${esc(c.byFull||c.by)}</b> is on it`} · since ${fmtD(c.at)}</span>${cq?`<button type="button" class="qlink" id="qclaim" data-on="${mineC||ME.role==='admin'?'0':'force'}">${mineC?'Let it go':'Take over'}</button>`:''}</div>`;
+      else if(cq)h+=`<div class="qclaim free"><span>Nobody has taken this one yet.</span><button type="button" class="qlink" id="qclaim" data-on="1">I’m on it</button></div>`;
+      if(cq)h+='<button type="button" class="btn pri qbig" id="qedit">+ Add quote</button>'}
     else h+=`<p class="qmsg">This RFQ hasn’t been emailed yet. Once it is, the office’s quote will show up here.</p>${cq?'<button type="button" class="qlink" id="qedit">Add a quote anyway</button>':''}`}
-  if(cq&&QEDIT){const repName=esc(RFQ.byFull||RFQ.by||'the rep');h+=`<form class="qform" id="qform" novalidate>
+  if(cq&&QEDIT&&TPL===null){TPL=[];J('GET','api/quote-templates').then(l=>{TPL=Array.isArray(l)?l:[];if(QEDIT&&$('qform')&&!$('qtpl')&&TPL.length)rxRender()}).catch(()=>{})}
+  if(cq&&QEDIT){const repName=esc(RFQ.byFull||RFQ.by||'the rep'),bk=RFQ.raw?(RFQ.raw.brand+'|'+RFQ.raw.name).toLowerCase():'',tl=[...(TPL||[])].sort((a,b)=>(b.burner===bk)-(a.burner===bk)||a.name.localeCompare(b.name));
+    h+=`<form class="qform" id="qform" novalidate>${tl.length?`<label class="qf qtplf"><span>Start from a template</span><span class="qtplrow"><select id="qtpl"><option value="">Choose a template…</option>${tl.map(t=>`<option value="${esc(t.id)}">${esc(t.name)}${t.burner===bk?' (this burner)':''}${t.value!=null?' – '+money(t.value):''}</option>`).join('')}</select><button type="button" class="qlink danger" id="qtdel" hidden>Delete</button></span></label>`:''}
     <label class="qf"><span>Price</span><span class="qmoney"><i>$</i><input type="text" name="value" inputmode="decimal" value="${q&&q.value!=null?q.value:''}" autocomplete="off" placeholder="12,500"></span></label>
     <label class="qf"><span>Quote number</span><input type="text" name="no" maxlength="40" value="${esc(q&&q.no||'')}" autocomplete="off" placeholder="e.g. Q-2041"></label>
     <div class="qf"><span>Quote PDF</span>
@@ -1380,14 +1466,23 @@ function rxRender(){const box=$('rfqx');if(!RFQ||PDFMODE||!ME||RFQ.offline){box.
     <label class="qf"><span>Note for the rep <small>optional</small></span><textarea name="note" maxlength="1000" rows="3" placeholder="Lead time, what's included, anything to tell the customer…">${esc(q&&q.note||'')}</textarea></label>
     ${ME.mail?`<label class="chk qchk"><input type="checkbox" name="email" checked> <span>Email the quote to ${repName}</span></label>`:''}
     <div class="msg err" id="qerr" hidden></div>
-    <div class="qbtns"><button type="button" class="btn" id="qcancel">Cancel</button><button class="btn pri" type="submit" id="qsave">${q?'Save quote':'Add quote'}</button></div></form>`}
+    <div class="qbtns"><button type="button" class="qlink" id="qtsave" title="Save this price and note to reuse on other quotes">Save as template</button><span style="flex:1"></span><button type="button" class="btn" id="qcancel">Cancel</button><button class="btn pri" type="submit" id="qsave">${q?'Save quote':'Add quote'}</button></div></form>`}
   qb.innerHTML=h;
   // comments
   const cs=RFQ.comments||[],mineRFQ=RFQ.by===ME.name;
   $('clist').innerHTML=cs.map(c=>`<div class="cm${c.by===ME.name?' me':''}" data-id="${esc(c.id)}"><div class="ch"><b>${esc(c.byFull||c.by)}</b><span>${fmtD(c.at)} ${new Date(c.at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</span>${c.by===ME.name||ME.role==='admin'?'<button type="button" class="cdel">Delete</button>':''}</div><div class="ct">${esc(c.text)}</div></div>`).join('')||'<div class="sm">No comments yet.</div>';
   const can=!!RFQ.id;$('cform').hidden=!can;$('cnote').hidden=can;
   $('cnotl').hidden=!ME.mail;$('cnott').textContent=mineRFQ?'Email the office':`Email ${RFQ.byFull||RFQ.by||'the rep'}`}
+let TPL=null;
+$('qbox').addEventListener('change',e=>{if(e.target.id!=='qtpl')return;const t=(TPL||[]).find(x=>x.id===e.target.value),f=$('qform');$('qtdel').hidden=!t;if(!t||!f)return;
+  if(t.value!=null)f.elements.value.value=String(t.value);if(t.note)f.elements.note.value=t.note;toast(`Filled in from “${t.name}”`)});
 $('qbox').addEventListener('click',async e=>{const t=e.target;
+  if(t.id==='qclaim'){t.disabled=true;try{const r=await J('POST','api/rfqs/'+RFQ.id+'/claim',{on:t.dataset.on!=='0',force:t.dataset.on==='force'});RFQ.claim=r.claim;const l=LIST.find(x=>x.id===RFQ.id);if(l)l.claim=r.claim;rxRender();toast(r.claim?'You’re on it':'Let go')}catch(x){toast(x.message);t.disabled=false}return}
+  if(t.id==='qtsave'){const f=$('qform');if(!f)return;const def=RFQ.raw?`${RFQ.raw.brand} ${RFQ.raw.name} standard`:'';const name=(window.prompt('Name this template (e.g. “AFG standard”):',def)||'').trim();if(!name)return;
+    try{const r=await J('POST','api/quote-templates',{name,value:f.elements.value.value,note:f.elements.note.value,burner:RFQ.raw?(RFQ.raw.brand+'|'+RFQ.raw.name):''});TPL=[...(TPL||[]).filter(x=>x.id!==r.id),r];toast(`Template “${r.name}” saved`);
+      const keep={value:f.elements.value.value,note:f.elements.note.value,no:f.elements.no.value};rxRender();const g=$('qform');if(g){g.elements.value.value=keep.value;g.elements.note.value=keep.note;g.elements.no.value=keep.no}}catch(x){toast(x.message)}return}
+  if(t.id==='qtdel'){const id=$('qtpl').value,tp=(TPL||[]).find(x=>x.id===id);if(!tp)return;if(!window.confirm(`Delete the template “${tp.name}”?`))return;
+    try{await J('DELETE','api/quote-templates',{id});TPL=TPL.filter(x=>x.id!==id);const f=$('qform'),keep=f?{value:f.elements.value.value,note:f.elements.note.value,no:f.elements.no.value}:null;rxRender();const g=$('qform');if(g&&keep){g.elements.value.value=keep.value;g.elements.note.value=keep.note;g.elements.no.value=keep.no}toast('Template deleted')}catch(x){toast(x.message)}return}
   if(t.id==='qedit'){QEDIT=true;rxRender();const f=$('qform');if(f)f.elements.no.focus();return}
   if(t.id==='qcancel'){QEDIT=false;rxRender();return}
   if(t.id==='qdel'){if(!t.dataset.sure){t.dataset.sure=1;t.textContent='Click again to remove';setTimeout(()=>{if(t.isConnected){delete t.dataset.sure;t.textContent='Remove'}},3000);return}
@@ -1415,9 +1510,9 @@ $('clist').addEventListener('click',async e=>{const b=e.target.closest('.cdel');
 async function openSaved(id,from){const rec=await J('GET','api/rfqs/'+id);
   openRFQ(toRec(rec.burner),{id:rec.id,no:rec.no,date:rec.date,raw:rec.burner,fit:rec.fit||'',fields:rec.fields,sends:rec.sends||[],by:rec.by,byFull:rec.byFull,from,locks:rec.locks||[],xfmr:rec.xfmr||'',
     ro:PDFMODE||(rec.sends||[]).length>0||!ME||rec.by!==ME.name});
-  RFQ.quote=rec.quote?{...rec.quote,file:!!rec.quote.file}:null;RFQ.comments=rec.comments||[];QEDIT=false;rxRender();
+  RFQ.quote=rec.quote?{...rec.quote,file:!!rec.quote.file}:null;RFQ.comments=rec.comments||[];RFQ.claim=rec.claim||null;QEDIT=false;rxRender();
   if(ME&&!PDFMODE&&((rec.comments||[]).length||rec.quote))J('POST','api/rfqs/'+id+'/seen',{}).then(()=>{const l=LIST.find(x=>x.id===id);if(l){l.unread=0;l.newQuote=false}quoteBadge()}).catch(()=>{})} // drafts stay editable for the rep who made them until emailed
-$('lbody').onclick=async e=>{if(e.target.closest('select.st'))return;const tr=e.target.closest('tr[data-id]');const d=e.target.closest('.ldel');
+$('lbody').onclick=async e=>{if(e.target.closest('select.st')||e.target.closest('.lck'))return;const tr=e.target.closest('tr[data-id]');const d=e.target.closest('.ldel');
   const fu=e.target.closest('.lfu'),lv=e.target.closest('.lval');
   if(fu&&tr){try{const r=await J('POST','api/rfqs/'+tr.dataset.id+'/followup',{});LIST=LIST.map(x=>x.id===r.id?r:x);renderList();toast(`${r.no}: follow-up logged`)}catch(err){toast(err.message)}return}
   if(lv&&tr){const r=LIST.find(x=>x.id===tr.dataset.id);if(r)openStatus(r,r.status);return}
@@ -1454,7 +1549,7 @@ function renderWon(){const staff=ME&&ME.role!=='rep',pick=staff?$('wwho').value:
   drawWon(Q);renderLost(base);renderBy(base);renderTurn(base);
   $('wqtbl').innerHTML=Q.slice().reverse().map(o=>`<tr><td style="white-space:nowrap">${qName(o.q)}</td><td>${o.won}</td><td>${o.lost}</td><td>${o.open}</td><td>${o.rate!=null?Math.round(o.rate*100)+'%':'—'}</td></tr>`).join('');
   $('wlh').textContent=`Jobs won (${won.length})`;
-  $('wbody').innerHTML=won.map(r=>`<tr data-id="${esc(r.id)}"><td class="no" style="font-weight:700;white-space:nowrap">${esc(r.no)}</td><td style="white-space:nowrap">${fmtD(r.statusAt||r.date)}</td><td>${r.company?`<a href="#" class="colink" data-co="${esc(r.company)}">${esc(r.company)}</a>`:''}${r.contact?`<div class="sm">${esc(r.contact)}</div>`:''}</td><td>${esc(r.job)}</td>
+  $('wbody').innerHTML=won.map(r=>`<tr data-id="${esc(r.id)}"><td class="no" style="font-weight:700;white-space:nowrap">${esc(r.no)}</td><td style="white-space:nowrap">${fmtD(r.statusAt||r.date)}</td><td>${r.company?`<a href="#" class="colink" data-co="${esc(r.company)}">${esc(r.company)}</a>`:''}${r.contact?`<div class="sm">${esc(r.contact)}</div>`:''}</td><td>${esc(r.job)}${r.app?`<div class="sm">${esc(r.app)}</div>`:''}</td>
     <td><span style="color:${r.fuel==='gas'?'var(--gas)':'var(--oil)'};font-weight:600">${esc(r.burner)}</span></td>${$('wrepth').hidden?'':`<td>${esc(r.byFull||r.by)}</td>`}<td style="text-align:right;white-space:nowrap">${money(r.value)||'—'}</td></tr>`).join('')||
     `<tr><td colspan="7" class="sm" style="padding:24px 8px">${who?esc(whoName)+' has no won jobs yet.':'No won jobs yet.'} Mark an RFQ as Won from ${mine&&!staff?'My RFQs':'the RFQs tab'} when the job comes in.</td></tr>`}
 function winSVG(Q,W,H,hl){const L=44,R=8,T=22,B=30,pw=W-L-R,ph=H-T-B,band=pw/Q.length,bw=Math.min(56,band*0.62);
@@ -1721,6 +1816,9 @@ if(RFQ_Q)ME_P.then(()=>openSaved(RFQ_Q,'list')).then(async()=>{if(!PDFMODE)retur
     await document.fonts.ready;fitAll();await Promise.all([...document.querySelectorAll('#sheet img')].map(i=>i.complete?(i.naturalWidth||i.remove()):new Promise(r=>{i.addEventListener('load',r);i.addEventListener('error',()=>{i.remove();r()});setTimeout(()=>{if(!i.naturalWidth)i.remove();r()},8000)})));
     window.RFQ_READY=true}).catch(e=>{window.RFQ_ERROR=e.message||'Could not open RFQ';toast(window.RFQ_ERROR)});
 document.addEventListener('click',e=>{const u=$('um');if(u.open&&!u.contains(e.target))u.open=false});
+// dark mode switch (remembered on this device; until it's used, the device's own setting decides)
+const darkLbl=()=>{$('darkb').textContent=document.documentElement.classList.contains('dark')?'Light mode':'Dark mode'};darkLbl();
+$('darkb').onclick=()=>{const on=!document.documentElement.classList.contains('dark');document.documentElement.classList.toggle('dark',on);try{localStorage.setItem('bm-theme',on?'dark':'light')}catch(e){}darkLbl()};
 /* ---------- phone notifications on this device ---------- */
 const PUSH_OK='serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
 const isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
@@ -1772,7 +1870,7 @@ $('outb').onclick=async e=>{const b=e.currentTarget,ob=getOutbox().filter(o=>!o.
 fetch('burners.json',{cache:'no-cache'}).then(r=>{if(r.status===401){location.replace('login');throw new Error('Signed out')}if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(list=>{
   const bad=BurnerSchema.checkAll(list);if(bad.length)console.warn('burners.json problems:',bad);
   RAW=list;D=list.filter(o=>BurnerSchema.check(o).length===0).map(toRec);
-  sync();
+  sync();if(SHEET_Q&&PDFMODE)renderSheetPdf();
 }).catch(err=>{$('lad').innerHTML=`<div class="empty">Could not load burners.json (${esc(err.message)}). Open this page through the web server, not as a file.</div>`;sync()});
 }
 </script>
