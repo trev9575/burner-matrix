@@ -265,6 +265,8 @@ footer p{margin:0 0 6px;max-width:100ch}
 #pic.err span::after{content:" (photo unavailable)";font-weight:500;color:var(--mute)}
 a.bn[data-img]{cursor:zoom-in}
 .rfqb{margin-top:6px;font:600 12px Montserrat,sans-serif;padding:4px 10px;min-height:30px;border-radius:3px;border:1px solid var(--red);background:#fff;color:var(--red);cursor:pointer;white-space:nowrap}
+.dyml{display:grid;gap:8px}.dyml button{text-align:left;font:500 15px Montserrat,sans-serif;padding:10px 14px;border:2px solid var(--red);border-radius:4px;background:#fff;color:var(--ink);cursor:pointer}.dyml button:hover,.dyml button:focus-visible{background:#fde3e5}.dyml button small{display:block;color:var(--mute);font-size:12.5px}
+#dymno{white-space:normal;text-align:left;min-height:42px}
 .shacts{display:flex;flex-wrap:wrap;gap:8px}.shacts .btn{display:inline-flex;align-items:center;text-decoration:none}
 .rfqb:hover{background:var(--red);color:#fff}.rfqb.shb{border-color:#b9b9b2;color:var(--ink)}.rfqb.shb:hover{background:var(--ink);border-color:var(--ink);color:#fff}
 #rfqv{padding:16px max(3vw,16px) 40px}
@@ -706,6 +708,12 @@ html.dark .util img,html.dark .brand img,html.dark .top img,html.dark footer.ban
   <div id="cuerr" class="msg err" hidden></div>
   <div class="row"><button type="button" class="btn danger" id="cudel" hidden>Remove</button><span style="flex:1"></span><button type="button" class="btn" id="cux">Cancel</button><button class="btn pri" type="submit" id="cugo">Save</button></div>
 </form></dialog>
+<dialog id="dymd" aria-labelledby="dymh"><div style="display:grid;gap:12px;max-width:440px">
+  <h2 id="dymh" style="font-size:20px;margin:0">Did you mean…?</h2>
+  <p id="dymt" style="margin:0;font-size:14px;line-height:1.5"></p>
+  <div id="dyml" class="dyml"></div>
+  <button type="button" class="btn" id="dymno"></button>
+</div></dialog>
 <dialog id="shd" aria-labelledby="shh"><div style="display:grid;gap:12px">
   <h2 id="shh" style="font-size:20px;margin:0"></h2>
   <p style="margin:0;font-size:13.5px;color:var(--mute)">Send this burner’s specs to a contractor or customer. Edit the text first if you like; the spec sheet PDF has the same details on one page.</p>
@@ -1175,6 +1183,33 @@ addEventListener('beforeprint',fitAll);addEventListener('afterprint',fitAll);
 let CUST=[],CUSTP=null;
 const loadCust=()=>CUSTP||(CUSTP=J('GET','api/customers').then(c=>{CUST=c;return c}).catch(()=>CUST).finally(()=>setTimeout(()=>CUSTP=null,30e3)));
 const findCo=v=>CUST.find(c=>c.company.toLowerCase()===String(v).trim().toLowerCase());
+/* ---------- "Did you mean…?" for customer names spelled a little differently from one we already have ---------- */
+// Acme Co / ACME, Inc. / Acme Company all become "acme"; & and "and" are the same
+const coKey=v=>String(v||'').toLowerCase().replace(/&/g,' and ').replace(/\b(inc|incorporated|llc|ltd|limited|co|corp|corporation|company|the)\b\.?/g,' ').replace(/[^a-z0-9]/g,'');
+function levD(a,b,max){if(a===b)return 0;if(Math.abs(a.length-b.length)>max)return max+1;let p=Array.from({length:b.length+1},(_,i)=>i);
+  for(let i=1;i<=a.length;i++){const c=[i];let lo=i;for(let j=1;j<=b.length;j++){c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));if(c[j]<lo)lo=c[j]}if(lo>max)return max+1;p=c}return p[b.length]}
+// existing customer names that look like the same company as `name` (never the exact same name)
+function similarCos(name,names){const k=coKey(name),low=String(name).trim().toLowerCase();if(k.length<3)return[];
+  const max=k.length<5?0:k.length<9?1:2,out=new Map();
+  for(const n of names){const t=String(n||'').trim();if(!t||t.toLowerCase()===low)continue;const d=levD(k,coKey(t),max);if(d<=max&&!out.has(t.toLowerCase()))out.set(t.toLowerCase(),{name:t,d})}
+  return[...out.values()].sort((a,b)=>a.d-b.d||a.name.localeCompare(b.name)).slice(0,3)}
+// resolves with the picked existing name, or null to keep what was typed
+function didYouMean(typed,cands,what='customer'){return new Promise(ok=>{const d=$('dymd');
+  $('dymt').innerHTML=`<b>${esc(typed)}</b> looks like ${cands.length>1?'one of these':'a'} ${what}${cands.length>1?'s':''} already in the list. Using the same name keeps the customer’s RFQs and history together.`;
+  $('dyml').innerHTML=cands.map((c,i)=>`<button type="button" data-i="${i}">Use <b>${esc(c.name)}</b>${c.sub?`<small>${esc(c.sub)}</small>`:''}</button>`).join('');
+  $('dymno').textContent=`No, “${typed}” is a different ${what}`;
+  let done=false;const fin=v=>{if(done)return;done=true;d.close();ok(v)};
+  $('dyml').onclick=e=>{const b=e.target.closest('button[data-i]');if(b)fin(cands[+b.dataset.i].name)};$('dymno').onclick=()=>fin(null);d.oncancel=e=>{e.preventDefault();fin(null)};
+  d.showModal();const f=$('dyml').querySelector('button');if(f)f.focus()})}
+const coSub=c=>[c.rfqs?`${c.rfqs} RFQ${c.rfqs>1?'s':''}`:'',(c.contacts||[]).slice(0,2).map(x=>x.name).filter(Boolean).join(', '),c.address||''].filter(Boolean).join(' · ');
+// on the RFQ: when the company typed isn't a customer we have but is close to one, ask once per spelling
+const DYM_OK=new Set();
+async function rfqCoCheck(){const el=$('q-co');if(!el||el.readOnly||!RFQ||RFQ.ro)return;const v=el.value.trim();if(!v||DYM_OK.has(v.toLowerCase()))return;
+  await loadCust();if(findCo(v)||el.value.trim()!==v)return;
+  const c=similarCos(v,CUST.map(x=>x.company));if(!c.length)return;
+  const pick=await didYouMean(v,c.map(x=>({...x,sub:coSub(CUST.find(y=>y.company===x.name)||{})})));
+  if(pick){el.value=pick;el.dispatchEvent(new Event('input',{bubbles:true}));fitText(el);bookCo(false);toast(`Using ${pick}`)}else DYM_OK.add(v.toLowerCase())}
+$('sheet').addEventListener('change',e=>{if(e.target.id==='q-co')setTimeout(rfqCoCheck,150)});
 // fill a box only if it's empty or was filled by the address book (never over what the rep typed)
 function bookFill(id,val){const el=$(id);if(!el||el.readOnly||!val)return;if(el.value&&!el.dataset.auto)return;el.value=val;el.dataset.auto='1';fitText(el)}
 function bookCo(pickContact){const c=findCo($('q-co').value);if(!c)return;bookFill('q-addr',c.address);
@@ -1744,6 +1779,15 @@ $('custf').onsubmit=async e=>{e.preventDefault();$('cuerr').hidden=true;
   const body={company:$('cu-co').value.trim(),address:$('cu-addr').value.trim(),notes:$('cu-notes').value.trim(),
     contacts:[...$('cu-cts').children].map(d=>{const [n,ph,em]=d.querySelectorAll('input');return{name:n.value.trim(),phone:ph.value.trim(),email:em.value.trim()}}).filter(x=>x.name||x.phone||x.email)};
   if(!body.company){$('cuerr').textContent='Enter a company name.';$('cuerr').hidden=false;$('cu-co').focus();return}
+  if((!CUED||coKey(CUED.company)!==coKey(body.company)||CUED.company.toLowerCase()!==body.company.toLowerCase())&&!DYM_OK.has(body.company.toLowerCase())){
+    const all=(CLIST.length?CLIST:await loadCust()).filter(c=>!CUED||c.company.toLowerCase()!==CUED.company.toLowerCase()),cand=similarCos(body.company,all.map(c=>c.company));
+    if(cand.length){$('custd').close();const pick=await didYouMean(body.company,cand.map(x=>({...x,sub:coSub(all.find(y=>y.company===x.name)||{})})));
+      if(pick){const ex=all.find(c=>c.company===pick);toast(`Opened ${pick}. Add the new details there.`);
+        if(ex){openCustDlg(ex);// carry over what was typed that the existing customer doesn't have yet
+          if(!$('cu-addr').value&&body.address)$('cu-addr').value=body.address;if(!$('cu-notes').value&&body.notes)$('cu-notes').value=body.notes;
+          const have=new Set((ex.contacts||[]).map(x=>x.name.toLowerCase()));body.contacts.filter(x=>!have.has(x.name.toLowerCase())).forEach(x=>cuRow(x))}
+        else openHistory(pick);return}
+      DYM_OK.add(body.company.toLowerCase());$('custd').showModal()}}
   if(CUED){body.original=CUED.company;const keep=new Set(body.contacts.map(x=>x.name.toLowerCase()));body.removed=CUED.contacts.map(x=>x.name).filter(n=>!keep.has(n.toLowerCase()))}$('cugo').disabled=true;
   try{const r=await J(CUED?'PUT':'POST','api/customers',body);$('custd').close();toast(CUED?'Customer updated':`${r.company} added`);await afterCust(CUED?r.company:'')}
   catch(err){$('cuerr').textContent=err.message;$('cuerr').hidden=false}finally{$('cugo').disabled=false}};

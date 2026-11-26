@@ -126,6 +126,12 @@ or paste many rows from a spreadsheet (Brand, Model, Replacement(s) separated by
 flame size, footprint, biofuel, air tube, insertion depth, mounting, oil supply, venting, altitude, gas pressure,
 controls, and the table's fit tags) opens a plain-English explanation. They're hidden on printouts and PDFs.
 
+**"Did you mean…?" for customers.** When someone types a company on an RFQ (when they leave the field) or adds/renames one in
+Customers, and it isn't a customer already on file but is very close to one (Acme Co / ACME, Inc. / Acme Company, & vs "and",
+or a typo or two), a popup offers the existing name(s), with their RFQ count and contacts. Picking one uses it (on the RFQ it also
+fills in the address and contact; in Customers it opens that customer with what was typed carried over). *No, it's a different
+customer* keeps the new name and doesn't ask again for that spelling.
+
 **Finding RFQs.** The search box in RFQs looks through the RFQ number, customer, contact, job, burner, rep, appliance, site
 address, email, phone, PO, notes (so a spec number like BCB7703 finds RFQs started from that spec) and the quote number; every word
 must match. Searches also find archived RFQs.
