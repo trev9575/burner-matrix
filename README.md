@@ -144,8 +144,13 @@ and *Start from a template* on the next one; templates for the RFQ's burner are 
 
 **Activity and data check (Admin).** *Activity* lists who changed what (burners, cross-references, spec guides and links,
 quotes and templates, customers, users, settings, deleted RFQs and bulk changes), searchable and by person; stored in
-`activity.jsonl` (newest 5,000). *Data check* lists burners missing a photo, dimensions, air tube lengths, flame size or product
-page, cross-references pointing at missing burners, spec-guide burners that aren't in the matrix, and spec links to inactive specs.
+`activity.jsonl` (newest 5,000). *Data check* lists, most important first: burners missing a photo (or whose photo file is gone, or
+still loads from another site), dimensions, air tube lengths, flame size, product page, fuel rating or notes, a step-down warning
+with no high-voltage option, or a standard power that isn't one of its options; cross-references pointing at missing burners;
+spec-guide burners not in the matrix, spec rates outside the burner's firing range, rows with no rate, exact duplicate rows,
+links to inactive specs and likely links not yet reviewed; RFQs emailed a week ago with no quote, "I'm on it" claims 3+ days
+old, won with no value, lost with no reason, drafts untouched for 30 days, and open RFQs whose burner was removed; customers spelled
+more than one way or with no phone/email; office users with no email; no quoters; email not set up; and no recent backup.
 Appliance lookups that find nothing are listed in Settings → Appliance specs (*Appliances searched for but not in any guide*).
 
 **Dark mode.** *Dark mode* in the account menu (and at the top of Admin) switches the screen to a dark theme on that device;

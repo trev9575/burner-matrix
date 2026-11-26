@@ -288,7 +288,7 @@ html.dark .util img,html.dark .brand img,html.dark .top img,html.dark footer.ban
     <section id="t-check" hidden>
       <div class="panel" style="display:grid;gap:12px">
         <div class="row" style="justify-content:space-between"><h2>Data check</h2><button class="btn" type="button" id="chkgo">Check again</button></div>
-        <p class="u" style="margin:0">Things that are missing or don't line up, most important first. Fixing them makes the filters, RFQs and appliance lookup more complete.</p>
+        <p class="u" style="margin:0">Things that are missing or don't line up across burners, cross-references, spec guides, RFQs, customers, users and settings, most important first. Click one to see the list and how to fix it.</p>
         <div id="chklist" class="chklist"></div>
       </div>
     </section>
@@ -634,7 +634,7 @@ async function loadAct(){const q=$('actq').value.trim(),who=$('actwho').value;
 $('actq').oninput=()=>{clearTimeout(actT);actT=setTimeout(loadAct,250)};$('actwho').onchange=loadAct;
 /* ---------- data check ---------- */
 async function loadCheck(){$('chklist').innerHTML='<div class="u">Checking…</div>';let r;try{r=await call('GET','/api/data-check')}catch(err){$('chklist').innerHTML=`<div class="msg err">${esc(err.message)}</div>`;return}
-  const L={error:'Fix',warn:'Missing',info:'Nice to have'};
+  const L={error:'Fix',warn:'Check',info:'Nice to have'};
   $('chklist').innerHTML=r.issues.length?r.issues.map(i=>`<details class="chk1 ${i.level}"${i.level==='error'?' open':''}><summary><span class="lvl">${L[i.level]}</span><b>${esc(i.title)}</b><span class="u">${i.area} · ${i.count.toLocaleString()}</span></summary>
       <ul>${i.items.map(x=>`<li>${esc(x)}</li>`).join('')}${i.count>i.items.length?`<li class="u">…and ${(i.count-i.items.length).toLocaleString()} more</li>`:''}</ul>${i.fix?`<div class="fix">${esc(i.fix)}</div>`:''}</details>`).join('')
     :'<div class="msg ok">Everything checks out.</div>'}

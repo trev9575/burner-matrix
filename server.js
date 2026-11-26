@@ -438,6 +438,56 @@ function dataCheck() {
     if (cs < 0) add('Spec guides', 'info', `${t}: no Beckett Spec column`, ['Reps won’t see spec numbers for this guide'], 'Load a copy of the guide with Beckett Spec / Spec Match columns.');
     else add('Spec guides', 'warn', `${t}: linked to an inactive spec`, set.rows.filter(r => /inactive/i.test(r.v[cm] || '')).map(r => `${r.v[set.roles.mfg]} ${r.v[set.roles.model]} → ${r.v[cs]}`), 'Reject it in Settings → Review spec links, or load a guide linked to active specs only.');
   }
+  // ----- more burner checks -----
+  add('Burners', 'error', 'Photo file is missing from the server', list.filter(b => b.image && !/^https?:/i.test(b.image) && !fs.existsSync(path.join(F.photos, path.basename(b.image))) && !fs.existsSync(path.join(HTML, 'photos', path.basename(b.image)))).map(b => `${nm(b)} (${b.image})`), 'Upload the photo again in the Burners tab.');
+  add('Burners', 'warn', 'Photo still loads from another website', list.filter(b => /^https?:/i.test(b.image || '')).map(nm), 'Use “Store photos on this server” in History & undo, so the photo works offline and can’t disappear.');
+  add('Burners', 'error', 'Step-down transformer warning on, but no power option above 120 V', list.filter(b => b.stepDown && !(b.power || []).some(p => /208|240|480/.test(p))).map(nm), 'Turn the warning off for these burners, or add the higher voltage they take.');
+  add('Burners', 'warn', 'Standard power isn’t one of its power options', list.filter(b => b.powerStd && !(b.power || []).includes(b.powerStd)).map(b => `${nm(b)} (${b.powerStd})`), 'Pick the standard from its power options in the Burners tab.');
+  add('Burners', 'info', 'Oil burner with no fuel rating (B20 etc.)', list.filter(b => b.fuel === 'oil' && !b.biofuel).map(nm), 'Add its biofuel / renewable rating, so the “Biofuel rated” filter can find it.');
+  add('Burners', 'info', 'No notes for reps', list.filter(b => !String(b.notes || '').trim()).map(nm), 'A line on when to pick this burner helps reps who don’t know the line well.');
+  // ----- more spec guide checks -----
+  const byKey = new Map(list.map(b => [keyOf(b), b]));
+  for (const set of SPECS.sets()) {
+    const t = Specs.title(set), r = set.roles, outR = [], noRate = [], seen = new Map(), dup = [];
+    for (const row of set.rows) {
+      const bn = Specs.burnerOf(set, row), b = byKey.get(specBurnerKey(set.brand, bn, list)), app = `${row.v[r.mfg]} ${row.v[r.model]}`;
+      const v = r.rate >= 0 ? parseFloat(row.v[r.rate]) : NaN;
+      if (!(v > 0)) noRate.push(`${app} (${bn})`);
+      else if (b) { // the spec's firing rate, in the burner's own units (GPH for oil, MBH for gas)
+        const u = set.rateUnit, x = b.fuel === 'oil' ? (u === 'gph' ? v : (u === 'btu' ? v / 1000 : v) / 140) : (u === 'gph' ? v * 140 : u === 'btu' ? v / 1000 : v);
+        if (x < b.min * 0.98 || x > b.max * 1.02) outR.push(`${app}: ${row.v[r.rate]}${u === 'gph' ? ' GPH' : u === 'btu' ? ' BTU/hr' : ' MBH'} on a ${bn} (${b.min}–${b.max} ${b.fuel === 'oil' ? 'GPH' : 'MBH'})`);
+      }
+      const k = set.cols.map((c, i) => /^(beckett spec|spec match|possible specs|matched on)$/i.test(c) ? '' : String(row.v[i]).trim().toLowerCase()).join('|');
+      if (seen.has(k)) dup.push(`${app} (${bn}${r.rate >= 0 ? ', ' + row.v[r.rate] : ''})`); else seen.set(k, 1);
+    }
+    add('Spec guides', 'warn', `${t}: firing rate outside the burner’s range`, outR, 'Check the rate in the guide (Settings → Find, change or add a single spec), or the burner’s range in the Burners tab.');
+    add('Spec guides', 'info', `${t}: no firing rate`, noRate, 'Add the rate so reps can see it and it fills in on the RFQ.');
+    add('Spec guides', 'info', `${t}: exact duplicate rows`, dup, 'Delete the extra copies (Settings → Find, change or add a single spec).');
+    const cm = set.cols.findIndex(c => c.toLowerCase() === 'spec match');
+    if (cm >= 0) { const n = set.rows.filter(x => /^medium/i.test(x.v[cm] || '')).length; if (n) add('Spec guides', 'info', `${t}: likely spec links not reviewed yet`, [`${n.toLocaleString()} appliance${n > 1 ? 's' : ''} show “likely” next to the spec number`], 'Confirm or reject them in Settings → Review spec links.'); }
+  }
+  // ----- RFQs -----
+  const rf = allRfqs(), day = 864e5, now = Date.now(), rno = x => `${x.no}${x.fields['q-co'] ? ' – ' + x.fields['q-co'] : ''}`;
+  const lastSend = x => (x.sends || []).slice(-1)[0];
+  add('RFQs', 'warn', 'Emailed over a week ago and still no quote', rf.filter(x => lastSend(x) && !x.quote && !x.status && !x.archived && now - Date.parse(lastSend(x).at) > 7 * day).map(x => `${rno(x)} (${Math.floor((now - Date.parse(lastSend(x).at)) / day)} days)`), 'Quoters: add the quote, or the rep can mark it lost if the job went away.');
+  add('RFQs', 'warn', 'Someone said “I’m on it” 3+ days ago, still no quote', rf.filter(x => x.claim && !x.quote && now - Date.parse(x.claim.at) > 3 * day).map(x => `${rno(x)} – ${x.claim.byFull || x.claim.by}`), 'Check in with the quoter, or let someone else take it.');
+  add('RFQs', 'info', 'Won with no dollar value', rf.filter(x => x.status === 'won' && typeof x.value !== 'number').map(rno), 'Add the value so the Jobs tab totals are right.');
+  add('RFQs', 'info', 'Lost with no reason', rf.filter(x => x.status === 'lost' && !x.lostReason).map(rno), 'Pick a reason so the Lost Jobs chart is complete.');
+  add('RFQs', 'info', 'Drafts untouched for 30+ days', rf.filter(x => !(x.sends || []).length && !x.archived && now - Date.parse(x.updated || x.date) > 30 * day).map(x => `${rno(x)} (${x.byFull || x.by})`), 'Email, delete or archive them so the lists stay short.');
+  add('RFQs', 'info', 'Burner is no longer in the matrix', rf.filter(x => x.burner && !keys.has(keyOf(x.burner)) && !x.archived && x.status !== 'won' && x.status !== 'lost').map(x => `${rno(x)} (${x.burner.brand} ${x.burner.name})`), 'Fine for old RFQs; open ones may need a new RFQ with a current burner.');
+  // ----- customers -----
+  const cn = c => String(c || '').toLowerCase().replace(/\b(inc|llc|ltd|co|corp|company|corporation|the)\b|[^a-z0-9]/g, '');
+  const names = new Map(); for (const c of [...getCustomers().map(c => c.company), ...rf.map(x => x.fields['q-co']).filter(Boolean)]) { const k = cn(c); if (!k) continue; if (!names.has(k)) names.set(k, new Set()); names.get(k).add(c.trim()); }
+  add('Customers', 'warn', 'Same customer spelled more than one way', [...names.values()].filter(v => v.size > 1).map(v => [...v].join(' / ')), 'Pick one spelling (Customers tab) so the customer history and totals stay together.');
+  add('Customers', 'info', 'Saved customers with no phone or email', getCustomers().filter(c => !c.contacts.some(k => k && (k.phone || k.email))).map(c => c.company), 'Add a contact phone or email in the Customers tab.');
+  // ----- people and settings -----
+  add('Users', 'warn', 'No email address (can’t get RFQ, quote or comment emails)', users.filter(u => !u.email && u.role !== 'rep').map(u => `${u.full || u.name} (${u.role})`), 'Add an email in the Users tab.');
+  add('Users', 'info', 'Reps with no email or phone (blank “Prepared by” contact on RFQs)', users.filter(u => u.role === 'rep' && !u.email && !u.phone).map(u => u.full || u.name), 'Add it in the Users tab, or have them fill in My profile.');
+  if (!users.some(u => u.role === 'quoter')) add('Users', 'info', 'No quoters', ['Only admins can add quotes, and the Waiting-for-quote view and quote emails go to nobody in particular'], 'Give the people who quote RFQs the Quoter role in the Users tab.');
+  if (!Mail.configured()) add('Settings', 'error', 'Email isn’t set up', ['RFQs, quotes and comments can’t be emailed'], 'Set the SMTP_* variables on the container (see the README).');
+  else if (!rfqTo()) add('Settings', 'warn', 'No “Send completed RFQs to” address', ['Reps have to type the office address on every RFQ'], 'Set it in Settings.');
+  const lb = (getSettings().lastBackup || {}).at;
+  if (!lb || now - Date.parse(lb) > 2 * day) add('Settings', 'error', lb ? 'No backup for more than 2 days' : 'No backup yet', [lb ? `Last backup ${new Date(lb).toLocaleString()}` : 'The nightly backup hasn’t run'], 'Click “Back up now” in Settings, and check the container is running overnight.');
   const order = { error: 0, warn: 1, info: 2 };
   return { at: new Date().toISOString(), issues: out.sort((a, b) => order[a.level] - order[b.level]) };
 }
