@@ -80,8 +80,6 @@ input.xbq:focus{border-color:var(--ink);outline:2px solid var(--ink);outline-off
 .xform{display:grid;gap:12px;background:#f6f6f3;border:1px solid var(--rule);border-radius:4px;padding:14px}.xopts{max-height:260px;overflow:auto}.xopts .bh{font-size:12px;font-weight:700;color:var(--mute);margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em}
 #xlist td{vertical-align:top}#xlist .bt{display:inline-block;background:#eef3fb;color:var(--gas);font-weight:700;font-size:12.5px;border-radius:3px;padding:1px 7px;margin:0 4px 4px 0}#xlist .bt.oil{background:#fdecee;color:var(--red)}#xlist .bt.gone{background:#eee;color:#888;text-decoration:line-through}
 .ximp summary{cursor:pointer;font-weight:700;font-size:14px}
-.rvlist{display:grid;gap:8px}.rvi{display:grid;gap:6px;background:#fff;border:1px solid var(--rule);border-radius:4px;padding:10px 12px}.rvi .t{font-size:14px}.rvi .t .u{margin-left:6px}
-.rvi .f{display:flex;flex-wrap:wrap;gap:2px 14px;font-size:12.5px;color:var(--mute)}.rvi .f b{color:var(--ink);font-weight:600}.rvi .acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.rvi .btn{min-height:34px;padding:4px 12px;font-size:13px}.rvi .why{font-size:12px;color:var(--mute)}
 .btn.ok{background:#1d7a3a;color:#fff}.chklist{display:grid;gap:10px}.chk1{border:1px solid var(--rule);border-left:4px solid #8c8c86;border-radius:4px;padding:10px 12px;background:#fff}.chk1.error{border-left-color:var(--red)}.chk1.warn{border-left-color:#e0a800}
 .chk1 summary{cursor:pointer;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;font-size:14px}.chk1 summary b{font-size:14.5px}.chk1 .lvl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mute)}.chk1.error .lvl{color:var(--red)}.chk1.warn .lvl{color:#9a6b00}
 .chk1 ul{margin:8px 0 4px;padding-left:20px;columns:2 260px;font-size:13px}.chk1 .fix{font-size:12.5px;color:var(--mute)}
@@ -280,7 +278,7 @@ html.dark .util img,html.dark .brand img,html.dark .top img,html.dark footer.ban
     <section id="t-activity" hidden>
       <div class="panel" style="display:grid;gap:12px">
         <div class="row" style="justify-content:space-between"><h2>Activity</h2><span class="u" id="actcnt"></span></div>
-        <p class="u" style="margin:0">Who changed what: burners, cross-references, spec guides and spec links, quotes, quote templates, customers, users, settings, deleted RFQs and bulk RFQ changes. Burner changes can be undone in <b>History &amp; undo</b>, and spec guides with <b>Restore previous</b> in Settings.</p>
+        <p class="u" style="margin:0">Who changed what: burners, cross-references, spec guides, quotes, quote templates, customers, users, settings, deleted RFQs and bulk RFQ changes. Burner changes can be undone in <b>History &amp; undo</b>, and spec guides with <b>Restore previous</b> in Settings.</p>
         <div class="xfil"><input type="text" id="actq" class="xbq" placeholder="Search, e.g. AFG or Weil" aria-label="Search activity" autocomplete="off"><label>Who<select id="actwho"><option value="">Everyone</option></select></label></div>
         <div class="scroll"><table><thead><tr><th style="width:150px">When</th><th style="width:160px">Who</th><th>What</th></tr></thead><tbody id="actlist"></tbody></table></div>
       </div>
@@ -342,12 +340,6 @@ html.dark .util img,html.dark .brand img,html.dark .top img,html.dark footer.ban
             <div class="row"><button class="btn pri" type="submit" id="spgo" disabled>Load</button></div>
             <div id="spmsg" class="msg" hidden></div>
           </form>
-          <div id="sprev" hidden style="display:grid;gap:10px;border-top:1px solid var(--rule);padding-top:12px">
-            <h3 style="margin:0;font-size:15px">Review spec links</h3>
-            <p class="u" style="margin:0">Which Beckett spec number goes with each appliance (from the guide's <b>Beckett Spec</b> column). Confirm or reject the likely and possible matches; your decisions are kept when the guide is loaded again.</p>
-            <div class="xfil"><label>Guide<select id="rvg"></select></label><div class="xsegw"><span>Show</span><div class="xseg" role="group" aria-label="Which links" id="rvk"></div></div></div>
-            <div id="rvlist" class="rvlist"></div><div class="row"><button class="btn" type="button" id="rvmore" hidden>Show more</button></div>
-          </div>
           <div id="spmissbox" hidden style="display:grid;gap:8px;border-top:1px solid var(--rule);padding-top:12px">
             <h3 style="margin:0;font-size:15px">Appliances searched for but not in any guide</h3>
             <p class="u" style="margin:0">What reps typed in <b>Look up an appliance</b> that found nothing, most asked first. They drop off once a guide has a match.</p>
@@ -660,44 +652,10 @@ async function loadSpecs(){let all;try{all=await call('GET','/api/specs')}catch(
   const keep=$('spbrand').value;$('spbrand').innerHTML=brands.map(b=>`<option>${esc(b)}</option>`).join('');if(brands.includes(keep))$('spbrand').value=keep;
   const k2=$('sprb').value;$('sprb').innerHTML=SP.map(s=>`<option value="${esc(s.id)}">${esc(s.title)}</option>`).join('');if(SP.some(s=>s.id===k2))$('sprb').value=k2;
   $('sped').hidden=!SP.length;if(SP.length)spRows();
-  const k3=$('rvg').value;$('rvg').innerHTML=SP.map(s=>`<option value="${esc(s.id)}">${esc(s.title)}</option>`).join('');
-  if(SP.some(s=>s.id===k3))$('rvg').value=k3;
-  else if(SP.length){ // first time: open the guide with the most links left to review
-    let best=null,n=-1;for(const g of SP){try{const r=await call('GET',`/api/specs/review?id=${encodeURIComponent(g.id)}&kind=none`);const c=r.counts||{},t=(c.likely||0)+(c.possible||0);if(t>n){n=t;best=g.id}}catch(e){}}
-    if(best)$('rvg').value=best}
-  $('sprev').hidden=!SP.length;if(SP.length)rvLoad();spMissLoad()}
+spMissLoad()}
 async function spMissLoad(){let l;try{l=await call('GET','/api/specs/misses')}catch(e){return}$('spmissbox').hidden=!l.length;
   $('spmiss').innerHTML=l.slice(0,100).map(x=>`<tr><td><b>${esc(x.q)}</b></td><td>${x.n}</td><td>${esc(x.users.join(', '))}</td><td style="white-space:nowrap">${esc(fmtWhen(x.last))}</td><td style="text-align:right"><button class="btn" type="button" data-k="${esc(x.k)}">Dismiss</button></td></tr>`).join('')}
 $('spmiss').onclick=async e=>{const b=e.target.closest('button[data-k]');if(!b)return;try{await call('DELETE','/api/specs/misses',{k:b.dataset.k});b.closest('tr').remove();if(!$('spmiss').children.length)$('spmissbox').hidden=true}catch(err){toast(err.message)}};
-/* review: confirm or reject which Beckett spec goes with each appliance */
-let RV=null,RVK='likely',RVN=25;
-const RVL={likely:'Likely',possible:'Possible',confirmed:'Confirmed',rejected:'Rejected'};
-async function rvLoad(keepN){const id=$('rvg').value;if(!id)return;if(!keepN)RVN=25;
-  try{RV=await call('GET',`/api/specs/review?id=${encodeURIComponent(id)}&kind=${RVK}`)}catch(err){$('rvlist').innerHTML=`<div class="msg err">${esc(err.message)}</div>`;return}
-  if(id!==$('rvg').value)return;rvDraw()}
-function rvDraw(){const c=RV.counts||{};
-  $('rvk').innerHTML=Object.entries(RVL).map(([k,t])=>`<button type="button" data-k="${k}" aria-pressed="${k===RVK}">${t} (${(c[k]||0).toLocaleString()})</button>`).join('');
-  if(!RV.linked){$('rvlist').innerHTML='<div class="u">This guide has no spec links yet. Load a copy of it that has a <b>Beckett Spec</b> column (and Spec Match / Possible Specs) to review them here.</div>';$('rvmore').hidden=true;return}
-  const rows=RV.rows.slice(0,RVN),unit=RV.unit==='mbh'||RV.unit==='btu'?'':' GPH';
-  $('rvlist').innerHTML=rows.length?rows.map(r=>{const cand=r.spec?[r.spec,...r.possible.filter(p=>p!==r.spec)]:r.possible;
-    return`<div class="rvi" data-id="${esc(r.id)}"><div class="t"><b>${esc(r.mfg)} ${esc(r.model)}</b><span class="u">${esc(r.burner)}${r.rate?` · ${esc(r.rate)}${unit}`:''}</span></div>
-      <div class="f">${r.f.slice(0,9).map(([c,v])=>`<span>${esc(c)} <b>${esc(v)}</b></span>`).join('')}</div>
-      ${r.why?`<div class="why">Matched on: ${esc(r.why)}</div>`:''}
-      <div class="acts">${RVK==='confirmed'?`<span>Spec <b>${esc(r.spec)}</b></span><button class="btn" type="button" data-a="undo">Undo</button>`
-        :RVK==='rejected'?`<span class="u">No spec${r.possible.length?` (was ${esc(r.possible[0])})`:''}</span><button class="btn" type="button" data-a="undo">Undo</button>`
-        :cand.slice(0,4).map((p,i)=>`<button class="btn${i===0?' ok':''}" type="button" data-a="confirm" data-s="${esc(p)}">Confirm ${esc(p)}</button>`).join('')+`<button class="btn dan" type="button" data-a="reject">${cand.length>1?'None of these':'Reject'}</button>`}</div></div>`}).join('')
-    :`<div class="u">Nothing ${RVL[RVK].toLowerCase()} in this guide.</div>`;
-  $('rvmore').hidden=RV.rows.length<=RVN;$('rvmore').textContent=`Show more (${(RV.rows.length-RVN).toLocaleString()} left${RV.rows.length>=400?' of the first 400':''})`}
-$('rvg').onchange=()=>rvLoad();
-$('rvk').onclick=e=>{const b=e.target.closest('button[data-k]');if(!b)return;RVK=b.dataset.k;rvLoad()};
-$('rvmore').onclick=()=>{RVN+=25;rvDraw()};
-$('rvlist').onclick=async e=>{const b=e.target.closest('button[data-a]');if(!b)return;const card=b.closest('.rvi'),id=card.dataset.id;card.querySelectorAll('button').forEach(x=>x.disabled=true);
-  try{await call('POST','/api/specs/review',{guide:$('rvg').value,id,action:b.dataset.a,spec:b.dataset.s||''});
-    const i=RV.rows.findIndex(r=>r.id===id);if(i>=0)RV.rows.splice(i,1);
-    const to=b.dataset.a==='confirm'?'confirmed':b.dataset.a==='reject'?'rejected':null;RV.counts[RVK]=Math.max(0,(RV.counts[RVK]||0)-1);
-    if(to)RV.counts[to]=(RV.counts[to]||0)+1;else rvLoad(true);
-    toast(b.dataset.a==='confirm'?`Confirmed ${b.dataset.s}`:b.dataset.a==='reject'?'Rejected':'Moved back');rvDraw()}
-  catch(err){toast(err.message);card.querySelectorAll('button').forEach(x=>x.disabled=false)}};
 $('splist').onclick=async e=>{const b=e.target.closest('button[data-sa]');if(!b)return;
   if(!b.dataset.armed){b.dataset.armed=1;const t=b.textContent;b.textContent=b.dataset.sa==='clear'?'Click again to remove':'Click again to restore';setTimeout(()=>{delete b.dataset.armed;b.textContent=t},4000);return}
   try{if(b.dataset.sa==='clear')await call('DELETE','/api/specs',{id:b.dataset.id});else await call('POST','/api/specs/restore',{id:b.dataset.id});
@@ -712,7 +670,7 @@ function spQueue(){$('spq').innerHTML=SPQ.map((q,i)=>{const ex=SP.find(s=>s.id==
   $('spgo').disabled=!SPQ.some(q=>!q.done);$('spgo').textContent=SPQ.filter(q=>!q.done).length>1?`Load ${SPQ.filter(q=>!q.done).length} guides`:'Load'}
 // what loading a file would change in the guide it replaces, worked out on the server without saving anything
 const diffTxt=r=>{const d=r.diff;if(!d)return`${r.count.toLocaleString()} specs`;const p=[];if(d.added)p.push(`${d.added.toLocaleString()} added`);if(d.removed)p.push(`${d.removed.toLocaleString()} removed`);if(d.changed)p.push(`${d.changed.toLocaleString()} changed`);
-  return(p.length?p.join(', '):'no changes')+(d.same?` (${d.same.toLocaleString()} the same)`:'')+(r.kept?`; keeps ${r.kept.toLocaleString()} confirmed/rejected spec link${r.kept>1?'s':''}`:'')+(d.linksDropped?'. This file has no Beckett Spec column, so the spec numbers linked to this guide would be dropped (confirmed and rejected links come back if a file with that column is loaded again)':'')};
+  return(p.length?p.join(', '):'no changes')+(d.same?` (${d.same.toLocaleString()} the same)`:'')};
 const spPvKey=q=>$('spbrand').value+'|'+q.name.trim().toLowerCase()+'|'+(q.burner||'');
 async function spPreview(){for(const q of SPQ){if(q.done)continue;const ex=SP.find(s=>s.id===gId($('spbrand').value,q.name));
     if(!ex||(q.pv&&q.pv.key===spPvKey(q))||(q.needBurner&&!q.burner))continue;const key=spPvKey(q);q.pvBusy=true;spQueue();

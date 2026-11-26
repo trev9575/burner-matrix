@@ -437,9 +437,6 @@ function dataCheck() {
     const t = Specs.title(set), miss = new Map();
     for (const row of set.rows) { const bn = Specs.burnerOf(set, row); if (!specBurnerKey(set.brand, bn, list)) miss.set(bn || '(blank)', (miss.get(bn || '(blank)') || 0) + 1); }
     add('Spec guides', 'error', `${t}: burner not in the matrix (these specs can’t start an RFQ)`, [...miss].map(([b, n]) => `${b} (${n} spec${n > 1 ? 's' : ''})`), 'Add the burner in the Burners tab, or correct the burner name in the guide.');
-    const cm = set.cols.findIndex(c => c.toLowerCase() === 'spec match'), cs = set.cols.findIndex(c => c.toLowerCase() === 'beckett spec');
-    if (cs < 0) add('Spec guides', 'info', `${t}: no Beckett Spec column`, ['Reps won’t see spec numbers for this guide'], 'Load a copy of the guide with Beckett Spec / Spec Match columns.');
-    else add('Spec guides', 'warn', `${t}: linked to an inactive spec`, set.rows.filter(r => /inactive/i.test(r.v[cm] || '')).map(r => `${r.v[set.roles.mfg]} ${r.v[set.roles.model]} → ${r.v[cs]}`), 'Reject it in Settings → Review spec links, or load a guide linked to active specs only.');
   }
   // ----- more burner checks -----
   add('Burners', 'error', 'Photo file is missing from the server', list.filter(b => b.image && !/^https?:/i.test(b.image) && !fs.existsSync(path.join(F.photos, path.basename(b.image))) && !fs.existsSync(path.join(HTML, 'photos', path.basename(b.image)))).map(b => `${nm(b)} (${b.image})`), 'Upload the photo again in the Burners tab.');
@@ -460,14 +457,12 @@ function dataCheck() {
         const u = set.rateUnit, x = b.fuel === 'oil' ? (u === 'gph' ? v : (u === 'btu' ? v / 1000 : v) / 140) : (u === 'gph' ? v * 140 : u === 'btu' ? v / 1000 : v);
         if (x < b.min * 0.98 || x > b.max * 1.02) outR.push(`${app}: ${row.v[r.rate]}${u === 'gph' ? ' GPH' : u === 'btu' ? ' BTU/hr' : ' MBH'} on a ${bn} (${b.min}–${b.max} ${b.fuel === 'oil' ? 'GPH' : 'MBH'})`);
       }
-      const k = set.cols.map((c, i) => /^(beckett spec|spec match|possible specs|matched on)$/i.test(c) ? '' : String(row.v[i]).trim().toLowerCase()).join('|');
+      const k = row.v.map(x => String(x).trim().toLowerCase()).join('|');
       if (seen.has(k)) dup.push(`${app} (${bn}${r.rate >= 0 ? ', ' + row.v[r.rate] : ''})`); else seen.set(k, 1);
     }
     add('Spec guides', 'warn', `${t}: firing rate outside the burner’s range`, outR, 'Check the rate in the guide (Settings → Find, change or add a single spec), or the burner’s range in the Burners tab.');
     add('Spec guides', 'info', `${t}: no firing rate`, noRate, 'Add the rate so reps can see it and it fills in on the RFQ.');
     add('Spec guides', 'info', `${t}: exact duplicate rows`, dup, 'Delete the extra copies (Settings → Find, change or add a single spec).');
-    const cm = set.cols.findIndex(c => c.toLowerCase() === 'spec match');
-    if (cm >= 0) { const n = set.rows.filter(x => /^medium/i.test(x.v[cm] || '')).length; if (n) add('Spec guides', 'info', `${t}: likely spec links not reviewed yet`, [`${n.toLocaleString()} appliance${n > 1 ? 's' : ''} show “likely” next to the spec number`], 'Confirm or reject them in Settings → Review spec links.'); }
   }
   // ----- RFQs -----
   const rf = allRfqs(), day = 864e5, now = Date.now(), rno = x => `${x.no}${x.fields['q-co'] ? ' – ' + x.fields['q-co'] : ''}`;
@@ -1081,7 +1076,7 @@ async function api(req, res, url) {
       if (out.error) return send(res, 422, { error: out.error, needBurner: !!out.needBurner });
       const info = b.dryRun === true ? { id: out.set.id, title: Specs.title(out.set), count: out.set.rows.length } : meta(out.set);
       if (b.dryRun !== true) act(`Loaded the ${Specs.title(out.set)} spec guide (${out.set.rows.length} specs${out.diff ? `: ${out.diff.added} added, ${out.diff.removed} removed, ${out.diff.changed} changed` : ''})`);
-      return send(res, 200, { ...info, dryRun: b.dryRun === true, skipped: out.skipped, warnings: out.warnings, diff: out.diff, kept: out.kept, replaces: out.replaces });
+      return send(res, 200, { ...info, dryRun: b.dryRun === true, skipped: out.skipped, warnings: out.warnings, diff: out.diff, replaces: out.replaces });
     }
     const one = id => SPECS.get(String(id || ''));
     if (p === '/api/specs/export' && m === 'GET') {
@@ -1101,37 +1096,6 @@ async function api(req, res, url) {
         .map(([k, e]) => ({ k, q: e.q, n: e.n, last: e.last, users: e.users.map(u => names.get(u) || u) })).sort((a, c) => c.n - a.n || String(c.last).localeCompare(String(a.last))));
     }
     if (p === '/api/specs/misses' && m === 'DELETE') { const b = (await readBody(req, 1024)) || {}, mm = getSMiss(); if (!mm[b.k]) return send(res, 404, { error: 'Not found' }); mm[b.k].dismissed = true; mm[b.k].n = 0; writeJSON(F.smiss, mm); return send(res, 200, { ok: true }); }
-    if (p === '/api/specs/review' && m === 'GET') { // spec links that still need a person to look at them
-      const s = one(url.searchParams.get('id')); if (!s) return send(res, 404, { error: 'No such spec guide' });
-      const ix = n => s.cols.findIndex(c => c.toLowerCase() === n), cS = ix('beckett spec'), cM = ix('spec match'), cP = ix('possible specs'), cW = ix('matched on');
-      if (cM < 0) return send(res, 200, { linked: false, counts: {}, rows: [] });
-      const kind = url.searchParams.get('kind') || 'likely', counts = { likely: 0, possible: 0, confirmed: 0, rejected: 0, sure: 0 }, out = [];
-      const r = s.roles, val = (row, i) => i >= 0 ? row.v[i] || '' : '';
-      for (const row of s.rows) {
-        const mt = val(row, cM).toLowerCase(), k = /^confirmed/.test(mt) ? 'confirmed' : /^rejected/.test(mt) ? 'rejected' : /^medium/.test(mt) ? 'likely' : /^high/.test(mt) ? 'sure' : val(row, cP) ? 'possible' : '';
-        if (!k) continue; counts[k]++;
-        if (k === kind && out.length < 400) out.push({ id: row.id, mfg: row.v[r.mfg], model: row.v[r.model], burner: Specs.burnerOf(s, row), rate: r.rate >= 0 ? row.v[r.rate] : '',
-          spec: val(row, cS), possible: val(row, cP).split(/\s*,\s*/).filter(Boolean), why: val(row, cW),
-          f: s.cols.map((c, i) => [c, row.v[i]]).filter(([c, x]) => x && x !== '0' && x !== '-' && !/^(beckett spec|spec match|possible specs|matched on|note|updated date|date modified|see note|proj no)$/i.test(c) && ![r.mfg, r.model].includes(s.cols.indexOf(c))) });
-      }
-      return send(res, 200, { linked: true, counts, unit: s.rateUnit || '', rows: out });
-    }
-    if (p === '/api/specs/review' && m === 'POST') { // confirm or reject one appliance's spec link; kept when the guide is loaded again
-      const b = (await readBody(req, 4096)) || {}, s = one(b.guide); if (!s) return send(res, 404, { error: 'No such spec guide' });
-      const i = s.rows.findIndex(x => x.id === b.id); if (i < 0) return send(res, 404, { error: 'That spec was changed or removed. Reload the list.' });
-      if (!['confirm', 'reject', 'undo'].includes(b.action)) return send(res, 422, { error: 'Unknown action' });
-      const spec = String(b.spec || '').trim().toUpperCase().slice(0, 40);
-      if (b.action === 'confirm' && !/^[A-Z0-9][A-Z0-9 ._\/-]{1,39}$/.test(spec)) return send(res, 422, { error: 'Give the spec number to confirm' });
-      const cur = { ...s, cols: s.cols.slice(), rows: s.rows.map(x => ({ ...x, v: x.v.slice() })), updated: new Date().toISOString(), by: me.name };
-      const L = SPECS.linkCols(cur), row = cur.rows[i];
-      if (b.action === 'confirm') { row.v[L.spec] = spec; row.v[L.match] = 'Confirmed'; }
-      else if (b.action === 'reject') { // the rejected spec stays at the front of Possible Specs, so Undo can bring it back
-        const was = row.v[L.spec] || spec, ps = String(row.v[L.poss] || '').split(/\s*,\s*/).filter(x => x && x !== was);
-        if (was) row.v[L.poss] = [was, ...ps].join(', '); row.v[L.spec] = ''; row.v[L.match] = 'Rejected'; }
-      else { row.v[L.match] = row.v[L.spec] ? 'Medium' : ''; }
-      act(`${{ confirm: 'Confirmed spec ' + spec + ' for', reject: 'Rejected the spec link for', undo: 'Reopened the spec link for' }[b.action]} ${row.v[s.roles.mfg]} ${row.v[s.roles.model]} (${Specs.title(s)})`);
-      SPECS.save(cur); return send(res, 200, { ok: true, spec: row.v[L.spec], match: row.v[L.match] });
-    }
     if (p === '/api/specs/row' && (m === 'POST' || m === 'DELETE')) { // add / change / delete one spec
       const b = (await readBody(req, 64 * 1024)) || {}, s = one(b.guide); if (!s) return send(res, 404, { error: 'No such spec guide' });
       const i = b.id ? s.rows.findIndex(r => r.id === b.id) : -1;

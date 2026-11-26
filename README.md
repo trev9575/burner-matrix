@@ -101,7 +101,7 @@ default inside the installed app. Signing out clears everything the app saved on
 guide (e.g. Beckett residential oil, commercial oil, residential gas and commercial gas), e.g. *Burnham V8H4* or *MPC-11*. Spaces,
 dashes and leading zeros don't matter (*V-8H4 S*, *v8h4s*, *0488*); when nothing matches, *Did you mean* offers the closest models.
 Results are grouped by appliance and guide with one line per burner: the firing rates are chips on that line (pick one and the
-line follows it), plus the linked Beckett spec number (*likely* when it hasn't been confirmed), *Details* and *Create RFQ*.
+line follows it), plus *Details* and *Create RFQ*.
 *Details* holds the key settings (nozzle, head, pump, manifold pressure, NG/LP orifice, firing mode, air tube combo, insertion),
 every other column, the guide's note and *Show in the matrix*. *Create RFQ* fills in the appliance, required input, insertion
 depth, key settings (Other Options), fuel, venting and firing mode where clear, and a note with the spec/chassis numbers. A spec's
@@ -109,11 +109,10 @@ burner is matched to the matrix burner of the same brand by name (AFG → AF/AFG
 
 Admins manage guides in **Admin → Settings → Appliance specs**: pick a brand and one or more CSV files. Each file becomes its own
 guide, named from the file name (editable). Before loading, a file that replaces a guide shows what would change (added, removed,
-changed, unchanged, and how many reviewed spec links carry over); loading replaces only that guide and keeps the old one for
+changed, unchanged); loading replaces only that guide and keeps the old one for
 *Restore previous*. A file with no burner column (Beckett's residential gas guide) asks for the one burner all its specs are for.
-Guides can be downloaded as CSV, removed (and restored), and single specs edited. **Review spec links** lists each guide's *likely*
-and *possible* Beckett spec matches (from the guide's Beckett Spec / Spec Match / Possible Specs columns) with *Confirm* and
-*Reject*; confirmed and rejected links are kept when the guide is loaded again. Stored in `specs/` in the data folder (backed up).
+Guides can be downloaded as CSV, removed (and restored), and single specs edited. Spec-number link columns (Beckett Spec, Spec
+Match, Possible Specs, Matched On) are ignored when a file is loaded. Stored in `specs/` in the data folder (backed up).
 
 **Replacing a burner? (cross-reference).** In the box beside it, reps type another maker's (or an older)
 model, e.g. *Carlin 301CRD*, and see the Beckett/Wayne burner(s) to sell instead, plus any note. *Show all in the matrix*
@@ -159,8 +158,7 @@ quotes and templates, customers, users, settings, deleted RFQs and bulk changes)
 `activity.jsonl` (newest 5,000). *Data check* lists, most important first: burners missing a photo (or whose photo file is gone, or
 still loads from another site), dimensions, air tube lengths, flame size, product page, fuel rating or notes, a step-down warning
 with no high-voltage option, or a standard power that isn't one of its options; cross-references pointing at missing burners;
-spec-guide burners not in the matrix, spec rates outside the burner's firing range, rows with no rate, exact duplicate rows,
-links to inactive specs and likely links not yet reviewed; RFQs emailed a week ago with no quote, "I'm on it" claims 3+ days
+spec-guide burners not in the matrix, spec rates outside the burner's firing range, rows with no rate and exact duplicate rows; RFQs emailed a week ago with no quote, "I'm on it" claims 3+ days
 old, won with no value, lost with no reason, drafts untouched for 30 days, and open RFQs whose burner was removed; customers spelled
 more than one way or with no phone/email; office users with no email; no quoters; email not set up; and no recent backup.
 Appliance lookups that find nothing are listed in Settings → Appliance specs (*Appliances searched for but not in any guide*).

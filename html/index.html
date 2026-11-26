@@ -914,10 +914,6 @@ const spRateTxt=h=>{const r=spRate(h);return r?`${r.v.toLocaleString()} ${r.u===
 const SPKEY=[[/^nozzle$/i,/alt/i],[/^head/i],[/high.*pump|^pump|psi/i],[/manifold/i],[/^ng orifice/i],[/^lp orifice/i],[/firing mode/i],[/air tube combo/i],[/insertion/i,/weld/i]];
 const fc=(h,re,not)=>{const p=h.f.find(([c,v])=>re.test(c)&&!(not&&not.test(c))&&String(v).trim()&&!/^(n\/a|-)$/i.test(String(v).trim()));return p?[p[0],String(p[1]).trim()]:null};
 const spKeys=h=>SPKEY.map(([re,not])=>fc(h,re,not)).filter(Boolean);
-// the Beckett spec number linked to this appliance (from the guide's Beckett Spec column), with how sure the link is
-function specNo(h){const n=fv(h,/^beckett spec$/i),m=fv(h,/^spec match$/i),p=fv(h,/^possible specs?$/i);
-  if(n)return`<span><span class="k">Spec</span> <b>${esc(n)}</b>${/inactive/i.test(m)?' <span class="k">(inactive)</span>':/medium/i.test(m)?' <span class="k">(likely)</span>':''}</span>`;
-  return p?`<span><span class="k">Possible spec</span> ${esc(p.split(/,\s*/)[0])}</span>`:''}
 // one line per appliance + burner; several firing rates for the same burner are chips on that line, and the line follows the chosen one
 const SPG=new Map();
 function specHTML(hits){const old=new Map(SPG);SPG.clear();const apps=new Map();
@@ -930,13 +926,13 @@ function specHTML(hits){const old=new Map(SPG);SPG.clear();const apps=new Map();
 function spvInner(gk){const g=SPG.get(gk);if(!g)return'';const h=g.list[g.sel],x=specBurner(h),key=esc(h.gid+'|'+h.id),r0=spRate(h),G2=esc(gk);
   const lbl=l=>{const r=spRate(l);return r?r.v.toLocaleString():'–'},seen={};
   const chips=g.list.length>1?`<span class="rcs" role="group" aria-label="Firing rate">${g.list.map((l,i)=>{let t=lbl(l);seen[t]=(seen[t]||0)+1;if(seen[t]>1)t+=` (${seen[t]})`;return`<button type="button" class="rc" data-a="sprate" data-g="${G2}" data-i="${i}" aria-pressed="${i===g.sel}">${esc(t)}</button>`}).join('')}<span class="k">${r0&&r0.u==='gph'?'GPH':'MBH'}</span></span>`:(spRateTxt(h)?`<span><b>${esc(spRateTxt(h))}</b></span>`:'');
-  return`<div class="spl"><span class="nm ${x?x.f:'un'}">${esc(h.brand)} ${esc(h.burner)}</span>${chips}${specNo(h)}
+  return`<div class="spl"><span class="nm ${x?x.f:'un'}">${esc(h.brand)} ${esc(h.burner)}</span>${chips}
     <span class="bt"><button type="button" class="gh" data-a="spdet" data-g="${G2}" aria-expanded="${g.open}">${g.open?'Hide details':'Details'}</button>${x?`<button type="button" class="pri" data-a="sprfq" data-s="${key}">Create RFQ</button>`:''}</span></div>
     ${x?'':`<div class="spx">${esc(h.burner)} isn’t in the matrix, so an RFQ can’t be started from here.</div>`}
     <div class="spdh"${g.open?'':' hidden'}>${g.open?specDetail(h,x,key):''}</div>`}
 function specDetail(h,x,key){const note=fv(h,/^note|notes$/i),kf=spKeys(h);
   return`${kf.length?`<div class="spk">${kf.map(([c,v])=>`<span><span class="k">${esc(c)}</span> <b>${esc(v)}</b></span>`).join('')}</div>`:''}
-    <dl class="spd">${h.f.filter(([c,v])=>String(v).trim()&&!/^(appliance|note$|notes$|beckett spec$|spec match$|possible specs$|matched on$)/i.test(c)&&!kf.some(([k])=>k===c)).map(([c,v])=>`<dt>${esc(c)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+    <dl class="spd">${h.f.filter(([c,v])=>String(v).trim()&&!/^(appliance|note$|notes$)/i.test(c)&&!kf.some(([k])=>k===c)).map(([c,v])=>`<dt>${esc(c)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
     ${note&&!/^none$/i.test(note)?`<div class="spn">${esc(note)}</div>`:''}${x?`<div class="spa"><button type="button" class="gh" data-a="spshow" data-s="${key}">Show ${esc(x.b+' '+x.n)} in the matrix</button></div>`:''}`}
 // a search that finds nothing is reported once it settles, so editors can see what reps look for
 const XLOGGED=new Set();let xMissT=0;
@@ -972,8 +968,8 @@ function spRedraw(gk){const el=[...$('ares').querySelectorAll('.spv')].find(e=>e
 async function specRFQ(h,b){const x=specBurner(h);if(!x)return;const xfmr=stepDownNote(x);if(xfmr&&!await stepDownOK(x))return;
   const r=spRate(h),rate=!r?'':r.u==='gph'?`${r.v} GPH (≈ ${Math.round(r.v*G).toLocaleString()} MBH)`:`${r.v.toLocaleString()} MBH${x.f==='oil'?` (≈ ${(r.v/G).toFixed(2)} GPH)`:''}`;
   const keys=spKeys(h),ins=(keys.find(([c])=>/insertion/i.test(c))||[])[1]||'';
-  const alt=fc(h,/alt.*nozzle/i),opt=keys.filter(([c])=>!/insertion|firing mode|beckett spec/i.test(c)).concat(alt?[alt]:[]).map(([c,v])=>`${c}: ${v}`).join(', ');
-  const ids=[['Beckett spec',fv(h,/^beckett spec$/i)],['air tube combo',fv(h,/atc/i)],['chassis',fv(h,/chassis/i)],['universal assy',fv(h,/universal/i)]].filter(o=>o[1]).map(o=>`${o[0]} ${o[1]}`).join(', ');
+  const alt=fc(h,/alt.*nozzle/i),opt=keys.filter(([c])=>!/insertion|firing mode/i.test(c)).concat(alt?[alt]:[]).map(([c,v])=>`${c}: ${v}`).join(', ');
+  const ids=[['air tube combo',fv(h,/atc/i)],['chassis',fv(h,/chassis/i)],['universal assy',fv(h,/universal/i)]].filter(o=>o[1]).map(o=>`${o[0]} ${o[1]}`).join(', ');
   const note=fv(h,/^note|notes$/i),ft=fv(h,/fuel/i).toLowerCase(),vt=fv(h,/vent/i).toLowerCase(),fm=(fc(h,/firing mode/i)||[])[1]||'';
   // only the clear cases are carried over; anything else is left for the rep to pick
   const fuel=x.f==='oil'?(/^#?2\b/.test(ft)?DD.oil[0]:''):/\bLP\b/.test(h.model)?DD.gas[1]:/\bnat(ural)?\b/i.test(h.model)?DD.gas[0]:'',vent=vt==='chimney'?DD.vent[0]:/^direct/.test(vt)?DD.vent[2]:'';
