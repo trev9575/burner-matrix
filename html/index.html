@@ -265,6 +265,8 @@ footer p{margin:0 0 6px;max-width:100ch}
 #pic.err span::after{content:" (photo unavailable)";font-weight:500;color:var(--mute)}
 a.bn[data-img]{cursor:zoom-in}
 .rfqb{margin-top:6px;font:600 12px Montserrat,sans-serif;padding:4px 10px;min-height:30px;border-radius:3px;border:1px solid var(--red);background:#fff;color:var(--red);cursor:pointer;white-space:nowrap}
+.cdo{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--rule);border-radius:4px;padding:10px 12px;cursor:pointer;font-size:14px}.cdo:has(input:checked){border-color:var(--red);background:#fff7f8}.cdo input[type=radio]{margin-top:4px;accent-color:var(--red)}
+.cdo input[type=text]{display:block;width:100%;box-sizing:border-box;margin-top:8px;font:500 14px Montserrat,sans-serif;min-height:40px;padding:0 10px;border:1px solid #b9b9b2;border-radius:3px}
 .dyml{display:grid;gap:8px}.dyml button{text-align:left;font:500 15px Montserrat,sans-serif;padding:10px 14px;border:2px solid var(--red);border-radius:4px;background:#fff;color:var(--ink);cursor:pointer}.dyml button:hover,.dyml button:focus-visible{background:#fde3e5}.dyml button small{display:block;color:var(--mute);font-size:12.5px}
 #dymno{white-space:normal;text-align:left;min-height:42px}
 .shacts{display:flex;flex-wrap:wrap;gap:8px}.shacts .btn{display:inline-flex;align-items:center;text-decoration:none}
@@ -632,7 +634,7 @@ html.dark .util img,html.dark .brand img,html.dark .top img,html.dark footer.ban
 <section id="histv" hidden class="wv">
   <div class="panel">
     <div class="lbar"><button class="btn" id="hback">← All customers</button><div id="hhead" style="margin-left:8px"></div><span style="flex:1"></span>
-      <button type="button" class="btn" id="hedit" hidden>Edit details</button></div>
+      <button type="button" class="btn" id="hedit" hidden>Edit details</button> <button type="button" class="btn danger" id="hdel" hidden>Delete</button></div>
     <p class="hnotes" id="hnotes" hidden></p>
     <div class="hcontacts" id="hcontacts"></div>
     <div class="tiles" id="htiles"></div>
@@ -707,6 +709,17 @@ html.dark .util img,html.dark .brand img,html.dark .top img,html.dark footer.ban
   <label><span>Notes <span class="sm">optional</span></span><textarea id="cu-notes" maxlength="1000" rows="3" placeholder="e.g. Prefers email, gate code, who signs off on quotes"></textarea></label>
   <div id="cuerr" class="msg err" hidden></div>
   <div class="row"><button type="button" class="btn danger" id="cudel" hidden>Remove</button><span style="flex:1"></span><button type="button" class="btn" id="cux">Cancel</button><button class="btn pri" type="submit" id="cugo">Save</button></div>
+</form></dialog>
+<dialog id="cdeld" aria-labelledby="cdelh"><form id="cdelf" style="display:grid;gap:12px;max-width:480px" novalidate>
+  <h2 id="cdelh" style="font-size:20px;margin:0"></h2>
+  <p id="cdelt" style="margin:0;font-size:14px;line-height:1.5"></p>
+  <div id="cdelopts" style="display:grid;gap:10px">
+    <label class="cdo"><input type="radio" name="how" value="move" checked><span><b>Move its RFQs to another customer</b><br><span class="sm">Best for a duplicate or misspelling. The RFQs, contacts, address and notes all go to that customer.</span>
+      <input type="text" id="cdelto" list="cdelcos" maxlength="120" autocomplete="off" placeholder="Customer to move them to" aria-label="Customer to move the RFQs to"><datalist id="cdelcos"></datalist></span></label>
+    <label class="cdo"><input type="radio" name="how" value="hide"><span><b>Keep the RFQs as they are</b><br><span class="sm">The customer disappears from the list and suggestions; its RFQs keep the name. It comes back if a new RFQ uses the name.</span></span></label>
+  </div>
+  <div id="cdelerr" class="msg err" hidden></div>
+  <div class="row"><span style="flex:1"></span><button type="button" class="btn" id="cdelx">Cancel</button><button class="btn danger" type="submit" id="cdelgo">Delete customer</button></div>
 </form></dialog>
 <dialog id="dymd" aria-labelledby="dymh"><div style="display:grid;gap:12px;max-width:440px">
   <h2 id="dymh" style="font-size:20px;margin:0">Did you mean…?</h2>
@@ -1764,7 +1777,7 @@ function renderHistory(){const h=HIST,c=CLIST.find(x=>x.company.toLowerCase()===
   $('hbody').innerHTML=rs.map(r=>{const st=stOf(r);return`<tr${r.open?` data-id="${esc(r.id)}" class="hopen"`:' class="hlim" title="Another rep’s RFQ – details are private to them"'}><td class="no" style="font-weight:700;white-space:nowrap">${esc(r.no)}</td><td style="white-space:nowrap">${fmtD(r.date)}</td><td>${esc(r.byFull||r.by)}</td>
     <td><span style="color:${r.fuel==='gas'?'var(--gas)':'var(--oil)'};font-weight:600">${esc(r.burner)}</span></td><td>${r.limited?'':esc(r.job||'')}</td>
     <td><span class="st st-${st}">${STL[st]}</span>${r.lostReason?`<div class="sm" style="margin-top:3px">${esc(r.lostReason)}</div>`:''}</td><td class="n">${r.limited?'':money(r.value)||'—'}</td></tr>`}).join('');
-  $('hnotes').hidden=!c.notes;$('hnotes').textContent=c.notes||'';$('hedit').hidden=!c.canEdit;
+  $('hnotes').hidden=!c.notes;$('hnotes').textContent=c.notes||'';$('hedit').hidden=!c.canEdit;$('hdel').hidden=!(ME&&(ME.role==='editor'||ME.role==='admin'||(!c.rfqs&&c.saved&&c.canEdit)));
   if(!rs.length){$('hburners').textContent='';$('hbody').innerHTML=`<tr><td colspan="7" class="sm" style="padding:20px 8px">No RFQs for this customer yet.${c.addedBy?` Added by ${esc(c.addedBy)} on ${fmtD(c.added)}.`:''}</td></tr>`}
   $('hnote').hidden=!(others&&!staff);$('hnote').textContent=`${others} RFQ${others>1?'s were':' was'} made by other reps. You can see when and what was quoted, but not their details.`}
 $('custb').onclick=()=>{if(!$('rfqv').hidden&&RFQ&&RFQ.dirty){saveRFQ(true).then(openCustomers,err=>toast('Could not save: '+err.message))}else openCustomers()};
@@ -1780,9 +1793,12 @@ function openCustDlg(c){CUED=c||null;$('custh').textContent=c?`Edit ${c.company}
   const locked=!!(c&&c.rfqs);$('cu-co').readOnly=locked;$('cu-conote').hidden=!locked;
   $('cu-addr').value=c?c.address||'':'';$('cu-notes').value=c?c.notes||'':'';
   $('cu-cts').innerHTML='';(c&&c.contacts.length?c.contacts:[{}]).forEach(x=>cuRow(x));
-  $('cudel').hidden=!(c&&c.saved&&c.canEdit);$('cudel').textContent=c&&c.rfqs?'Clear saved details':'Remove customer';
+  // delete: anyone who can edit it when it has no RFQs; editors and admins when it has (they choose where the RFQs go)
+  const staffE=ME&&(ME.role==='editor'||ME.role==='admin');
+  $('cudel').hidden=!(c&&(c.rfqs?(staffE||(c.saved&&c.canEdit)):(c.saved&&c.canEdit)));$('cudel').textContent=c&&c.rfqs&&!staffE?'Clear saved details':'Delete customer';
   $('custd').showModal();(locked?$('cu-addr'):$('cu-co')).focus()}
 $('cadd').onclick=()=>openCustDlg();
+$('hdel').onclick=()=>{const c=CLIST.find(x=>x.company.toLowerCase()===HIST.company.toLowerCase());if(c)openCustDel(c)};
 $('hedit').onclick=()=>{const c=CLIST.find(x=>x.company.toLowerCase()===HIST.company.toLowerCase());if(c)openCustDlg(c)};
 $('cu-more').onclick=()=>cuRow().querySelector('input').focus();
 $('cux').onclick=()=>$('custd').close();
@@ -1803,11 +1819,30 @@ $('custf').onsubmit=async e=>{e.preventDefault();$('cuerr').hidden=true;
   if(CUED){body.original=CUED.company;const keep=new Set(body.contacts.map(x=>x.name.toLowerCase()));body.removed=CUED.contacts.map(x=>x.name).filter(n=>!keep.has(n.toLowerCase()))}$('cugo').disabled=true;
   try{const r=await J(CUED?'PUT':'POST','api/customers',body);$('custd').close();toast(CUED?'Customer updated':`${r.company} added`);await afterCust(CUED?r.company:'')}
   catch(err){$('cuerr').textContent=err.message;$('cuerr').hidden=false}finally{$('cugo').disabled=false}};
-$('cudel').onclick=async()=>{if(!CUED)return;const clear=CUED.rfqs>0;
-  if(!$('cudel').dataset.sure){$('cudel').dataset.sure=1;$('cudel').textContent=clear?'Click again to clear':'Click again to remove';setTimeout(()=>{delete $('cudel').dataset.sure;if(CUED)$('cudel').textContent=clear?'Clear saved details':'Remove customer'},3000);return}
-  delete $('cudel').dataset.sure;
-  try{await J('DELETE','api/customers',{company:CUED.company});$('custd').close();toast(clear?'Saved details cleared':'Customer removed');await afterCust(clear?CUED.company:'')}
-  catch(err){$('cuerr').textContent=err.message;$('cuerr').hidden=false}};
+$('cudel').onclick=async()=>{if(!CUED)return;const c=CUED,staffE=ME&&(ME.role==='editor'||ME.role==='admin');
+  if(c.rfqs&&!staffE){ // reps can only clear the details they saved; the RFQs keep the customer in the list
+    if(!$('cudel').dataset.sure){$('cudel').dataset.sure=1;$('cudel').textContent='Click again to clear';setTimeout(()=>{delete $('cudel').dataset.sure;if(CUED)$('cudel').textContent='Clear saved details'},3000);return}
+    delete $('cudel').dataset.sure;try{await J('DELETE','api/customers',{company:c.company});$('custd').close();toast('Saved details cleared');await afterCust(c.company)}catch(err){$('cuerr').textContent=err.message;$('cuerr').hidden=false}return}
+  $('custd').close();openCustDel(c)};
+function openCustDel(c){CDEL=c;$('cdelerr').hidden=true;$('cdelh').textContent=`Delete ${c.company}?`;$('cdelopts').hidden=!c.rfqs;
+  $('cdelt').innerHTML=c.rfqs?`<b>${esc(c.company)}</b> has <b>${c.rfqs} RFQ${c.rfqs>1?'s':''}</b>. RFQs are never deleted with a customer, so choose what happens to them.`:`This removes <b>${esc(c.company)}</b> and its saved contacts, address and notes. It has no RFQs.`;
+  const others=(CLIST.length?CLIST:CUST).filter(x=>x.company.toLowerCase()!==c.company.toLowerCase());
+  $('cdelcos').innerHTML=others.map(x=>`<option value="${esc(x.company)}">`).join('');
+  const sim=similarCos(c.company,others.map(x=>x.company));$('cdelto').value=sim.length?sim[0].name:'';
+  $('cdelf').elements.how.value='move';$('cdeld').showModal();(c.rfqs?$('cdelto'):$('cdelgo')).focus()}
+let CDEL=null;
+$('cdelx').onclick=()=>$('cdeld').close();
+$('cdelto').addEventListener('focus',()=>{$('cdelf').elements.how.value='move'});
+$('cdelf').onsubmit=async e=>{e.preventDefault();if(!CDEL)return;const c=CDEL,how=c.rfqs?$('cdelf').elements.how.value:'none',to=$('cdelto').value.trim();$('cdelerr').hidden=true;
+  if(how==='move'){if(!to){$('cdelerr').textContent='Pick the customer to move the RFQs to.';$('cdelerr').hidden=false;$('cdelto').focus();return}
+    if(to.toLowerCase()===c.company.toLowerCase()){$('cdelerr').textContent='Pick a different customer.';$('cdelerr').hidden=false;return}
+    if(!(CLIST.length?CLIST:CUST).some(x=>x.company.toLowerCase()===to.toLowerCase())&&!window.confirm(`“${to}” isn’t a customer yet. Move the RFQs to a new customer with that name?`))return}
+  $('cdelgo').disabled=true;
+  try{const r=await J('POST','api/customers/delete',{company:c.company,moveTo:how==='move'?to:''});$('cdeld').close();
+    toast(r.moved?`${c.company} deleted · ${r.moved} RFQ${r.moved>1?'s':''} moved to ${to}`:r.hidden?`${c.company} deleted · its RFQs kept the name`:`${c.company} deleted`);
+    const exact=(CLIST.length?CLIST:CUST).find(x=>x.company.toLowerCase()===to.toLowerCase());
+    CUSTP=null;CLIST=await J('GET','api/customers');CUST=CLIST;refreshFollow();if(!$('histv').hidden&&r.moved)openHistory(exact?exact.company:to);else openCustomers()}
+  catch(err){$('cdelerr').textContent=err.message;$('cdelerr').hidden=false}finally{$('cdelgo').disabled=false}};
 $('cbody').onclick=e=>{const tr=e.target.closest('tr[data-co]');if(tr)openHistory(tr.dataset.co)};
 $('hback').onclick=()=>openCustomers();
 $('hbody').onclick=e=>{const tr=e.target.closest('tr[data-id]');if(tr)openSaved(tr.dataset.id,'hist').catch(err=>toast(err.message))};

@@ -132,6 +132,12 @@ or a typo or two), a popup offers the existing name(s), with their RFQ count and
 fills in the address and contact; in Customers it opens that customer with what was typed carried over). *No, it's a different
 customer* keeps the new name and doesn't ask again for that spelling.
 
+**Deleting customers.** *Delete* on a customer's page (or in *Edit details*). A customer with no RFQs is simply removed (by whoever
+added it, or an editor/admin). A customer with RFQs can be deleted by editors and admins, who choose either to **move its RFQs to
+another customer** (for duplicates and misspellings: the RFQs' company name changes, and its contacts, address and notes are merged
+into that customer) or to **keep the RFQs as they are** and just hide the customer from the list and suggestions (it comes back if a
+newer RFQ uses the name, or it's added again). RFQs are never deleted with a customer; moves are recorded on each RFQ and in Activity.
+
 **Finding RFQs.** The search box in RFQs looks through the RFQ number, customer, contact, job, burner, rep, appliance, site
 address, email, phone, PO, notes (so a spec number like BCB7703 finds RFQs started from that spec) and the quote number; every word
 must match. Searches also find archived RFQs.
