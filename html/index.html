@@ -1185,16 +1185,25 @@ const loadCust=()=>CUSTP||(CUSTP=J('GET','api/customers').then(c=>{CUST=c;return
 const findCo=v=>CUST.find(c=>c.company.toLowerCase()===String(v).trim().toLowerCase());
 /* ---------- "Did you mean…?" for customer names spelled a little differently from one we already have ---------- */
 // Acme Co / ACME, Inc. / Acme Company all become "acme"; & and "and" are the same
-const coKey=v=>String(v||'').toLowerCase().replace(/&/g,' and ').replace(/\b(inc|incorporated|llc|ltd|limited|co|corp|corporation|company|the)\b\.?/g,' ').replace(/[^a-z0-9]/g,'');
+// trade words people shorten: Heating / Htg / Heat, Plumbing / Plbg, Mechanical / Mech, Services / Svc, Brothers / Bros…
+const CO_WORDS={heating:'heat',htg:'heat',heaters:'heat',heater:'heat',plumbing:'plumb',plbg:'plumb',plumbers:'plumb',plumber:'plumb',mechanical:'mech',mechanicals:'mech',
+  services:'svc',service:'svc',svcs:'svc',svc:'svc',brothers:'bros',bro:'bros',contractors:'contract',contractor:'contract',contracting:'contract',
+  cooling:'cool',conditioning:'cond',airconditioning:'ac',hvacr:'hvac',boilers:'boiler',burners:'burner',oils:'oil',fuels:'fuel',energies:'energy',
+  systems:'sys',system:'sys',industries:'ind',industrial:'ind',international:'intl',supply:'sup',supplies:'sup',mfg:'manuf',manufacturing:'manuf',associates:'assoc',enterprises:'ent'};
+const coKey=v=>String(v||'').toLowerCase().replace(/&/g,' and ').replace(/\b(inc|incorporated|llc|ltd|limited|co|corp|corporation|company|the|and)\b\.?/g,' ')
+  .split(/[^a-z0-9]+/).filter(Boolean).map(w=>CO_WORDS[w]||w).join('');
 function levD(a,b,max){if(a===b)return 0;if(Math.abs(a.length-b.length)>max)return max+1;let p=Array.from({length:b.length+1},(_,i)=>i);
   for(let i=1;i<=a.length;i++){const c=[i];let lo=i;for(let j=1;j<=b.length;j++){c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));if(c[j]<lo)lo=c[j]}if(lo>max)return max+1;p=c}return p[b.length]}
 // existing customer names that look like the same company as `name` (never the exact same name)
 function similarCos(name,names){const k=coKey(name),low=String(name).trim().toLowerCase();if(k.length<3)return[];
   const max=k.length<5?0:k.length<9?1:2,out=new Map();
-  for(const n of names){const t=String(n||'').trim();if(!t||t.toLowerCase()===low)continue;const d=levD(k,coKey(t),max);if(d<=max&&!out.has(t.toLowerCase()))out.set(t.toLowerCase(),{name:t,d})}
+  for(const n of names){const t=String(n||'').trim();if(!t||t.toLowerCase()===low)continue;const o=coKey(t);let d=levD(k,o,max);
+    // one name is the other with a word cut short or left off the end ("Apple Gate Heat" / "Apple Gate Heating Co")
+    if(d>max){const[a,b]=k.length<o.length?[k,o]:[o,k];if(a.length>=6&&b.startsWith(a)&&b.length-a.length<=5)d=max}
+    if(d<=max&&!out.has(t.toLowerCase()))out.set(t.toLowerCase(),{name:t,d})}
   return[...out.values()].sort((a,b)=>a.d-b.d||a.name.localeCompare(b.name)).slice(0,3)}
 // resolves with the picked existing name, or null to keep what was typed
-function didYouMean(typed,cands,what='customer'){return new Promise(ok=>{const d=$('dymd');
+function didYouMean(typed,cands,what='customer'){return new Promise(ok=>{const d=$('dymd');acHide();
   $('dymt').innerHTML=`<b>${esc(typed)}</b> looks like ${cands.length>1?'one of these':'a'} ${what}${cands.length>1?'s':''} already in the list. Using the same name keeps the customer’s RFQs and history together.`;
   $('dyml').innerHTML=cands.map((c,i)=>`<button type="button" data-i="${i}">Use <b>${esc(c.name)}</b>${c.sub?`<small>${esc(c.sub)}</small>`:''}</button>`).join('');
   $('dymno').textContent=`No, “${typed}” is a different ${what}`;
@@ -1203,12 +1212,15 @@ function didYouMean(typed,cands,what='customer'){return new Promise(ok=>{const d
   d.showModal();const f=$('dyml').querySelector('button');if(f)f.focus()})}
 const coSub=c=>[c.rfqs?`${c.rfqs} RFQ${c.rfqs>1?'s':''}`:'',(c.contacts||[]).slice(0,2).map(x=>x.name).filter(Boolean).join(', '),c.address||''].filter(Boolean).join(' · ');
 // on the RFQ: when the company typed isn't a customer we have but is close to one, ask once per spelling
-const DYM_OK=new Set();
+// answers are remembered on this device, so a spelling someone said is a different customer isn't asked about again
+const DYM_OK=new Set((()=>{try{return JSON.parse(localStorage.getItem('bm-dym')||'[]')}catch(e){return[]}})());
+const dymKeep=v=>{DYM_OK.add(v.toLowerCase());try{localStorage.setItem('bm-dym',JSON.stringify([...DYM_OK].slice(-300)))}catch(e){}};
 async function rfqCoCheck(){const el=$('q-co');if(!el||el.readOnly||!RFQ||RFQ.ro)return;const v=el.value.trim();if(!v||DYM_OK.has(v.toLowerCase()))return;
-  await loadCust();if(findCo(v)||el.value.trim()!==v)return;
-  const c=similarCos(v,CUST.map(x=>x.company));if(!c.length)return;
+  await loadCust();if(el.value.trim()!==v)return;
+  // asked even when this exact spelling was used before, if another spelling of the same company exists (offered first: the one with more RFQs)
+  const cur=findCo(v),c=similarCos(v,CUST.map(x=>x.company)).map(x=>({...x,n:(CUST.find(y=>y.company===x.name)||{}).rfqs||0})).filter(x=>!cur||x.n>=(cur.rfqs||0)).sort((a,b)=>b.n-a.n||a.d-b.d);if(!c.length)return;
   const pick=await didYouMean(v,c.map(x=>({...x,sub:coSub(CUST.find(y=>y.company===x.name)||{})})));
-  if(pick){el.value=pick;el.dispatchEvent(new Event('input',{bubbles:true}));fitText(el);bookCo(false);toast(`Using ${pick}`)}else DYM_OK.add(v.toLowerCase())}
+  if(pick){el.value=pick;el.dispatchEvent(new Event('input',{bubbles:true}));fitText(el);bookCo(false);toast(`Using ${pick}`)}else dymKeep(v)}
 $('sheet').addEventListener('change',e=>{if(e.target.id==='q-co')setTimeout(rfqCoCheck,150)});
 // fill a box only if it's empty or was filled by the address book (never over what the rep typed)
 function bookFill(id,val){const el=$(id);if(!el||el.readOnly||!val)return;if(el.value&&!el.dataset.auto)return;el.value=val;el.dataset.auto='1';fitText(el)}
@@ -1233,7 +1245,7 @@ function acShow(el){if(acQuiet||!el||el.readOnly)return;const q=el.value.trim(),
 function acPlace(){if(!acFor||AC.hidden)return;const r=acFor.getBoundingClientRect();AC.style.left=(r.left+scrollX)+'px';AC.style.top=(r.bottom+scrollY+4)+'px';AC.style.width=Math.max(280,Math.min(r.width,520))+'px'}
 function acHide(){AC.hidden=true;acFor=null;acIdx=-1}
 function acMark(){AC.querySelectorAll('.ac-i').forEach((d,i)=>{d.classList.toggle('on',i===acIdx);if(i===acIdx)d.scrollIntoView({block:'nearest'})})}
-function acPick(i){const it=acItems[i],el=acFor;if(!it||!el)return;el.value=it.v;acHide();acQuiet=true;el.dispatchEvent(new Event('input',{bubbles:true}));acQuiet=false;fitText(el);el.focus()}
+function acPick(i){const it=acItems[i],el=acFor;if(!it||!el)return;el.value=it.v;acHide();acQuiet=true;el.dispatchEvent(new Event('input',{bubbles:true}));acQuiet=false;fitText(el);el.focus();if(el.id==='q-co')setTimeout(rfqCoCheck,150)}
 AC.addEventListener('mousedown',e=>{e.preventDefault();const it=e.target.closest('.ac-i');if(it)acPick(+it.dataset.i)});
 AC.addEventListener('mousemove',e=>{const it=e.target.closest('.ac-i');if(it&&+it.dataset.i!==acIdx){acIdx=+it.dataset.i;acMark()}});
 addEventListener('resize',acPlace);addEventListener('scroll',acPlace,{passive:true});
@@ -1787,7 +1799,7 @@ $('custf').onsubmit=async e=>{e.preventDefault();$('cuerr').hidden=true;
           if(!$('cu-addr').value&&body.address)$('cu-addr').value=body.address;if(!$('cu-notes').value&&body.notes)$('cu-notes').value=body.notes;
           const have=new Set((ex.contacts||[]).map(x=>x.name.toLowerCase()));body.contacts.filter(x=>!have.has(x.name.toLowerCase())).forEach(x=>cuRow(x))}
         else openHistory(pick);return}
-      DYM_OK.add(body.company.toLowerCase());$('custd').showModal()}}
+      dymKeep(body.company);$('custd').showModal()}}
   if(CUED){body.original=CUED.company;const keep=new Set(body.contacts.map(x=>x.name.toLowerCase()));body.removed=CUED.contacts.map(x=>x.name).filter(n=>!keep.has(n.toLowerCase()))}$('cugo').disabled=true;
   try{const r=await J(CUED?'PUT':'POST','api/customers',body);$('custd').close();toast(CUED?'Customer updated':`${r.company} added`);await afterCust(CUED?r.company:'')}
   catch(err){$('cuerr').textContent=err.message;$('cuerr').hidden=false}finally{$('cugo').disabled=false}};

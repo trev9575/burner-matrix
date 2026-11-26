@@ -476,7 +476,8 @@ function dataCheck() {
   add('RFQs', 'info', 'Drafts untouched for 30+ days', rf.filter(x => !(x.sends || []).length && !x.archived && now - Date.parse(x.updated || x.date) > 30 * day).map(x => `${rno(x)} (${x.byFull || x.by})`), 'Email, delete or archive them so the lists stay short.');
   add('RFQs', 'info', 'Burner is no longer in the matrix', rf.filter(x => x.burner && !keys.has(keyOf(x.burner)) && !x.archived && x.status !== 'won' && x.status !== 'lost').map(x => `${rno(x)} (${x.burner.brand} ${x.burner.name})`), 'Fine for old RFQs; open ones may need a new RFQ with a current burner.');
   // ----- customers -----
-  const cn = c => String(c || '').toLowerCase().replace(/\b(inc|llc|ltd|co|corp|company|corporation|the)\b|[^a-z0-9]/g, '');
+  const W = { heating: 'heat', htg: 'heat', plumbing: 'plumb', plbg: 'plumb', mechanical: 'mech', services: 'svc', service: 'svc', brothers: 'bros', contractors: 'contract', contracting: 'contract', systems: 'sys', supply: 'sup', supplies: 'sup' };
+  const cn = c => String(c || '').toLowerCase().replace(/&/g, ' and ').replace(/\b(inc|incorporated|llc|ltd|limited|co|corp|corporation|company|the|and)\b\.?/g, ' ').split(/[^a-z0-9]+/).filter(Boolean).map(w => W[w] || w).join('');
   const names = new Map(); for (const c of [...getCustomers().map(c => c.company), ...rf.map(x => x.fields['q-co']).filter(Boolean)]) { const k = cn(c); if (!k) continue; if (!names.has(k)) names.set(k, new Set()); names.get(k).add(c.trim()); }
   add('Customers', 'warn', 'Same customer spelled more than one way', [...names.values()].filter(v => v.size > 1).map(v => [...v].join(' / ')), 'Pick one spelling (Customers tab) so the customer history and totals stay together.');
   add('Customers', 'info', 'Saved customers with no phone or email', getCustomers().filter(c => !c.contacts.some(k => k && (k.phone || k.email))).map(c => c.company), 'Add a contact phone or email in the Customers tab.');
