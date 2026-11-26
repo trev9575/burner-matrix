@@ -115,6 +115,7 @@ th .infob{border-color:#cfcfc9;background:transparent;color:#fff;width:16px;heig
 #lbody tr.nqr td{background:#eaf6ee}
 th.lck,td.lck{width:28px;padding-right:0}td.lck input,th.lck input{width:17px;height:17px;accent-color:var(--red)}
 .lbulk{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;background:#fff7e0;border-left:4px solid #e0a800;padding:8px 12px;border-radius:3px;margin:0 0 10px}.lbulk>*{flex:none}.lbulk select{width:auto;max-width:220px;font:600 13px Montserrat,sans-serif;min-height:32px;border:1px solid #b9b9b2;border-radius:3px;padding:0 8px;background:#fff}
+.lbulk .btn:disabled{opacity:.45;cursor:not-allowed}
 .arch{display:inline-block;margin-left:6px;background:#e8e8e4;color:#55554f;font-size:11px;font-weight:700;border-radius:3px;padding:1px 6px;vertical-align:1px}
 .claimt{display:inline-block;margin-top:3px;font-size:11.5px;font-weight:700;color:#1d4e89;background:#e8f0fb;border-radius:3px;padding:1px 6px}
 .lq{display:block;font-size:12px;color:var(--mute);margin-top:3px}.wait{display:inline-block;margin-top:3px;font-size:11.5px;font-weight:700;color:#b35c00;background:#fff3e8;border-radius:3px;padding:1px 6px}
@@ -552,6 +553,8 @@ html.dark .util img,html.dark .brand img,html.dark .top img,html.dark footer.ban
     <span style="flex:1"></span>
     <button class="btn" id="rfqsave" hidden>Save</button>
     <button class="btn" id="rfqdel" hidden style="color:#b3141f">Delete</button>
+    <button class="btn" id="rfqfu" hidden title="Restart the follow-up clock">Followed up</button>
+    <button class="btn" id="rfqarch" hidden title="Hide it from the RFQ lists (it still shows under Archived and in searches)">Archive</button>
     <button class="btn" id="rfqdup" hidden title="Start a new RFQ with a new number, filled in from this one">Copy to new RFQ</button>
     <button class="btn" id="rfqcopy">Copy as text</button>
     <button class="btn" id="rfqpdf" hidden>Download PDF</button>
@@ -1222,7 +1225,10 @@ function rfqStatus(){const on=!!ME;['rfqpdf','rfqsend'].forEach(i=>$(i).hidden=!
   if(RFQ&&RFQ.offline){$('rfqsave').hidden=false;$('rfqsave').disabled=RFQ.saved&&!RFQ.dirty;$('rfqdup').hidden=true;$('rfqdel').hidden=true;$('rfqst').textContent=RFQ.saved?(RFQ.dirty?'Unsaved changes':'Saved on this device – uploads and gets its number when you’re back online'):'Offline draft – not saved yet';return}$('rfqsave').hidden=!on||!!(RFQ&&RFQ.ro);$('rfqdup').hidden=!on||!(RFQ&&RFQ.ro);$('rfqdel').hidden=!canDel(RFQ&&RFQ.id&&{by:RFQ.by||(ME&&ME.name),sent:RFQ.sends.length});if(!on||!RFQ){$('rfqst').textContent='';return}
   const last=RFQ.sends.slice(-1)[0];
   $('rfqst').innerHTML=esc((RFQ.id?(RFQ.dirty?'Unsaved changes':'Saved'):'Not saved yet')+(last?` · emailed ${fmtD(last.at)} to ${last.to.join(', ')}`:'')+(RFQ.by&&ME&&RFQ.by!==ME.name?` · by ${RFQ.byFull||RFQ.by}`:''))+(RFQ.ro?'<span class="robadge">Read-only</span>':'');
-  $('rfqsave').disabled=!!RFQ.id&&!RFQ.dirty}
+  $('rfqsave').disabled=!!RFQ.id&&!RFQ.dirty;
+  // archive / followed up for a saved RFQ the user can change (their own, or anyone's for office staff)
+  const l=RFQ.id&&LIST.find(x=>x.id===RFQ.id),can=!!(RFQ.id&&ME&&(RFQ.by===ME.name||ME.role!=='rep'));
+  $('rfqarch').hidden=!can;$('rfqarch').textContent=RFQ.archived?'Unarchive':'Archive';$('rfqfu').hidden=!(can&&l&&l.followUp)}
 // Signed out (session ran out) while an RFQ had unsaved typing: keep it on this device and put it back after signing in.
 function rescueRFQ(){try{if(!RFQ||RFQ.ro||PDFMODE||!$('sheet').querySelector('#q-co'))return;
   if(RFQ.id){if(RFQ.dirty)localStorage.setItem('bm-rescue',JSON.stringify({id:RFQ.id,no:RFQ.no,fields:rfqFields(),at:Date.now()}))}
@@ -1404,9 +1410,16 @@ function renderList(){const staff=ME&&ME.role!=='rep',mine=!staff||$('lwho').val
   followBadge()}
 // ----- several RFQs at once -----
 let LSEL=new Set(),LSHOWN=[];
+// the same two actions from inside an open RFQ
+async function rfqOne(action,btn){if(!RFQ||!RFQ.id)return;btn.disabled=true;
+  try{const r=await J('POST','api/rfqs/bulk',{ids:[RFQ.id],action});const x=r.changed[0];if(!x){toast('Nothing to change');return}
+    LIST=LIST.some(y=>y.id===x.id)?LIST.map(y=>y.id===x.id?x:y):LIST;RFQ.archived=!!x.archived;rfqStatus();followBadge();
+    toast(action==='followup'?'Marked followed up':x.archived?`${x.no} archived`:`${x.no} unarchived`)}catch(err){toast(err.message)}finally{btn.disabled=false}}
+$('rfqarch').onclick=e=>rfqOne(RFQ&&RFQ.archived?'unarchive':'archive',e.currentTarget);
+$('rfqfu').onclick=e=>rfqOne('followup',e.currentTarget);
 function bulkBar(){const n=LSEL.size,b=$('lbulk');b.hidden=!n;if(!n)return;const sel=LIST.filter(r=>LSEL.has(r.id)),arch=sel.length&&sel.every(r=>r.archived),nfu=sel.filter(r=>r.followUp).length;
   b.innerHTML=`<b>${n} selected</b><select id="lbl" aria-label="Mark the selected RFQs lost"><option value="">Mark lost…</option>${(ME.lostReasons||[]).map(x=>`<option>${esc(x)}</option>`).join('')}</select>
-    ${nfu?`<button type="button" class="btn lmini" data-b="followup">Followed up (${nfu})</button>`:''}<button type="button" class="btn lmini" data-b="${arch?'unarchive':'archive'}">${arch?'Unarchive':'Archive'}</button><button type="button" class="btn lmini" data-b="clear">Clear selection</button>`}
+    <button type="button" class="btn lmini" data-b="followup"${nfu?'':' disabled title="None of the selected RFQs are due for a follow-up (only Emailed or Quoted RFQs with no activity for a while are)"'}>Followed up${nfu?` (${nfu})`:''}</button><button type="button" class="btn lmini" data-b="${arch?'unarchive':'archive'}">${arch?'Unarchive':'Archive'}</button><button type="button" class="btn lmini" data-b="clear">Clear selection</button>`}
 async function bulkDo(action,extra={}){const ids=[...LSEL];if(!ids.length)return;
   try{const r=await J('POST','api/rfqs/bulk',{ids,action,...extra});const ch=new Map(r.changed.map(x=>[x.id,x]));LIST=LIST.map(x=>ch.get(x.id)||x);LSEL.clear();renderList();
     toast(`${r.changed.length} RFQ${r.changed.length===1?'':'s'} ${{lost:'marked lost',followup:'marked followed up',archive:'archived',unarchive:'unarchived'}[action]}${r.skipped?` · ${r.skipped} skipped (already ${action==='lost'?'won or lost':action==='followup'?'up to date':'that way'})`:''}`)}
@@ -1510,7 +1523,7 @@ $('clist').addEventListener('click',async e=>{const b=e.target.closest('.cdel');
 async function openSaved(id,from){const rec=await J('GET','api/rfqs/'+id);
   openRFQ(toRec(rec.burner),{id:rec.id,no:rec.no,date:rec.date,raw:rec.burner,fit:rec.fit||'',fields:rec.fields,sends:rec.sends||[],by:rec.by,byFull:rec.byFull,from,locks:rec.locks||[],xfmr:rec.xfmr||'',
     ro:PDFMODE||(rec.sends||[]).length>0||!ME||rec.by!==ME.name});
-  RFQ.quote=rec.quote?{...rec.quote,file:!!rec.quote.file}:null;RFQ.comments=rec.comments||[];RFQ.claim=rec.claim||null;QEDIT=false;rxRender();
+  RFQ.quote=rec.quote?{...rec.quote,file:!!rec.quote.file}:null;RFQ.comments=rec.comments||[];RFQ.claim=rec.claim||null;RFQ.archived=!!rec.archived;QEDIT=false;rxRender();rfqStatus();
   if(ME&&!PDFMODE&&((rec.comments||[]).length||rec.quote))J('POST','api/rfqs/'+id+'/seen',{}).then(()=>{const l=LIST.find(x=>x.id===id);if(l){l.unread=0;l.newQuote=false}quoteBadge()}).catch(()=>{})} // drafts stay editable for the rep who made them until emailed
 $('lbody').onclick=async e=>{if(e.target.closest('select.st')||e.target.closest('.lck'))return;const tr=e.target.closest('tr[data-id]');const d=e.target.closest('.ldel');
   const fu=e.target.closest('.lfu'),lv=e.target.closest('.lval');
