@@ -1079,9 +1079,9 @@ async function api(req, res, url) {
       const name = typeof b.name === 'string' && b.name.trim() ? b.name.trim().slice(0, 40) : Specs.guideName(b.file);
       const out = SPECS.importCSV(b.brand.trim(), name, String(b.csv || ''), me.name, typeof b.burner === 'string' ? b.burner : '', b.dryRun === true);
       if (out.error) return send(res, 422, { error: out.error, needBurner: !!out.needBurner });
-      const m = b.dryRun === true ? { id: out.set.id, title: Specs.title(out.set), count: out.set.rows.length } : meta(out.set);
+      const info = b.dryRun === true ? { id: out.set.id, title: Specs.title(out.set), count: out.set.rows.length } : meta(out.set);
       if (b.dryRun !== true) act(`Loaded the ${Specs.title(out.set)} spec guide (${out.set.rows.length} specs${out.diff ? `: ${out.diff.added} added, ${out.diff.removed} removed, ${out.diff.changed} changed` : ''})`);
-      return send(res, 200, { ...m, dryRun: b.dryRun === true, skipped: out.skipped, warnings: out.warnings, diff: out.diff, kept: out.kept, replaces: out.replaces });
+      return send(res, 200, { ...info, dryRun: b.dryRun === true, skipped: out.skipped, warnings: out.warnings, diff: out.diff, kept: out.kept, replaces: out.replaces });
     }
     const one = id => SPECS.get(String(id || ''));
     if (p === '/api/specs/export' && m === 'GET') {
@@ -1137,6 +1137,7 @@ async function api(req, res, url) {
       const i = b.id ? s.rows.findIndex(r => r.id === b.id) : -1;
       if (b.id && i < 0) return send(res, 404, { error: 'That spec was changed or removed. Search again.' });
       const cur = { ...s, rows: s.rows.slice(), updated: new Date().toISOString(), by: me.name };
+      if (m === 'DELETE' && i < 0) return send(res, 404, { error: 'Which spec?' });
       if (m === 'DELETE') { act(`Deleted spec ${s.rows[i].v[s.roles.mfg]} ${s.rows[i].v[s.roles.model]} from ${Specs.title(s)}`); cur.rows.splice(i, 1); SPECS.save(cur); return send(res, 200, { ok: true, count: cur.rows.length }); }
       const v = s.cols.map((_, k) => String(Array.isArray(b.v) && b.v[k] != null ? b.v[k] : '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 1000));
       const need = ['mfg', 'model', 'burner'].filter(k => s.roles[k] >= 0 && !v[s.roles[k]]);

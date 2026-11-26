@@ -1448,11 +1448,11 @@ function renderList(){const staff=ME&&ME.role!=='rep',mine=!staff||$('lwho').val
   const q=$('lq').value.trim().toLowerCase();
   const all=LIST.filter(r=>!mine||r.by===ME.name),narch=all.filter(r=>r.archived).length;
   if(LST==='archived'&&!narch)LST='';
-  // archived RFQs only show under Archived, or when searching
-  const base=all.filter(r=>LST==='archived'?r.archived:(q||!r.archived));
-  const cnt={};base.forEach(r=>cnt[stOf(r)]=(cnt[stOf(r)]||0)+1);const dec=(cnt.won||0)+(cnt.lost||0),nfu=base.filter(r=>r.followUp).length,nw=base.filter(waiting).length;
-  const nnq=base.filter(r=>r.newQuote).length;
-  $('lstats').innerHTML=`<button class="stat" data-s="" aria-pressed="${!LST}"><b>${base.length}</b>All</button>`+(nnq||LST==='newq'?`<button class="stat nqs" data-s="newq" aria-pressed="${LST==='newq'}" title="Quoted by the office since you last opened them"><b>${nnq}</b>New quote${nnq===1?'':'s'}</button>`:'')+(staff?`<button class="stat wq" data-s="wait" aria-pressed="${LST==='wait'}" title="Emailed and not quoted yet, oldest first"><b>${nw}</b>Waiting for quote</button>`:'')+(ME&&ME.followUpDays?`<button class="stat fu" data-s="follow" aria-pressed="${LST==='follow'}" title="Emailed or Quoted with no activity for ${ME.followUpDays}+ days"><b>${nfu}</b>Follow up</button>`:'')+Object.entries(STL).filter(([k])=>!(k==='draft'&&ME&&ME.role==='quoter')).map(([k,l])=>`<button class="stat" data-s="${k}" aria-pressed="${LST===k}"><b>${cnt[k]||0}</b>${l}</button>`).join('')+
+  // the counts and win rate never include archived RFQs; the rows include them under Archived, or when searching
+  const live=all.filter(r=>!r.archived),base=LST==='archived'?all.filter(r=>r.archived):q?all:live;
+  const cnt={};live.forEach(r=>cnt[stOf(r)]=(cnt[stOf(r)]||0)+1);const dec=(cnt.won||0)+(cnt.lost||0),nfu=live.filter(r=>r.followUp).length,nw=live.filter(waiting).length;
+  const nnq=live.filter(r=>r.newQuote).length;
+  $('lstats').innerHTML=`<button class="stat" data-s="" aria-pressed="${!LST}"><b>${live.length}</b>All</button>`+(nnq||LST==='newq'?`<button class="stat nqs" data-s="newq" aria-pressed="${LST==='newq'}" title="Quoted by the office since you last opened them"><b>${nnq}</b>New quote${nnq===1?'':'s'}</button>`:'')+(staff?`<button class="stat wq" data-s="wait" aria-pressed="${LST==='wait'}" title="Emailed and not quoted yet, oldest first"><b>${nw}</b>Waiting for quote</button>`:'')+(ME&&ME.followUpDays?`<button class="stat fu" data-s="follow" aria-pressed="${LST==='follow'}" title="Emailed or Quoted with no activity for ${ME.followUpDays}+ days"><b>${nfu}</b>Follow up</button>`:'')+Object.entries(STL).filter(([k])=>!(k==='draft'&&ME&&ME.role==='quoter')).map(([k,l])=>`<button class="stat" data-s="${k}" aria-pressed="${LST===k}"><b>${cnt[k]||0}</b>${l}</button>`).join('')+
     (narch||LST==='archived'?`<button class="stat" data-s="archived" aria-pressed="${LST==='archived'}" title="Hidden from the other lists"><b>${narch}</b>Archived</button>`:'')+
     `<span class="stat wr" title="Won ÷ (won + lost)"><b>${dec?Math.round((cnt.won||0)/dec*100)+'%':'—'}</b>win rate</span>`;
   // every word must appear somewhere in the RFQ (number, customer, job, burner, rep, appliance, address, notes with spec numbers, quote #…)
